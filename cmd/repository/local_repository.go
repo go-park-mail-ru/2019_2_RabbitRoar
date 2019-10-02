@@ -1,12 +1,39 @@
 package repository
 
 import (
+	"errors"
+
 	"../entity"
+	"github.com/google/uuid"
 )
 
 type LocalRepository struct {
 	users       []entity.User
+	sessions    map[uuid.UUID]entity.Session
 	lastUserUID int64
+}
+
+func (repo LocalRepository) SessionGetUser(sessionId uuid.UUID) (entity.User, error) {
+	if session, success := repo.sessions[sessionId]; success {
+		return session.User, nil
+	}
+
+	return entity.User{}, errors.New("Session not found")
+}
+
+func (repo *LocalRepository) SessionCreate(user entity.User) (uuid.UUID, error) {
+	newUUID, err := uuid.NewUUID()
+
+	repo.sessions[newUUID] = entity.Session{
+		Uuid: newUUID,
+		User: user,
+	}
+
+	return newUUID, err
+}
+
+func (repo *LocalRepository) SessionDestroy(sessionId uuid.UUID) {
+	delete(repo.sessions, sessionId)
 }
 
 func (repo LocalRepository) UserGetByName(name string) (entity.User, error) {

@@ -1,13 +1,14 @@
 package server
 
 import (
-	"../../../cmd/entity"
-	"../../../cmd/repository"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"../../../cmd/entity"
+	"../../../cmd/repository"
+	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 )
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
@@ -43,7 +44,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	u := &entity.User{}
 	json.Unmarshal(body, u)
-	if u.Username == "" || u.Password == "" || u.Email == ""{
+	if u.Username == "" || u.Password == "" || u.Email == "" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -57,6 +58,17 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		w.WriteHeader(http.StatusOK)
+		r.Body.Close()
+	}()
+
+	if cookie, err := r.Cookie("sessionID"); err != nil {
+		if UUID, err := uuid.Parse(cookie.Value); err != nil {
+		} else {
+			repository.Data.sessionDestroy(UUID)
+		}
+	}
 }
 
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
