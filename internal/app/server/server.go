@@ -1,21 +1,60 @@
 package server
 
 import (
+	"../../../cmd/entity"
+	"../../../cmd/repository"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
 
-// Проверка командой curl --data "password=1234&username=Anita" http://localhost:3000/user/login
+// curl --data "password=1234&username=Anita" http://localhost:3000/user/login
+//
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	u := entity.User{}
+	err := decoder.Decode(&u)
+	if err != nil {
+		panic(err)
+	}
+	//b, err := ioutil.ReadAll(r.Body)
+	//fmt.Println(b)
+	//defer r.Body.Close()
+	//
+	//if err != nil {
+	//	http.Error(w, err.Error(), 500)
+	//	return
+	//}
+	//
+	//u := entity.User{}
+	//err = json.Unmarshal(b, &u)
+	//if err != nil {
+	//	http.Error(w, err.Error(), 500)
+	//	return
+	//}
+	//fmt.Fprintln(w, u)
+
+	//output, err := json.Marshal(u)
+	//if err != nil {
+	//	http.Error(w, err.Error(), 500)
+	//	return
+	//}
+	//w.Header().Set("content-type", "application/json")
+	//w.Write(output)
+}
+
+// curl --data "password=1234&username=Anita&email=heh@mail.ru" http://localhost:3000/user/signup
+func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	inputUsername := r.FormValue("username")
 	inputPassword := r.FormValue("password")
-	fmt.Fprintln(w, "you username: ", inputUsername)
-	fmt.Fprintln(w, "you password: ", inputPassword)
-
-}
-func SignupHandler(w http.ResponseWriter, r *http.Request) {
+	inputEmail := r.FormValue("email")
+	createdUser, err := repository.Data.UserCreate(inputUsername, inputPassword, inputEmail)
+	if err != nil {
+		fmt.Fprintln(w, "creation error")
+	}
+	fmt.Fprintln(w, createdUser)
 }
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
