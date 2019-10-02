@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"mux/context"
 	"net/http"
 
 	"../../../cmd/entity"
+	"../../../cmd/middleware"
 	"../../../cmd/repository"
 	"github.com/google/uuid"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
@@ -58,7 +59,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	user := context.Get("user")
+	user := context.Get(r, "user")
 
 	userJSON, err := json.Marshal(user)
 
@@ -66,7 +67,7 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 		panic("error marshaling user")
 	}
 
-	fmt.Fprintln(user, userJSON)
+	fmt.Println(user, userJSON)
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +80,8 @@ func Start() {
 	r.HandleFunc("/user", GetProfileHandler).Methods("GET")
 	r.HandleFunc("/user", UpdateProfile).Methods("PUT")
 	r.HandleFunc("/user", LogoutHandler).Methods("DELETE")
+
+	r.Use(middleware.AuthMiddleware)
 
 	log.Fatal(http.ListenAndServe(":3000", r))
 }

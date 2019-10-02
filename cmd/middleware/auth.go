@@ -1,21 +1,39 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
-	"mux/context"
 	"net/http"
 
 	"../repository"
+	"github.com/google/uuid"
+	"github.com/gorilla/context"
 )
 
-func Middleware(next http.Handler) http.Handler {
+func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID := r.Cookie("sessionID")
+		sessionIDCookie, errCookie := r.Cookie("sessionID")
+
+		if errCookie != nil {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		fmt.Println(errCookie)
+
+		sessionID, errParseUUID := uuid.Parse(sessionIDCookie.Value)
+
+		if errParseUUID != nil {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		fmt.Println(errParseUUID)
 
 		user, err := repository.Data.SessionGetUser(sessionID)
 
+		fmt.Println(err)
 		if err != nil {
 			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
 		}
 
 		context.Set(r, "user", user)
