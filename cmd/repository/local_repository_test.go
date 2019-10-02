@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -34,9 +35,24 @@ func TestSessionCreate(t *testing.T) {
 	rep := LocalRepository{}
 	rep.sessions = make(map[uuid.UUID]entity.Session)
 	user1, _ := rep.UserCreate("1", "1234", "test@mail.ru")
-	userUUID, err := rep.SessionCreate(user1)
 
+	userUUID, err := rep.SessionCreate(user1)
 	assert.Nil(t, err)
+
 	userBySession, err := rep.SessionGetUser(userUUID)
 	assert.Equal(t, user1, userBySession)
+}
+
+func TestSessionDestroy(t *testing.T){
+	rep := LocalRepository{}
+	rep.sessions = make(map[uuid.UUID]entity.Session)
+	user1, _ := rep.UserCreate("1", "1234", "test@mail.ru")
+
+	userUUID, err := rep.SessionCreate(user1)
+	assert.Nil(t, err)
+
+	rep.SessionDestroy(userUUID)
+
+	_, err = rep.SessionGetUser(userUUID)
+	assert.Equal(t, errors.New("Session not found"), err)
 }
