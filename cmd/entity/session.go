@@ -5,5 +5,6 @@ import (
 )
 
 type Session struct {
-	uuid uuid.UUID
+	Uuid uuid.UUID
+	User User
 }
