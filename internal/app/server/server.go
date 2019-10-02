@@ -108,7 +108,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cookie, err := r.Cookie("sessionID"); err != nil {
+	if cookie, err := r.Cookie("SessionID"); err != nil {
 		if UUID, err := uuid.Parse(cookie.Value); err != nil {
 		} else {
 			repository.Data.SessionDestroy(UUID)
