@@ -66,7 +66,7 @@ func (repo *LocalRepository) UserUpdate(updatedUser entity.User) error {
 		}
 	}()
 
-	repo.users[updatedUser.UID] = updatedUser
+	repo.users[updatedUser.UID-1] = updatedUser
 
 	return err
 }
