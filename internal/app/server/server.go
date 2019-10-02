@@ -13,22 +13,24 @@ import (
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username": "anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+}
+
+func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close() // важный пункт!
+	defer r.Body.Close()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	u := &entity.User{}
 	json.Unmarshal(body, u)
-	createdUser, err := repository.Data.UserCreate(u.Username, u.Password, u.Email)
+	_, err = repository.Data.UserCreate(u.Username, u.Password, u.Email)
 	if err != nil {
+		http.Error(w, err.Error(), 401)
 		fmt.Fprintln(w, "creation error")
 	}
-	fmt.Fprintln(w, createdUser)
-}
-
-func SignupHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	//fmt.Fprintln(w, createdUser)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
