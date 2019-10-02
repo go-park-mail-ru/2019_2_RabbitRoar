@@ -67,5 +67,7 @@ func (repo *LocalRepository) UserCreate(name, password, email string) (entity.Us
 var Data LocalRepository
 
 func init() {
-	Data = LocalRepository{}
+	Data = LocalRepository{
+		sessions: make(map[uuid.UUID]entity.Session),
+	}
 }
