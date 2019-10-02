@@ -1,23 +1,26 @@
 package server
 
 import (
-	"../../../cmd/entity"
-	"../../../cmd/repository"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"../../../cmd/repository"
+	"../../../cmd/entity"
 )
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username": "anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	u := entity.User{}
-	err := decoder.Decode(&u)
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close() // важный пункт!
 	if err != nil {
-		panic(err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
+	u := &entity.User{}
+	json.Unmarshal(body, u)
 	createdUser, err := repository.Data.UserCreate(u.Username, u.Password, u.Email)
 	if err != nil {
 		fmt.Fprintln(w, "creation error")
