@@ -12,6 +12,25 @@ import (
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	u := &entity.User{}
+	json.Unmarshal(body, u)
+	if u.Username == "" || u.Password == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	_, err = repository.Data.UserGetByName(u.Username)
+	if err == repository.ErrNotFound {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 // curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/signup'
