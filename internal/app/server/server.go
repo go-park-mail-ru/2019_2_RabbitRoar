@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,10 +11,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//  curl -XPOST -H "Content-type: application/json" -d '{"username": "anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/login'
+//  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
+// curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/signup'
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -25,13 +25,17 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	u := &entity.User{}
 	json.Unmarshal(body, u)
+	if u.Username == "" || u.Password == "" || u.Email == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	_, err = repository.Data.UserCreate(u.Username, u.Password, u.Email)
 	if err != nil {
-		http.Error(w, err.Error(), 401)
-		fmt.Fprintln(w, "creation error")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-	w.WriteHeader(http.StatusOK)
-	//fmt.Fprintln(w, createdUser)
+	w.WriteHeader(http.StatusCreated)
+	return
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
