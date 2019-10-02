@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"../../../cmd/entity"
 	"../../../cmd/middleware"
@@ -74,14 +75,40 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func Start() {
-	r := mux.NewRouter()
-	r.HandleFunc("/user/login", LoginHandler).Methods("POST")
-	r.HandleFunc("/user/signup", SignupHandler).Methods("POST")
-	r.HandleFunc("/user", GetProfileHandler).Methods("GET")
-	r.HandleFunc("/user", UpdateProfile).Methods("PUT")
-	r.HandleFunc("/user", LogoutHandler).Methods("DELETE")
+	topRouter := mux.NewRouter()
+	topRouter.HandleFunc("/login", LoginHandler).Methods("POST")
+	topRouter.HandleFunc("/signup", SignupHandler).Methods("POST")
 
-	r.Use(middleware.AuthMiddleware)
+	userRouter := topRouter.PathPrefix("/api").Subrouter()
+	userRouter.Use(middleware.AuthMiddleware)
+	userRouter.HandleFunc("/user", GetProfileHandler).Methods("GET")
+	userRouter.HandleFunc("/user", UpdateProfile).Methods("PUT")
+	userRouter.HandleFunc("/user", LogoutHandler).Methods("DELETE")
 
-	log.Fatal(http.ListenAndServe(":3000", r))
+	topRouter.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pathTemplate, err := route.GetPathTemplate()
+		if err == nil {
+			fmt.Println("ROUTE:", pathTemplate)
+		}
+		pathRegexp, err := route.GetPathRegexp()
+		if err == nil {
+			fmt.Println("Path regexp:", pathRegexp)
+		}
+		queriesTemplates, err := route.GetQueriesTemplates()
+		if err == nil {
+			fmt.Println("Queries templates:", strings.Join(queriesTemplates, ","))
+		}
+		queriesRegexps, err := route.GetQueriesRegexp()
+		if err == nil {
+			fmt.Println("Queries regexps:", strings.Join(queriesRegexps, ","))
+		}
+		methods, err := route.GetMethods()
+		if err == nil {
+			fmt.Println("Methods:", strings.Join(methods, ","))
+		}
+		fmt.Println()
+		return nil
+	})
+
+	log.Fatal(http.ListenAndServe(":3000", topRouter))
 }

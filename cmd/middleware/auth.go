@@ -14,6 +14,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionIDCookie, errCookie := r.Cookie("sessionID")
 
+		fmt.Println("Got request: ", r)
+
 		if errCookie != nil {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
