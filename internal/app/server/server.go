@@ -2,13 +2,16 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"mux/context"
 	"net/http"
+
 	"../../../cmd/entity"
 	"../../../cmd/repository"
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
@@ -47,12 +50,23 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie("sessionID"); err != nil {
 		if UUID, err := uuid.Parse(cookie.Value); err != nil {
 		} else {
-			repository.Data.sessionDestroy(UUID)
+			repository.Data.SessionDestroy(UUID)
 		}
 	}
 }
 
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	user := context.Get("user")
+
+	userJSON, err := json.Marshal(user)
+
+	if err != nil {
+		panic("error marshaling user")
+	}
+
+	fmt.Fprintln(user, userJSON)
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
