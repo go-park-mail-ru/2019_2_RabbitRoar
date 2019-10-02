@@ -120,6 +120,7 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("content-type", "application/json")
 	if r.Method == http.MethodOptions {
 		return
 	}
@@ -132,7 +133,8 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 		panic("error marshaling user")
 	}
 
-	fmt.Println(user, userJSON)
+	fmt.Println("User_profle: ", user)
+	w.Write(userJSON)
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
@@ -172,6 +174,8 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+
+	fmt.Println("UserUpdate: ", mainUser)
 
 	if err := repository.Data.UserUpdate(mainUser); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
