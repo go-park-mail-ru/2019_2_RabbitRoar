@@ -11,7 +11,7 @@ type LocalRepository struct {
 
 func (repo LocalRepository) UserGetByName(name string) (entity.User, error) {
 	for _, user := range repo.users {
-		if user.Name == name {
+		if user.Username == name {
 			return user, nil
 		}
 	}
@@ -27,7 +27,7 @@ func (repo *LocalRepository) UserCreate(name, password string) (entity.User, err
 	repo.lastUserUID++
 	user := entity.User{
 		UID:      repo.lastUserUID,
-		Name:     name,
+		Username: name,
 		Password: password,
 		Rating:   0,
 	}
