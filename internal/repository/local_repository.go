@@ -18,7 +18,7 @@ func (repo LocalRepository) UserGetByName(name string) (entity.User, error) {
 	return entity.User{}, ErrNotFound
 }
 
-func (repo *LocalRepository) UserCreate(name, password string) (entity.User, error) {
+func (repo *LocalRepository) UserCreate(name, password, email string) (entity.User, error) {
 	_, err := repo.UserGetByName(name)
 	if err != ErrNotFound {
 		return entity.User{}, ErrConflict
@@ -29,9 +29,16 @@ func (repo *LocalRepository) UserCreate(name, password string) (entity.User, err
 		UID:      repo.lastUserUID,
 		Username: name,
 		Password: password,
+		Email:    email,
 		Rating:   0,
 	}
 	repo.users = append(repo.users, user)
 
 	return user, nil
+}
+
+var Data LocalRepository
+
+func init() {
+	Data = LocalRepository{}
 }
