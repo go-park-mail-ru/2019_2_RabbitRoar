@@ -11,13 +11,32 @@ import (
 	"../../../cmd/entity"
 	"../../../cmd/middleware"
 	"../../../cmd/repository"
-	"github.com/google/uuid"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
+	"github.com/google/uuid"
 )
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	u := &entity.User{}
+	json.Unmarshal(body, u)
+	if u.Username == "" || u.Password == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	_, err = repository.Data.UserGetByName(u.Username)
+	if err == repository.ErrNotFound {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 // curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/signup'
@@ -72,6 +91,44 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var mainUser entity.User
+	mainUser = context.Get(r, "user").(entity.User)
+	
+	userUpdated := &entity.User{}
+
+	if userFromBody, err := ioutil.ReadAll(r.Body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else {
+		if err := json.Unmarshal(userFromBody, userUpdated); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+
+	changes := 0
+	if userUpdated.Email != "" {
+		changes++
+		mainUser.Email = userUpdated.Email
+	}
+	if userUpdated.Url != "" {
+		changes++
+		mainUser.Url = userUpdated.Url
+	}
+
+	if changes == 0 {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+
+	if err := repository.Data.UserUpdate(mainUser); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func Start() {

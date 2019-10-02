@@ -45,6 +45,32 @@ func (repo LocalRepository) UserGetByName(name string) (entity.User, error) {
 	return entity.User{}, ErrNotFound
 }
 
+func (repo LocalRepository) UserGetById(userId int64) (entity.User, error) {
+	var err error = nil
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("User not found")
+		}
+	}()
+
+	return repo.users[userId], err
+}
+
+func (repo *LocalRepository) UserUpdate(updatedUser entity.User) error {
+	var err error = nil
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("User not found")
+		}
+	}()
+
+	repo.users[updatedUser.UID] = updatedUser
+
+	return err
+}
+
 func (repo *LocalRepository) UserCreate(name, password, email string) (entity.User, error) {
 	_, err := repo.UserGetByName(name)
 	if err != ErrNotFound {
@@ -67,5 +93,7 @@ func (repo *LocalRepository) UserCreate(name, password, email string) (entity.Us
 var Data LocalRepository
 
 func init() {
-	Data = LocalRepository{}
+	Data = LocalRepository{
+		sessions: make(map[uuid.UUID]entity.Session),
+	}
 }
