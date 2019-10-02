@@ -2,12 +2,16 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+
 	"../../../cmd/entity"
+	"../../../cmd/middleware"
 	"../../../cmd/repository"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	"github.com/google/uuid"
 )
 
@@ -66,15 +70,64 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie("sessionID"); err != nil {
 		if UUID, err := uuid.Parse(cookie.Value); err != nil {
 		} else {
-			repository.Data.sessionDestroy(UUID)
+			repository.Data.SessionDestroy(UUID)
 		}
 	}
 }
 
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	user := context.Get(r, "user")
+
+	userJSON, err := json.Marshal(user)
+
+	if err != nil {
+		panic("error marshaling user")
+	}
+
+	fmt.Println(user, userJSON)
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var mainUser entity.User
+	mainUser = context.Get(r, "user").(entity.User)
+	
+	userUpdated := &entity.User{}
+
+	if userFromBody, err := ioutil.ReadAll(r.Body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else {
+		if err := json.Unmarshal(userFromBody, userUpdated); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+
+	changes := 0
+	if userUpdated.Email != "" {
+		changes++
+		mainUser.Email = userUpdated.Email
+	}
+	if userUpdated.Url != "" {
+		changes++
+		mainUser.Url = userUpdated.Url
+	}
+
+	if changes == 0 {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+
+	if err := repository.Data.UserUpdate(mainUser); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func Start() {
@@ -84,6 +137,8 @@ func Start() {
 	r.HandleFunc("/user", GetProfileHandler).Methods("GET")
 	r.HandleFunc("/user", UpdateProfile).Methods("PUT")
 	r.HandleFunc("/user", LogoutHandler).Methods("DELETE")
+
+	r.Use(middleware.AuthMiddleware)
 
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
