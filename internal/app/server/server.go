@@ -3,12 +3,13 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"../../../cmd/repository"
+
 	"../../../cmd/entity"
+	"../../../cmd/repository"
+	"github.com/gorilla/mux"
 )
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username": "anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/login'
