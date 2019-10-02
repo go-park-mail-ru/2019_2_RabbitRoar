@@ -18,6 +18,12 @@ import (
 
 //  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -64,6 +70,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 // curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/signup'
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -91,6 +103,11 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		r.Body.Close()
 	}()
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	if cookie, err := r.Cookie("sessionID"); err != nil {
 		if UUID, err := uuid.Parse(cookie.Value); err != nil {
 		} else {
@@ -101,6 +118,11 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
 
 	user := context.Get(r, "user")
 
@@ -115,6 +137,12 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	var mainUser entity.User
 	mainUser = context.Get(r, "user").(entity.User)
 
@@ -163,6 +191,8 @@ func Start() {
 	userRouter.HandleFunc("/user", GetProfileHandler).Methods("GET")
 	userRouter.HandleFunc("/user", UpdateProfile).Methods("PUT")
 	userRouter.HandleFunc("/user", LogoutHandler).Methods("DELETE")
+
+	topRouter.Use(mux.CORSMethodMiddleware(topRouter))
 
 	topRouter.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, err := route.GetPathTemplate()
