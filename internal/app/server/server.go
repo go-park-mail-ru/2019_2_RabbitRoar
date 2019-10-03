@@ -187,14 +187,16 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 func Start() {
 	topRouter := mux.NewRouter()
-	topRouter.HandleFunc("/login", LoginHandler).Methods("POST")
-	topRouter.HandleFunc("/signup", SignupHandler).Methods("POST")
+
+	topRouter.HandleFunc("/login", LoginHandler).Methods("POST", "OPTIONS")
+	topRouter.HandleFunc("/signup", SignupHandler).Methods("POST", "OPTIONS")
 
 	userRouter := topRouter.PathPrefix("/api").Subrouter()
+
 	userRouter.Use(middleware.AuthMiddleware)
-	userRouter.HandleFunc("/user", GetProfileHandler).Methods("GET")
-	userRouter.HandleFunc("/user", UpdateProfile).Methods("PUT")
-	userRouter.HandleFunc("/user", LogoutHandler).Methods("DELETE")
+	userRouter.HandleFunc("/user", GetProfileHandler).Methods("GET", "OPTIONS")
+	userRouter.HandleFunc("/user", UpdateProfile).Methods("PUT", "OPTIONS")
+	userRouter.HandleFunc("/user", LogoutHandler).Methods("DELETE", "OPTIONS")
 
 	topRouter.Use(mux.CORSMethodMiddleware(topRouter))
 
