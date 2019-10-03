@@ -6,5 +6,5 @@ type User struct {
 	Email    string `json:"email"`
 	Rating   int64  `json:"rating"`
 	Url      string `json:"url"`
-	Password string
+	Password string `json:",omitempty"`
 }

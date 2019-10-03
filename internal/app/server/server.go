@@ -125,8 +125,8 @@ func GetProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := context.Get(r, "user")
-
+	user := context.Get(r, "user").(entity.User)
+	user.Password = ""
 	userJSON, err := json.Marshal(user)
 
 	if err != nil {
