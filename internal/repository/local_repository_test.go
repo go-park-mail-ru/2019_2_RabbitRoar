@@ -2,10 +2,11 @@ package repository
 
 import (
 	"errors"
+	"testing"
+
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"../entity"
 )
 
 func TestUserCreateGet(t *testing.T) {
@@ -43,7 +44,7 @@ func TestSessionCreate(t *testing.T) {
 	assert.Equal(t, user1, userBySession)
 }
 
-func TestSessionDestroy(t *testing.T){
+func TestSessionDestroy(t *testing.T) {
 	rep := LocalRepository{}
 	rep.sessions = make(map[uuid.UUID]entity.Session)
 	user1, _ := rep.UserCreate("1", "1234", "test@mail.ru")

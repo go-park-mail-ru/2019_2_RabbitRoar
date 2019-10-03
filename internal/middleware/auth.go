@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"../repository"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/context"
 )

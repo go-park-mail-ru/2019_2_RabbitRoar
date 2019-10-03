@@ -3,7 +3,7 @@ package repository
 import (
 	"errors"
 
-	"../entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
 )
 
 var ErrNotFound = errors.New("no entity found")

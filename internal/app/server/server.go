@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"../../../cmd/entity"
-	"../../../cmd/middleware"
-	"../../../cmd/repository"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/middleware"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"

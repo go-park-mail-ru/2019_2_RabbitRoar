@@ -3,7 +3,7 @@ package repository
 import (
 	"errors"
 
-	"../entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
 	"github.com/google/uuid"
 )
 
@@ -77,7 +77,6 @@ func (repo *LocalRepository) UserCreate(name, password, email string) (entity.Us
 		return entity.User{}, ErrConflict
 	}
 
-	repo.lastUserUID++
 	user := entity.User{
 		UID:      repo.lastUserUID,
 		Username: name,
@@ -86,6 +85,7 @@ func (repo *LocalRepository) UserCreate(name, password, email string) (entity.Us
 		Rating:   0,
 	}
 	repo.users = append(repo.users, user)
+	repo.lastUserUID++
 
 	return user, nil
 }

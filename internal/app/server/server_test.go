@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"../../../cmd/entity"
-	"../../../cmd/repository"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/repository"
 	"github.com/gorilla/context"
 )
 
@@ -30,7 +30,6 @@ func TestUpdateProfile(t *testing.T) {
 	cookie := http.Cookie{}
 	cookie.Name = "sessionID"
 	cookie.Value = UUID.String()
-
 
 	request_body := bytes.NewReader([]byte(`{"Email": "Egos@mail.ru"}`))
 
