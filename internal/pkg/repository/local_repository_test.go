@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/entity"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )

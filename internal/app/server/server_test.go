@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/entity"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/repository"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/entity"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/repository"
 	"github.com/gorilla/context"
 )
 
