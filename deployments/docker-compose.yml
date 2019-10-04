@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  application:
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile-application
+    ports:
+      - "3000:3000"

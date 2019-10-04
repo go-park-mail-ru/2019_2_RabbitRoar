@@ -1,0 +1,10 @@
+FROM golang:1.13
+
+WORKDIR /application
+
+COPY . .
+
+RUN go install -v cmd/server/server.go
+
+EXPOSE 3000
+CMD ["server"]
