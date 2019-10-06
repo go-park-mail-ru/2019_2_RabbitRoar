@@ -1,2 +1,8 @@
 # 2019_2_RabbitRoar
-Backend-repository for project Swoyak
+
+
+### How to run:
+
+```shell script
+cd depoloyments && docker-compose up
+```

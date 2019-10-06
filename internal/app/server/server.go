@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/handlers"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	"github.com/gorilla/mux"
 )
 
