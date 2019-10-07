@@ -1,0 +1,166 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1",
+    "title": "",
+    "description": ""
+  },
+  "paths": {
+
+    "/user/login": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "login endpoint",
+        "description": "Should return current user object or redirect. Also sets session secure http-only cookie.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "description": "The user name for login",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "The password for login in clear text",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorised"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "login CSRF Token",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Wrong username or password"
+          }
+        }
+      }
+    },
+
+    "/user": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "self profile view",
+        "description": "Returns JSON object with profile preferences.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "profile edit view",
+        "description": "Accepts JSON object with same structure as profile view, but values represented in that view updated os server side.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorised"
+          }
+        }
+      }
+    },
+
+    "/user/logout": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "logout endpoint",
+        "description": "Always return 200 and removes session object associated with given cookie.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+
+    "/user/{username}": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "self profile view",
+        "description": "Returns JSON object with profile preferences.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "description": "The name that needs to be fetched. Use user1 for testing. ",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    }
+  },
+
+  "schemes": [
+    "https",
+    "http"
+  ],
+
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
