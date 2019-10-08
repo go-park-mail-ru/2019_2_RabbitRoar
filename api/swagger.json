@@ -7,7 +7,7 @@
   },
   "paths": {
 
-    "/user/login": {
+    "/login": {
       "post": {
         "tags": [
           "user"
@@ -55,6 +55,21 @@
       }
     },
 
+    "/logout": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "logout endpoint",
+        "description": "Always return 200 and removes session object associated with given cookie.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+
     "/user": {
       "get": {
         "tags": [
@@ -83,21 +98,6 @@
           },
           "401": {
             "description": "Unauthorised"
-          }
-        }
-      }
-    },
-
-    "/user/logout": {
-      "delete": {
-        "tags": [
-          "user"
-        ],
-        "summary": "logout endpoint",
-        "description": "Always return 200 and removes session object associated with given cookie.",
-        "responses": {
-          "200": {
-            "description": "OK"
           }
         }
       }
