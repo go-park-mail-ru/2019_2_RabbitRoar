@@ -6,7 +6,7 @@ services:
       context: ../
       dockerfile: deployments/Dockerfile-application
     volumes:
-      - "../data/uploads"
+      - "../data/uploads:/application/data/uploads"
 
   swagger:
     image: swaggerapi/swagger-ui
