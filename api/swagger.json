@@ -1,16 +1,21 @@
 {
   "swagger": "2.0",
+
+
   "info": {
     "version": "1",
-    "title": "",
-    "description": ""
+    "title": "Svoyak game project API",
+    "description": "Some day there will be some info..."
   },
+
+
   "paths": {
 
     "/login": {
       "post": {
         "tags": [
-          "user"
+          "user",
+          "auth"
         ],
         "summary": "login endpoint",
         "description": "Should return current user object or redirect. Also sets session secure http-only cookie.",
@@ -41,7 +46,8 @@
       },
       "get": {
         "tags": [
-          "user"
+          "user",
+          "auth"
         ],
         "summary": "login CSRF Token",
         "responses": {
@@ -58,13 +64,31 @@
     "/logout": {
       "delete": {
         "tags": [
-          "user"
+          "user",
+          "auth"
         ],
         "summary": "logout endpoint",
         "description": "Always return 200 and removes session object associated with given cookie.",
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+
+    "/user/avatar": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "upload user avatar",
+        "responses": {
+          "200": {
+            "description": "JSON object with operation errors.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -135,11 +159,20 @@
   },
 
   "schemes": [
-    "https",
     "http"
   ],
 
   "definitions": {
+
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+
     "User": {
       "type": "object",
       "properties": {
@@ -157,10 +190,13 @@
           "type": "integer",
           "format": "int64"
         },
-        "url": {
+        "avatar_url": {
           "type": "string"
         }
       }
     }
-  }
+
+  },
+
+
 }
