@@ -66,7 +66,7 @@ func (repo *LocalRepository) UserUpdate(updatedUser entity.User) error {
 		}
 	}()
 
-	repo.users[updatedUser.UID-1] = updatedUser
+	repo.users[updatedUser.UID] = updatedUser
 
 	return err
 }
@@ -85,6 +85,7 @@ func (repo *LocalRepository) UserCreate(name, password, email string) (entity.Us
 		Rating:   0,
 	}
 	repo.users = append(repo.users, user)
+
 	repo.lastUserUID++
 
 	return user, nil

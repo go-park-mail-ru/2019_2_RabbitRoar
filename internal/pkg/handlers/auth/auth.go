@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-//  curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234"}' 'http://localhost:3000/user/login'
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -62,7 +61,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// curl -XPOST -H "Content-type: application/json" -d '{"username":"anita", "password":"1234", "email":"anit@mail.com"}' 'http://localhost:3000/user/signup'
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -96,11 +94,6 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		r.Body.Close()
 	}()
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
 
 	if cookie, err := r.Cookie("SessionID"); err != nil {
 		if UUID, err := uuid.Parse(cookie.Value); err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/context"
+	"github.com/labstack/echo"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -45,4 +46,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		log.Printf("Authenticated user %s\n", user)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func EchoAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		SessionID, err := ctx.Cookie("SessionID")
+
+		return next(ctx)
+	}
 }
