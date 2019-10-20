@@ -52,23 +52,15 @@ func (repo *memUserRepository) Update(updatedUser models.User) error {
 	return err
 }
 
-func (repo *memUserRepository) Create(name, password, email string) (*models.User, error) {
-	_, err := repo.GetByName(name)
+func (repo *memUserRepository) Create(u models.User) (*models.User, error) {
+	_, err := repo.GetByName(u.Username)
 	if err != ErrUserNotFound {
 		return nil, ErrUserConflict
 	}
 
-	u := models.User{
-		UID:      repo.lastUserUID,
-		Username: name,
-		Password: password,
-		Email:    email,
-		Rating:   0,
-	}
-
-	repo.users = append(repo.users, u)
-
+	u.UID = repo.lastUserUID
 	repo.lastUserUID++
+	repo.users = append(repo.users, u)
 
 	return &u, nil
 }

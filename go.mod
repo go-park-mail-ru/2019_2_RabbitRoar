@@ -3,6 +3,7 @@ module github.com/go-park-mail-ru/2019_2_RabbitRoar
 go 1.13
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1

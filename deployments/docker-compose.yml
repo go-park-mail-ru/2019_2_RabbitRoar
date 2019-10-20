@@ -5,8 +5,28 @@ services:
     build:
       context: ../
       dockerfile: deployments/Dockerfile-application
+    restart: always
     volumes:
       - "../data/uploads:/application/data/uploads"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:12.0
+    restart: always
+    environment:
+      POSTGRES_USER: svoyak
+      POSTGRES_PASSWORD: top_secret_goes_here
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - 8123:8123
 
   swagger:
     image: swaggerapi/swagger-ui
@@ -15,6 +35,7 @@ services:
 
   nginx:
     image: nginx:latest
+    restart: always
     depends_on:
       - application
       - swagger

@@ -1,57 +1,45 @@
 package middleware
 
 import (
-	"fmt"
-	"log"
+	"github.com/google/uuid"
 	"net/http"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/repository"
-	"github.com/google/uuid"
-	"github.com/gorilla/context"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
+
 	"github.com/labstack/echo"
 )
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionIDCookie, errCookie := r.Cookie("SessionID")
-
-		fmt.Println("Middleware: Got request: ", r)
-
-		fmt.Println("Middleware: got cookie: ", sessionIDCookie)
-
-		if errCookie != nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		fmt.Println("Middleware: ", errCookie)
-
-		sessionID, errParseUUID := uuid.Parse(sessionIDCookie.Value)
-
-		if errParseUUID != nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		fmt.Println("Middleware: ", errParseUUID)
-
-		user, err := repository.Data.SessionGetUser(sessionID)
-
-		fmt.Println("Middleware: ", err)
-		if err != nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-
-		context.Set(r, "user", user)
-
-		log.Printf("Authenticated user %s\n", user)
-		next.ServeHTTP(w, r)
-	})
+type authMiddleware struct {
+	useCase session.UseCase
 }
 
-func EchoAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func NewAuthMiddleware(useCase session.UseCase) echo.MiddlewareFunc {
+	am := authMiddleware{
+		useCase: useCase,
+	}
+	return am.AuthMiddlewareFunc
+}
+
+//TODO: make session renew on close to expire
+func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		SessionID, err := ctx.Cookie("SessionID")
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "No session.")
+		}
 
+		UUID, err := uuid.Parse(SessionID.Value)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Session invalid.")
+		}
+
+		user, err := u.useCase.GetUserByUUID(UUID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Session not found.")
+		}
+
+		ctx.Set("sessionID", UUID)
+		ctx.Set("user", user)
 		return next(ctx)
 	}
 }

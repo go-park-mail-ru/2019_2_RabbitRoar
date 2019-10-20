@@ -1,0 +1,17 @@
+{
+  "logger": {
+    "level": "debug"
+  },
+
+  "server": {
+    "address": ":3000"
+  },
+
+  "database": {
+    "host": "postgres",
+    "port": "3306",
+    "user": "svoyak",
+    "pass": "top_secret_goes_here",
+    "db": "svoyak"
+  }
+}

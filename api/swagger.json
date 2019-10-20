@@ -1,5 +1,5 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
 
 
   "info": {
@@ -9,30 +9,49 @@
   },
 
 
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    },
+    {
+      "url": "http://frontend.photocouple.space",
+      "description": "Production server"
+    }
+  ],
+
   "paths": {
 
     "/login": {
       "post": {
         "tags": [
-          "user",
           "auth"
         ],
         "summary": "login endpoint",
-        "description": "Should return current user object or redirect. Also sets session secure http-only cookie.",
+        "description": "Sets SessionID cookie.",
         "parameters": [
           {
-            "name": "username",
             "in": "query",
-            "description": "The user name for login",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "description": "The password for login in clear text",
-            "required": true,
-            "type": "string"
+            "name": "credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password"
+                  ],
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         ],
         "responses": {
@@ -46,7 +65,6 @@
       },
       "get": {
         "tags": [
-          "user",
           "auth"
         ],
         "summary": "login CSRF Token",
@@ -61,34 +79,69 @@
       }
     },
 
-    "/logout": {
-      "delete": {
+    "/signup": {
+      "post": {
         "tags": [
-          "user",
           "auth"
         ],
-        "summary": "logout endpoint",
-        "description": "Always return 200 and removes session object associated with given cookie.",
+        "summary": "signup endpoint",
+        "description": "SignUp user also sets SessionID cookie.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password",
+                    "email"
+                  ],
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Validation error occurs."
+          },
+          "422": {
+            "description": "Can not parse json. Or fields missing."
           }
         }
       }
     },
 
-    "/user/avatar": {
-      "put": {
+    "/logout": {
+      "delete": {
         "tags": [
-          "user"
+          "auth"
         ],
-        "summary": "upload user avatar",
+        "summary": "logout endpoint",
+        "description": "removes session associated with SessionID in cookie.",
         "responses": {
           "200": {
-            "description": "JSON object with operation errors.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
@@ -104,8 +157,12 @@
         "responses": {
           "200": {
             "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/User"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
             }
           }
         }
@@ -115,10 +172,30 @@
           "user"
         ],
         "summary": "profile edit view",
-        "description": "Accepts JSON object with same structure as profile view, but values represented in that view updated os server side.",
+        "description": "Accepts JSON object with fields that should be updated.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user fields to update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password"
+                  ]
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Validation Error"
           },
           "401": {
             "description": "Unauthorised"
@@ -126,8 +203,24 @@
         }
       }
     },
+    "/user/avatar": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "upload user avatar",
+        "responses": {
+          "200": {
+            "description": "User avatar updated."
+          },
+          "400": {
+            "description": "Error validating avatar."
+          }
+        }
+      }
+    },
 
-    "/user/{username}": {
+    "/user/{id}": {
       "get": {
         "tags": [
           "user"
@@ -136,18 +229,21 @@
         "description": "Returns JSON object with profile preferences.",
         "parameters": [
           {
-            "name": "username",
+            "name": "id",
             "in": "path",
-            "description": "The name that needs to be fetched. Use user1 for testing. ",
-            "required": true,
-            "type": "string"
+            "description": "Get user object by UID.",
+            "required": true
           }
         ],
         "responses": {
           "200": {
             "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/User"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
             }
           },
           "404": {
@@ -158,45 +254,42 @@
     }
   },
 
-  "schemes": [
-    "http"
-  ],
 
-  "definitions": {
+  "components": {
+    "schemas": {
 
-    "Error": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string"
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
         }
-      }
-    },
+      },
 
-    "User": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "username": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "rating": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "avatar_url": {
-          "type": "string"
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "avatar_url": {
+            "type": "string"
+          }
         }
       }
     }
-
   }
-
 
 }

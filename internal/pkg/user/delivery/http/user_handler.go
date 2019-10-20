@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"net/http"
 	"strconv"
 
@@ -9,18 +10,36 @@ import (
 	"github.com/labstack/echo"
 )
 
-type UserHandler struct {
+type handler struct {
 	useCase user.UseCase
 }
 
-func NewUserHandler(e *echo.Group, usecase user.UseCase) {
-	handler := &UserHandler{
+func NewUserHandler(e *echo.Echo, usecase user.UseCase, authMiddleware echo.MiddlewareFunc) {
+	handler := &handler{
 		useCase: usecase,
 	}
-	e.GET("/:id", handler.UserByID)
+
+	group := e.Group("/user", authMiddleware)
+	group.GET("/", handler.self)
+	group.PUT("/", handler.update)
+	group.PUT("/avatar", handler.avatar)
+	group.GET("/:id", handler.byID)
 }
 
-func (uh *UserHandler) UserByID(ctx echo.Context) error {
+func (uh *handler) self(ctx echo.Context) error {
+	u := ctx.Get("user").(*models.User)
+	return ctx.JSON(http.StatusOK, *u)
+}
+
+func (uh *handler) update(ctx echo.Context) error {
+	return nil
+}
+
+func (uh *handler) avatar(ctx echo.Context) error {
+	return nil
+}
+
+func (uh *handler) byID(ctx echo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "wrong user id provided")
