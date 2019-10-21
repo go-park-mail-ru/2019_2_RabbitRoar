@@ -4,7 +4,13 @@
   },
 
   "server": {
-    "address": ":3000"
+    "address": "0.0.0.0:3000",
+    "CORS": {
+      "allowed_hosts": [
+        "http://localhost",
+        "http://frontend.photocouple.space"
+      ]
+    }
   },
 
   "database": {

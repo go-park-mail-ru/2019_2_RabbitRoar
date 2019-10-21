@@ -10,13 +10,23 @@ import (
 	_userUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/usecase"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/spf13/viper"
+	"log"
 )
+
+func init() {
+	viper.SetConfigName("configs/server.json")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func Start() {
 	e := echo.New()
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost", "http://frontend.photocouple.space"},
+		AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType},
 		AllowCredentials: true,
 	}))
@@ -32,5 +42,5 @@ func Start() {
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 
-	e.Start("0.0.0.0:3000")
+	log.Fatal(e.Start(viper.GetString("server.address")))
 }
