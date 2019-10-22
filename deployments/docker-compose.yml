@@ -2,10 +2,10 @@ version: "3.7"
 
 services:
   application:
+    restart: always
     build:
       context: ../
       dockerfile: deployments/Dockerfile-application
-    restart: always
     volumes:
       - "../data/uploads:/application/data/uploads"
     depends_on:
@@ -24,7 +24,6 @@ services:
 
   adminer:
     image: adminer
-    restart: always
     depends_on:
       - postgres
     ports:
@@ -32,6 +31,7 @@ services:
 
   swagger:
     image: swaggerapi/swagger-ui
+    restart: always
     volumes:
       - "../api:/app"
 
