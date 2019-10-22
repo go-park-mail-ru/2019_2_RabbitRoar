@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
@@ -15,11 +16,13 @@ import (
 )
 
 func init() {
-	viper.SetConfigName("configs/server.json")
-	err := viper.ReadInConfig()
-	if err != nil {
+	viper.SetConfigType("json")
+	viper.SetConfigName("server")
+	viper.AddConfigPath("configs")
+	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
+	fmt.Println("Config file used: ", viper.ConfigFileUsed())
 }
 
 func Start() {
