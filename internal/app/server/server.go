@@ -28,6 +28,7 @@ func init() {
 func Start() {
 	e := echo.New()
 
+	e.Use(_middleware.PanicMiddleware)
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType},
