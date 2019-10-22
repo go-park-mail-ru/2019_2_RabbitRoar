@@ -8,6 +8,7 @@
     "CORS": {
       "allowed_hosts": [
         "http://localhost",
+        "http://localhost:8080",
         "http://frontend.photocouple.space"
       ]
     }
