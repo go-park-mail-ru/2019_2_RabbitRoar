@@ -17,6 +17,8 @@ services:
     environment:
       POSTGRES_USER: svoyak
       POSTGRES_PASSWORD: top_secret_goes_here
+    volumes:
+      - "../db/migrations/:/docker-entrypoint-initdb.d"
     ports:
       - 5432:5432
 
@@ -26,7 +28,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - 8123:8123
+      - 8080:8080
 
   swagger:
     image: swaggerapi/swagger-ui
