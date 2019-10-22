@@ -32,7 +32,28 @@ func (uh *handler) self(ctx echo.Context) error {
 }
 
 func (uh *handler) update(ctx echo.Context) error {
-	return nil
+	var userUpdate models.User
+	err := ctx.Bind(&userUpdate)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUnprocessableEntity,
+			Message:  "can not parse user object",
+			Internal: err,
+		}
+	}
+
+	u := ctx.Get("user").(*models.User)
+
+	err = uh.useCase.UpdatePassword(u.UID, userUpdate.Password)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error applying user update",
+			Internal: err,
+		}
+	}
+
+	return ctx.JSON(http.StatusOK, *u)
 }
 
 func (uh *handler) avatar(ctx echo.Context) error {

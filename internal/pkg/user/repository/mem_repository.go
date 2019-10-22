@@ -10,7 +10,7 @@ import (
 
 type memUserRepository struct {
 	users       []models.User
-	lastUserUID int64
+	lastUserUID int
 }
 
 var ErrUserNotFound = errors.New("error user not found")

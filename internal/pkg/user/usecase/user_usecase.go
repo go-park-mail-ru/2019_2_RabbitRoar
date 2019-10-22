@@ -1,12 +1,9 @@
 package usecase
 
 import (
-	"net/http"
-
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
-	"github.com/labstack/echo"
 )
 
 //TODO: make password saved and validated in hash!
@@ -21,13 +18,7 @@ func NewUserUseCase(userRepo user.Repository) user.UseCase {
 }
 
 func (uc *userUseCase) Create(u models.User) (*models.User, error) {
-	ok, err := govalidator.ValidateStruct(u)
-
-	if !ok {
-		return nil, echo.NewHTTPError(http.StatusBadRequest, "error validating obj")
-	}
-
-	if err != nil {
+	if ok, err := govalidator.ValidateStruct(u); !ok {
 		return nil, err
 	}
 
@@ -38,6 +29,17 @@ func (uc *userUseCase) Create(u models.User) (*models.User, error) {
 	}
 
 	return userCreated, nil
+}
+
+func (uc *userUseCase) UpdatePassword(UID int, password string) error {
+	u, err := uc.repository.GetByID(UID)
+	if err != nil {
+		return err
+	}
+	//TODO: validate password here
+	u.Password = password
+
+	return uc.repository.Update(*u)
 }
 
 func (uc *userUseCase) GetByID(id int) (*models.User, error) {
