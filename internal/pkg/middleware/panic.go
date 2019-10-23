@@ -11,7 +11,9 @@ func PanicMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		defer func() {
 			err := recover()
-			logger.Critical(err)
+			if err != nil {
+				logger.Critical(err)
+			}
 		}()
 		return next(ctx)
 	}

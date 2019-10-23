@@ -8,6 +8,7 @@ services:
       dockerfile: deployments/Dockerfile-application
     volumes:
       - "../data/uploads:/application/data/uploads"
+      - "../data/logs:/tmp/logs"
     depends_on:
       - postgres
 

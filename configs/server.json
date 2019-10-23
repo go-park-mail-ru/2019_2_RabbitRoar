@@ -1,6 +1,7 @@
 {
   "logger": {
-    "level": "debug"
+    "level": "DEBUG",
+    "file": "/tmp/logs/server.log"
   },
 
   "server": {

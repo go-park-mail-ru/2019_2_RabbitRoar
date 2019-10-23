@@ -1,8 +1,9 @@
 package server
 
 import (
-	"fmt"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
+	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
+	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
@@ -11,21 +12,14 @@ import (
 	_userUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/usecase"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/op/go-logging"
 	"github.com/spf13/viper"
-	"log"
 )
 
-func init() {
-	viper.SetConfigType("json")
-	viper.SetConfigName("server")
-	viper.AddConfigPath("configs")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
-	}
-	fmt.Println("Config file used: ", viper.ConfigFileUsed())
-}
+var log = logging.MustGetLogger("server")
 
 func Start() {
+	log.Info("Staring service.")
 	e := echo.New()
 
 	e.Use(_middleware.PanicMiddleware)
