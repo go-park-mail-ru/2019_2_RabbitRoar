@@ -35,21 +35,12 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Session" (
 
 
 -- -----------------------------------------------------
--- Table "svoyak"."QuestionType"
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS "svoyak"."QuestionType" (
-  "id" INT NOT NULL,
-  "type" VARCHAR(45) NULL,
-  PRIMARY KEY ("id"));
-
-
--- -----------------------------------------------------
 -- Table "svoyak"."Question"
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS "svoyak"."Question" (
   "id" INT NOT NULL,
   "text" TEXT NOT NULL,
-  "img" VARCHAR(45) NULL,
+  "media" VARCHAR(45) NULL,
   "answer" VARCHAR(45) NOT NULL,
   "type_id" INT NOT NULL,
   "rating" INT NOT NULL,
@@ -59,11 +50,6 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Question" (
 --   INDEX "fk_Question_QuestionType1_idx" ("type_id" ASC) VISIBLE,
 --   INDEX "fk_Question_User1_idx" ("author" ASC) VISIBLE,
 --   FULLTEXT INDEX "tags_fulltext_idx" ("tags") VISIBLE,
-  CONSTRAINT "fk_Question_QuestionType"
-    FOREIGN KEY ("type_id")
-    REFERENCES "svoyak"."QuestionType" ("id")
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
   CONSTRAINT "fk_Question_User"
     FOREIGN KEY ("author")
     REFERENCES "svoyak"."User" ("id")
@@ -104,25 +90,16 @@ CREATE TABLE IF NOT EXISTS "svoyak"."PackQuestion" (
   PRIMARY KEY ("QuestionPack_id", "Question_id"),
 --   INDEX "fk_QuestionPack_has_Question_Question1_idx" ("Question_id" ASC) VISIBLE,
 --   INDEX "fk_QuestionPack_has_Question_QuestionPack1_idx" ("QuestionPack_id" ASC) VISIBLE,
-  CONSTRAINT "fk_QuestionPack_has_Question_QuestionPack1"
+  CONSTRAINT "fk_QuestionPack_Question"
     FOREIGN KEY ("QuestionPack_id")
     REFERENCES "svoyak"."QuestionPack" ("id")
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT "fk_QuestionPack_Question"
+  CONSTRAINT "fk_Question_QuestionPack"
     FOREIGN KEY ("Question_id")
     REFERENCES "svoyak"."Question" ("id")
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
-
-
--- -----------------------------------------------------
--- Table "svoyak"."GameState"
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS "svoyak"."GameState" (
-  "id" INT NOT NULL,
-  "state" VARCHAR(45) NOT NULL,
-  PRIMARY KEY ("id"));
 
 
 -- -----------------------------------------------------
@@ -132,7 +109,7 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Game" (
   "UUID" VARCHAR(45) NOT NULL,
   "name" VARCHAR(45) NOT NULL,
   "size" SMALLINT NOT NULL,
-  "GameState_id" INT NOT NULL,
+  "state" INT NOT NULL,
   "creator" INT NOT NULL,
   "QuestionPack_id" INT NOT NULL,
   PRIMARY KEY ("UUID"),
@@ -140,11 +117,6 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Game" (
 --   INDEX "fk_Game_User1_idx" ("creator" ASC) VISIBLE,
 --   INDEX "fk_Game_PackQuestion1_idx" ("PackQuestion_QuestionPack_id" ASC, "PackQuestion_Question_id" ASC) VISIBLE,
 --   INDEX "name_idx" ("name" ASC) VISIBLE,
-  CONSTRAINT "fk_Game_GameState"
-    FOREIGN KEY ("GameState_id")
-    REFERENCES "svoyak"."GameState" ("id")
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
   CONSTRAINT "fk_Game_User"
     FOREIGN KEY ("creator")
     REFERENCES "svoyak"."User" ("id")
