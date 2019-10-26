@@ -132,6 +132,28 @@
         }
       }
     },
+    "/csrf" : {
+      "get": {
+        "summary": "get CSRF Token associated with session",
+        "responses": {
+          "200": {
+            "description": "CSRF Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrf": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
 
     "/user": {
       "get": {
@@ -408,6 +430,19 @@
         }
       }
     },
+    "/game/leave": {
+      "delete": {
+        "tags": [
+          "game"
+        ],
+        "summary": "leave current room",
+        "responses": {
+          "200": {
+            "description": "successfully leaved"
+          }
+        }
+      }
+    },
     "/game/ws": {
       "get": {
         "tags": [
@@ -488,10 +523,7 @@
             "description": "author's id"
           },
           "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string"
           }
         }
       },
@@ -526,10 +558,7 @@
               }
             },
             "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             }
           }
         }
@@ -557,10 +586,7 @@
             "format": "int32"
           },
           "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string"
           }
         }
       },
