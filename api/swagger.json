@@ -552,9 +552,38 @@
               "format": "int32"
             },
             "questions": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/Question"
+              "type": "object",
+              "properties": {
+                "theme0": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme1": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme2": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme3": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme4": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                }
               }
             },
             "tags": {
