@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS "svoyak"."User" (
 -- Table "svoyak"."Session"
 -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS "svoyak"."Session" (
-  "UUID" INT NOT NULL,
+  "UUID" VARCHAR(45) NOT NULL,
   "User_id" INT NOT NULL,
+  "CSRF" VARCHAR(45) NOT NULL,
   PRIMARY KEY ("UUID"),
   CONSTRAINT "fk_Session_User"
     FOREIGN KEY ("User_id")
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Question" (
 CREATE TABLE IF NOT EXISTS "svoyak"."QuestionPack" (
   "id" INT NOT NULL,
   "name" VARCHAR(45) NOT NULL,
+  "img" VARCHAR(45) NULL,
   "ctime" DATE NOT NULL,
   "mtime" DATE NOT NULL,
   "author" INT NOT NULL,
@@ -76,6 +78,8 @@ CREATE TABLE IF NOT EXISTS "svoyak"."QuestionPack" (
 CREATE TABLE IF NOT EXISTS "svoyak"."PackQuestion" (
   "QuestionPack_id" INT NOT NULL,
   "Question_id" INT NOT NULL,
+  "theme" VARCHAR(45) NOT NULL ,
+  "cost" INT NOT NULL,
   PRIMARY KEY ("QuestionPack_id", "Question_id"),
   CONSTRAINT "fk_QuestionPack_Question"
     FOREIGN KEY ("QuestionPack_id")
@@ -95,8 +99,9 @@ CREATE TABLE IF NOT EXISTS "svoyak"."PackQuestion" (
 CREATE TABLE IF NOT EXISTS "svoyak"."Game" (
   "UUID" VARCHAR(45) NOT NULL,
   "name" VARCHAR(45) NOT NULL,
-  "size" SMALLINT NOT NULL,
-  "state" INT NOT NULL,
+  "players_cap" SMALLINT NOT NULL,
+--   "players_joined" SMALLINT NOT NULL, <- optimize me with trigger
+  "state" SMALLINT NOT NULL,
   "creator" INT NOT NULL,
   "QuestionPack_id" INT NOT NULL,
   PRIMARY KEY ("UUID"),
