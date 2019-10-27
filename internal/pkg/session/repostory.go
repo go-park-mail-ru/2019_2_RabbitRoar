@@ -8,5 +8,5 @@ import (
 type Repository interface {
 	GetUser(uuid.UUID) (*models.User, error)
 	Create(models.User) (*uuid.UUID, error)
-	Destroy(sessionId uuid.UUID)
+	Destroy(sessionId uuid.UUID) error
 }

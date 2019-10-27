@@ -40,6 +40,8 @@ func (repo *memSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 	return &newUUID, err
 }
 
-func (repo *memSessionRepository) Destroy(sessionId uuid.UUID) {
+func (repo *memSessionRepository) Destroy(sessionId uuid.UUID) error {
 	delete(repo.sessions, sessionId)
+
+	return nil
 }
