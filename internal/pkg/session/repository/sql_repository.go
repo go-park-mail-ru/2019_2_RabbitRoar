@@ -34,11 +34,7 @@ func (repo sqlSessionRepository) GetUser(sessionId uuid.UUID) (*models.User, err
 		}
 	}
 
-	if rows.Err() != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return &user, rows.Err()
 }
 
 func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
