@@ -14,7 +14,7 @@ type sqlSessionRepository struct {
 	conn *pgx.Conn
 }
 
-func NewPostgresqlSessionRepository(conn *pgx.Conn) session.Repository {
+func NewSqlSessionRepository(conn *pgx.Conn) session.Repository {
 	return &sqlSessionRepository{conn}
 }
 
