@@ -21,8 +21,8 @@ func NewMemSessionRepository() session.Repository {
 	}
 }
 
-func (repo memSessionRepository) GetUser(sessionId uuid.UUID) (*models.User, error) {
-	if s, success := repo.sessions[sessionId]; success {
+func (repo memSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
+	if s, success := repo.sessions[sessionID]; success {
 		user := s.User
 		return &user, nil
 	}
@@ -40,8 +40,8 @@ func (repo *memSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 	return &newUUID, err
 }
 
-func (repo *memSessionRepository) Destroy(sessionId uuid.UUID) error {
-	delete(repo.sessions, sessionId)
+func (repo *memSessionRepository) Destroy(sessionID uuid.UUID) error {
+	delete(repo.sessions, sessionID)
 
 	return nil
 }
