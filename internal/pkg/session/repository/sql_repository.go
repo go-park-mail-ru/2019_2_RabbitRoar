@@ -19,7 +19,7 @@ func NewSqlSessionRepository(conn *pgx.Conn) session.Repository {
 }
 
 func (repo sqlSessionRepository) GetUser(sessionId uuid.UUID) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE id = (SELECT User_id FROM svoyak.Session WHERE UUID = $1)", sessionId)
+	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE id = (SELECT User_id FROM svoyak.Session WHERE UUID = $1)", sessionId) //TODO: concrete fields
 	if err != nil {
 		return nil, err
 	}

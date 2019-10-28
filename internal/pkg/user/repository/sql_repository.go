@@ -31,7 +31,7 @@ func interpretUser(rows *pgx.Rows) (models.User, error) {
 }
 
 func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE id = $1", userID)
+	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE id = $1", userID) //TODO: Concrete fields
 	if err != nil {
 		return nil, err
 	}
