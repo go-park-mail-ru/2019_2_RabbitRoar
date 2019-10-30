@@ -20,6 +20,7 @@ services:
       POSTGRES_PASSWORD: top_secret_goes_here
     volumes:
       - "../db/migrations/:/docker-entrypoint-initdb.d"
+      - "../data/postgres:/var/lib/postgresql/data"
     ports:
       - 5432:5432
 
