@@ -31,7 +31,7 @@ func interpretUser(rows *pgx.Rows) (models.User, error) {
 }
 
 func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE id = $1", userID) //TODO: Concrete fields
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = $1", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
 }
 
 func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT * FROM svoyak.User WHERE username = $1", name)
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE username = $1", name)
 	if err != nil {
 		return nil, err
 	}
