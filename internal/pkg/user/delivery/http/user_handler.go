@@ -14,15 +14,20 @@ type handler struct {
 	useCase user.UseCase
 }
 
-func NewUserHandler(e *echo.Echo, usecase user.UseCase, authMiddleware echo.MiddlewareFunc) {
+func NewUserHandler(
+	e *echo.Echo, usecase user.UseCase,
+	authMiddleware echo.MiddlewareFunc,
+	csrfMiddleware echo.MiddlewareFunc,
+	) {
+
 	handler := &handler{
 		useCase: usecase,
 	}
 
 	group := e.Group("/user", authMiddleware)
 	group.GET("/", handler.self)
-	group.PUT("/", handler.update)
-	group.PUT("/avatar", handler.avatar)
+	group.PUT("/", csrfMiddleware(handler.update))
+	group.PUT("/avatar", csrfMiddleware(handler.avatar))
 	group.GET("/:id", handler.byID)
 }
 
