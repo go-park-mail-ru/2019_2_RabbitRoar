@@ -53,7 +53,6 @@ func (h *handler) signUp(ctx echo.Context) error {
 		}
 	}
 
-	//TODO: Validate me
 	uc, err := h.userUseCase.Create(u)
 	if err != nil {
 		return &echo.HTTPError{

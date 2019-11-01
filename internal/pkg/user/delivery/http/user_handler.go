@@ -28,6 +28,7 @@ func NewUserHandler(e *echo.Echo, usecase user.UseCase, authMiddleware echo.Midd
 
 func (uh *handler) self(ctx echo.Context) error {
 	u := ctx.Get("user").(*models.User)
+	u.Password = ""
 	return ctx.JSON(http.StatusOK, *u)
 }
 
@@ -44,7 +45,7 @@ func (uh *handler) update(ctx echo.Context) error {
 
 	u := ctx.Get("user").(*models.User)
 
-	err = uh.useCase.UpdatePassword(u.UID, userUpdate.Password)
+	err = uh.useCase.Update(*u, userUpdate)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,

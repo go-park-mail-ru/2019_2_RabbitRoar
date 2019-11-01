@@ -15,6 +15,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/valyala/fasttemplate v1.1.0 // indirect
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 	golang.org/x/text v0.3.2 // indirect
 )
