@@ -43,8 +43,8 @@ func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerF
 
 		ctx.Set("sessionID", UUID)
 		ctx.Set("user", user)
-		logger.Debugf("set sessionID %v", UUID)
-		logger.Debugf("set user %v", user)
+		log.Debugf("set sessionID %v", UUID)
+		log.Debugf("set user %v", user)
 		return next(ctx)
 	}
 }
