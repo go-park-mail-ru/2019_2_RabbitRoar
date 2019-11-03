@@ -18,23 +18,17 @@ func NewSqlSessionRepository(conn *pgx.Conn) session.Repository {
 	return &sqlSessionRepository{conn}
 }
 
-func (repo sqlSessionRepository) GetUser(sessionId uuid.UUID) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = (SELECT User_id FROM svoyak.Session WHERE UUID = $1)", sessionId)
+func (repo sqlSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
+	row := repo.conn.QueryRow(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = (SELECT User_id FROM svoyak.Session WHERE UUID = '$1')", sessionID)
+
+	var user models.User
+	err := row.Scan(&user.UID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
+
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	var user models.User
-	for rows.Next() {
-		err := rows.Scan(&user.UID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &user, rows.Err()
+	return &user, nil
 }
 
 func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
@@ -57,15 +51,15 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 	return &newUUID, nil
 }
 
-func (repo *sqlSessionRepository) Destroy(sessionId uuid.UUID) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Session WHERE UUID = $1", sessionId)
+func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
+	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Session WHERE UUID = '$1'", sessionID)
 
 	if err != nil {
 		return err
 	}
 
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("Unable to delete session: No session found")
+		return errors.New("Unable to destroy session: No session found")
 	}
 
 	return nil

@@ -17,41 +17,28 @@ func NewSqlUserRepository(conn *pgx.Conn) user.Repository {
 	return &sqlUserRepository{conn}
 }
 
-func interpretUser(rows *pgx.Rows) (models.User, error) {
-	var user models.User
-
-	for (*rows).Next() {
-		err := (*rows).Scan(&user.UID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
-		if err != nil {
-			return user, err
-		}
-	}
-
-	return user, (*rows).Err()
-}
-
 func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = $1", userID)
+	row := repo.conn.QueryRow(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = $1;", userID)
+
+	var user models.User
+	err := row.Scan(&user.UID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
+
 	if err != nil {
 		return nil, err
 	}
-
-	defer rows.Close()
-
-	user, err := interpretUser(&rows)
 
 	return &user, err
 }
 
 func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE username = $1", name)
+	row := repo.conn.QueryRow(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE username = '$1';", name)
+
+	var user models.User
+	err := row.Scan(&user.UID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
+
 	if err != nil {
 		return nil, err
 	}
-
-	defer rows.Close()
-
-	user, err := interpretUser(&rows)
 
 	return &user, err
 }
@@ -61,17 +48,27 @@ func (repo *sqlUserRepository) Create(user models.User) (*models.User, error) {
 		return nil, errors.New("Unable to create user: Username already exists")
 	}
 
-	_, err := repo.conn.Exec(context.Background(), "INSERT INTO svoyak.User VALUES (DEFAULT, '$1', '$2', '$3', $4, '$5')", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl)
+	idRow := repo.conn.QueryRow(context.Background(), "INSERT INTO svoyak.User VALUES (DEFAULT, '$1', '$2', '$3', $4, '$5') RETURNING id;", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl)
+
+	err := idRow.Scan(&user.UID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return repo.GetByName(user.Username)
+	return &user, nil
 }
 
 func (repo *sqlUserRepository) Update(user models.User) error {
-	_, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.User SET username = $1, password = $2, email = $3, rating = $4, avatar = $5 WHERE id = $6", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl, user.UID)
+	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.User SET username = '$1', password = '$2', email = '$3', rating = $4, avatar = '$5' WHERE id = $6", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl, user.UID)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("No user found to update")
+	}
+
+	return nil
 }
