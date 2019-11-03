@@ -30,7 +30,7 @@ func (repo sqlQuestionRepository) GetByID(questionID int) (*models.Question, err
 	return &question, nil
 }
 
-func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) ([]models.Question, error) {
+func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) (*[]models.Question, error) {
 	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author WHERE tags = '$1' OFFSET $2 LIMIT $3", tags, (page * pageSize), pageSize)
 
 	if err != nil {
@@ -55,10 +55,10 @@ func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) (
 		questions = append(questions, question)
 	}
 
-	return questions, rows.Err()
+	return &questions, rows.Err()
 }
 
-func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page int) ([]models.Question, error) {
+func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page int) (*[]models.Question, error) {
 	var order string
 	if desc {
 		order = "DESC"
@@ -88,7 +88,7 @@ func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page
 		questions = append(questions, question)
 	}
 
-	return questions, rows.Err()
+	return &questions, rows.Err()
 }
 
 func (repo *sqlQuestionRepository) Create(question models.Question) (*models.Question, error) {
