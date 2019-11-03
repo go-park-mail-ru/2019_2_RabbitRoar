@@ -25,19 +25,9 @@ var log = logging.MustGetLogger("server")
 func Start() {
 	log.Info("Staring service.")
 
-	_sentry.Init_sentry()
+	_sentry.InitSentry()
 
 	e := echo.New()
-
-	e.Use(
-		middleware.CORSWithConfig(
-			middleware.CORSConfig{
-				AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
-				AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType},
-				AllowCredentials: true,
-			},
-		),
-	)
 
 	e.Use(_middleware.PanicMiddleware)
 
@@ -47,6 +37,16 @@ func Start() {
 				Repanic:         true,
 				WaitForDelivery: false,
 				Timeout:         0,
+			},
+		),
+	)
+
+	e.Use(
+		middleware.CORSWithConfig(
+			middleware.CORSConfig{
+				AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
+				AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType},
+				AllowCredentials: true,
 			},
 		),
 	)
