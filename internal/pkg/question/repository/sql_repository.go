@@ -104,7 +104,7 @@ func (repo *sqlQuestionRepository) Create(question models.Question) (*models.Que
 }
 
 func (repo *sqlQuestionRepository) Update(question models.Question) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Question SET text = '$1', media = '$2', answer = '$3', rating = $4, author = $5, tags = '$6' WHERE id = $7")
+	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Question SET text = '$1', media = '$2', answer = '$3', rating = $4, author = $5, tags = '$6' WHERE id = $7", question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags, question.ID)
 
 	if err != nil {
 		return err
