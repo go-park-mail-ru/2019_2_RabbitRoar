@@ -60,14 +60,14 @@ func (repo *sqlUserRepository) Create(user models.User) (*models.User, error) {
 }
 
 func (repo *sqlUserRepository) Update(user models.User) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.User SET username = '$1', password = '$2', email = '$3', rating = $4, avatar = '$5' WHERE id = $6", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl, user.UID)
+	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.User SET username = '$1', password = '$2', email = '$3', rating = $4, avatar = '$5' WHERE id = $6;", user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl, user.UID)
 
 	if err != nil {
 		return err
 	}
 
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("No user found to update")
+		return errors.New("Unable to update user: No user found")
 	}
 
 	return nil
