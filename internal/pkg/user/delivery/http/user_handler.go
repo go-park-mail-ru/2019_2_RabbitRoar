@@ -3,11 +3,12 @@ package http
 import (
 	"errors"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"strconv"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type handler struct {
@@ -27,7 +28,7 @@ func NewUserHandler(
 	group := e.Group("/user", authMiddleware)
 	group.GET("/", handler.self)
 	group.PUT("/", csrfMiddleware(handler.update))
-	group.PUT("/avatar", csrfMiddleware(handler.avatar))
+	group.PUT("/avatar", middleware.BodyLimit("2M")(csrfMiddleware(handler.avatar)))
 	group.GET("/:id", handler.byID)
 }
 
@@ -63,7 +64,29 @@ func (uh *handler) update(ctx echo.Context) error {
 }
 
 func (uh *handler) avatar(ctx echo.Context) error {
-	return nil
+	file, err := ctx.FormFile("avatar")
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error handling file",
+			Internal: err,
+		}
+	}
+
+	u := ctx.Get("user").(*models.User)
+
+	u, err = uh.useCase.UpdateAvatar(*u, file)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error handling file",
+			Internal: err,
+		}
+	}
+
+	u.Password = ""
+
+	return ctx.JSON(http.StatusOK, u)
 }
 
 func (uh *handler) byID(ctx echo.Context) error {

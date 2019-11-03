@@ -9,6 +9,7 @@ services:
     volumes:
       - "../data/uploads:/application/data/uploads"
       - "../data/logs:/tmp/logs"
+      - "../../configs:../configs"
     depends_on:
       - postgres
 

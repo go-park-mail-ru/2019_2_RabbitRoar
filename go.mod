@@ -5,8 +5,10 @@ go 1.13
 require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/getsentry/sentry-go v0.3.0
 	github.com/google/uuid v1.1.1
 	github.com/labstack/echo v3.3.10+incompatible
+	github.com/labstack/echo/v4 v4.1.10
 	github.com/labstack/gommon v0.3.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
@@ -16,7 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/valyala/fasttemplate v1.1.0 // indirect
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 	golang.org/x/text v0.3.2 // indirect
 )

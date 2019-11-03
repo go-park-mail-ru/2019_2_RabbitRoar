@@ -2,10 +2,10 @@ package utils
 
 import "reflect"
 
-func Contains(arrayType interface{}, item interface{}) bool {
-	arr := reflect.ValueOf(arrayType)
+func SliceContains(sliceType interface{}, item interface{}) bool {
+	arr := reflect.ValueOf(sliceType)
 
-	if arr.Kind() != reflect.Array {
+	if arr.Kind() != reflect.Slice {
 		panic("Invalid data-type")
 	}
 
