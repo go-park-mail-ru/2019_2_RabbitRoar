@@ -33,7 +33,7 @@ func (repo *memSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 	newUUID, err := uuid.NewUUID()
 
 	repo.sessions[newUUID] = models.Session{
-		Uuid: newUUID,
+		UUID: newUUID,
 		User: user,
 	}
 

@@ -47,7 +47,7 @@ func (repo *memUserRepository) Update(updatedUser models.User) error {
 		}
 	}()
 
-	repo.users[updatedUser.UID] = updatedUser
+	repo.users[updatedUser.ID] = updatedUser
 
 	return err
 }
@@ -58,7 +58,7 @@ func (repo *memUserRepository) Create(u models.User) (*models.User, error) {
 		return nil, ErrUserConflict
 	}
 
-	u.UID = repo.lastUserUID
+	u.ID = repo.lastUserUID
 	repo.lastUserUID++
 	repo.users = append(repo.users, u)
 

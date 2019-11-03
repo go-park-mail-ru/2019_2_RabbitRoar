@@ -23,11 +23,7 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 	var pack models.Pack
 	err := row.Scan(&pack.ID, &pack.Name, &pack.Description, &pack.Img, &pack.Rating, &pack.Author, &pack.Private, &pack.Tags)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &pack, nil
+	return &pack, err
 }
 
 func (repo sqlPackRepository) GetQuestions(pack models.Pack) (*[]models.Question, error) {
@@ -100,37 +96,25 @@ func (repo *sqlPackRepository) Create(pack models.Pack) (*models.Pack, error) {
 
 	err := idRow.Scan(&pack.ID)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &pack, nil
+	return &pack, err
 }
 
 func (repo *sqlPackRepository) Update(pack models.Pack) error {
 	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Pack SET name = '$1', description = '$2', img = '$3', rating = $4, author = $5, private = $6, tags = '$7' WHERE id = $8;", pack.Name, pack.Description, pack.Img, pack.Rating, pack.Author, pack.Private, pack.Tags, pack.ID)
 
-	if err != nil {
-		return err
-	}
-
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to update pack: No pack found")
 	}
 
-	return nil
+	return err
 }
 
 func (repo *sqlPackRepository) Delete(packID int) error {
 	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Pack WHERE id = $1;", packID)
 
-	if err != nil {
-		return err
-	}
-
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to delete pack: No pack found")
 	}
 
-	return nil
+	return err
 }

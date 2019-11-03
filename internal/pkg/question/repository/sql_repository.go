@@ -23,11 +23,7 @@ func (repo sqlQuestionRepository) GetByID(questionID int) (*models.Question, err
 	var question models.Question
 	err := row.Scan(&question.ID, &question.Text, &question.Media, &question.Answer, &question.Rating, &question.Author, &question.Tags)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &question, nil
+	return &question, err
 }
 
 func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) (*[]models.Question, error) {
@@ -96,37 +92,25 @@ func (repo *sqlQuestionRepository) Create(question models.Question) (*models.Que
 
 	err := idRow.Scan(&question.ID)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &question, nil
+	return &question, err
 }
 
 func (repo *sqlQuestionRepository) Update(question models.Question) error {
 	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Question SET text = '$1', media = '$2', answer = '$3', rating = $4, author = $5, tags = '$6' WHERE id = $7;", question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags, question.ID)
 
-	if err != nil {
-		return err
-	}
-
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to update question: No question found")
 	}
 
-	return nil
+	return err
 }
 
 func (repo *sqlQuestionRepository) Delete(questionID int) error {
 	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Question WHERE id = $1;", questionID)
 
-	if err != nil {
-		return err
-	}
-
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to delete question: No question found")
 	}
 
-	return nil
+	return err
 }
