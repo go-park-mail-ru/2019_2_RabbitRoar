@@ -29,7 +29,6 @@ func Start() {
 
 	e := echo.New()
 
-	e.Use(_middleware.PanicMiddleware)
 	e.Use(
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
@@ -43,12 +42,14 @@ func Start() {
 	e.Use(
 		sentryecho.New(
 			sentryecho.Options{
-				Repanic:         false,
+				Repanic:         true,
 				WaitForDelivery: false,
 				Timeout:         0,
 			},
 		),
 	)
+
+	e.Use(_middleware.PanicMiddleware)
 
 	jwtToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
