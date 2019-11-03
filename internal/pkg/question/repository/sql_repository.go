@@ -31,7 +31,7 @@ func (repo sqlQuestionRepository) GetByID(questionID int) (*models.Question, err
 }
 
 func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) (*[]models.Question, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author WHERE tags = '$1' OFFSET $2 LIMIT $3", tags, (page * pageSize), pageSize)
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author FROM svoyak.Question WHERE tags = '$1' OFFSET $2 LIMIT $3", tags, (page * pageSize), pageSize)
 
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page
 		order = "ASC"
 	}
 
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author , tags ORDER BY rating $1", order)
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author , tags FROM svoyak.Question ORDER BY rating $1", order)
 
 	if err != nil {
 		return nil, err
