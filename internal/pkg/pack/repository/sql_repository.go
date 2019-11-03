@@ -31,7 +31,7 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 }
 
 func (repo sqlPackRepository) GetQuestions(pack models.Pack) (*[]models.Question, error) {
-	return nil, nil
+	return nil, errors.New("Function not implemented")
 }
 
 func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int) (*[]models.Pack, error) {
