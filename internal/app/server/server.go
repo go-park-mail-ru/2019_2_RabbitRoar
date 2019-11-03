@@ -39,6 +39,8 @@ func Start() {
 		),
 	)
 
+	e.Use(_middleware.PanicMiddleware)
+
 	e.Use(
 		sentryecho.New(
 			sentryecho.Options{
@@ -48,8 +50,6 @@ func Start() {
 			},
 		),
 	)
-
-	e.Use(_middleware.PanicMiddleware)
 
 	jwtToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
