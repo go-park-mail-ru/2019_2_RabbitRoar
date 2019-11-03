@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
@@ -60,7 +59,7 @@ func (uh *handler) update(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, *u)
+	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
 }
 
 func (uh *handler) avatar(ctx echo.Context) error {
@@ -86,7 +85,7 @@ func (uh *handler) avatar(ctx echo.Context) error {
 
 	u.Password = ""
 
-	return ctx.JSON(http.StatusOK, u)
+	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
 }
 
 func (uh *handler) byID(ctx echo.Context) error {
@@ -100,10 +99,5 @@ func (uh *handler) byID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "error user not found")
 	}
 
-	err = ctx.JSON(http.StatusOK, *u)
-	if err != nil {
-		return errors.New("error marshalling user")
-	}
-
-	return nil
+	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
 }

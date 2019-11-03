@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/utils"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 	"io"
 	"mime/multipart"
@@ -19,12 +20,20 @@ import (
 
 type userUseCase struct {
 	repository user.Repository
+	sanitizer *bluemonday.Policy
 }
 
 func NewUserUseCase(userRepo user.Repository) user.UseCase {
 	return &userUseCase{
 		repository: userRepo,
+		sanitizer: bluemonday.UGCPolicy(),
 	}
+}
+
+func (uc *userUseCase) Sanitize(u models.User) models.User {
+	u.Username = uc.sanitizer.Sanitize(u.Username)
+	u.Email = uc.sanitizer.Sanitize(u.Email)
+	return u
 }
 
 func (uc *userUseCase) Create(u models.User) (*models.User, error) {
