@@ -9,7 +9,7 @@ services:
     volumes:
       - "../data/uploads:/application/data/uploads"
       - "../data/logs:/tmp/logs"
-      - "../../configs:../configs"
+      - "../../configs:/application/configs"
     depends_on:
       - postgres
 
@@ -46,7 +46,7 @@ services:
       - swagger
     volumes:
       - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "../data:/data"
+      - "../data/:/data"
     ports:
       - 3000:3000
 
