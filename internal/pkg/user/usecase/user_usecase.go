@@ -101,6 +101,7 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 	filePath := filepath.Join(
 		"data",
 		"uploads",
+		"avatar",
 		filename,
 	)
 
@@ -140,6 +141,10 @@ func getFileContentType(file multipart.File) (string, error){
 
 	_, err := file.Read(buffer)
 	if err != nil {
+		return "", err
+	}
+
+	if _, err = file.Seek(0, io.SeekStart); err != nil {
 		return "", err
 	}
 
