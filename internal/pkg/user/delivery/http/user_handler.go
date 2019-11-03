@@ -35,6 +35,7 @@ func NewUserHandler(
 func (uh *handler) self(ctx echo.Context) error {
 	u := ctx.Get("user").(*models.User)
 	u.Password = ""
+	panic("I AM TEST PANIC")
 	return ctx.JSON(http.StatusOK, *u)
 }
 
