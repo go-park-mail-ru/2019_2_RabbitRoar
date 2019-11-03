@@ -19,7 +19,8 @@ func NewAuthHandler(
 	e *echo.Echo,
 	userUseCase user.UseCase,
 	sessionUseCase session.UseCase,
-	authMiddleware echo.MiddlewareFunc) {
+	authMiddleware echo.MiddlewareFunc,
+	) {
 
 	h := handler{
 		sessionUseCase: sessionUseCase,
@@ -53,7 +54,6 @@ func (h *handler) signUp(ctx echo.Context) error {
 		}
 	}
 
-	//TODO: Validate me
 	uc, err := h.userUseCase.Create(u)
 	if err != nil {
 		return &echo.HTTPError{
@@ -99,7 +99,7 @@ func (h *handler) login(ctx echo.Context) error {
 }
 
 func (h *handler) logout(ctx echo.Context) error {
-	UUID := ctx.Get("UUID").(uuid.UUID)
+	UUID := ctx.Get("sessionID").(uuid.UUID)
 	h.sessionUseCase.Destroy(UUID)
 	return nil
 }

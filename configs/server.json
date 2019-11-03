@@ -10,8 +10,14 @@
       "allowed_hosts": [
         "http://localhost",
         "http://localhost:8080",
-        "http://frontend.photocouple.space"
+        "http://frontend.photocouple.space",
+        "https://localhost",
+        "https://localhost:8080",
+        "https://frontend.photocouple.space"
       ]
+    },
+    "CSRF": {
+      "secret" : "top_secret_csrf_goes_here"
     }
   },
 

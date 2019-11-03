@@ -62,20 +62,6 @@
             "description": "Unauthorised"
           }
         }
-      },
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "login CSRF Token",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Wrong username or password"
-          }
-        }
       }
     },
 
@@ -84,7 +70,7 @@
         "tags": [
           "auth"
         ],
-        "summary": "signup endpoint",
+        "summary": "sign up endpoint",
         "description": "SignUp user also sets SessionID cookie.",
         "parameters": [
           {
@@ -146,13 +132,35 @@
         }
       }
     },
+    "/csrf" : {
+      "get": {
+        "summary": "get CSRF Token associated with session",
+        "responses": {
+          "200": {
+            "description": "CSRF Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrf": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
 
     "/user": {
       "get": {
         "tags": [
           "user"
         ],
-        "summary": "self profile view",
+        "summary": "self profile detail view",
         "description": "Returns JSON object with profile preferences.",
         "responses": {
           "200": {
@@ -225,7 +233,7 @@
         "tags": [
           "user"
         ],
-        "summary": "self profile view",
+        "summary": "profile detail view",
         "description": "Returns JSON object with profile preferences.",
         "parameters": [
           {
@@ -251,9 +259,206 @@
           }
         }
       }
-    }
-  },
+    },
 
+
+    "/pack": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "packs list view",
+        "description": "Sorted by rating by default.",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pack"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/pack/{id}": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack detail view",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pack"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pack/offline": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "offline packs",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackOffline"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/question": {
+      "get": {
+        "tags": [
+          "question"
+        ],
+        "summary": "question list view",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/{id}": {
+      "get": {
+        "tags": [
+          "question"
+        ],
+        "summary": "question detail view",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                    "$ref": "#/components/schemas/Question"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/game": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "game list view",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Game"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/{UUID}": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "game detail view",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Game"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/{UUID}/join": {
+      "post": {
+        "tags": [
+          "game"
+        ],
+        "summary": "join game",
+        "parameters": [
+        ],
+        "responses": {
+          "200": {
+            "description": "room successfully joined"
+          }
+        }
+      }
+    },
+    "/game/leave": {
+      "delete": {
+        "tags": [
+          "game"
+        ],
+        "summary": "leave current room",
+        "responses": {
+          "200": {
+            "description": "successfully leaved"
+          }
+        }
+      }
+    },
+    "/game/ws": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "establish websocket connection",
+        "parameters": [
+
+        ],
+        "responses": {
+
+        }
+      }
+    }
+
+  },
 
   "components": {
     "schemas": {
@@ -267,12 +472,160 @@
         }
       },
 
+      "Game": {
+        "type": "object",
+        "properties": {
+          "UUID": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "playersCapacity": {
+            "type": "integer"
+          },
+          "playersJoined": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "integer"
+          },
+          "creator": {
+            "type": "integer"
+          }
+        }
+      },
+
+      "Question": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "text": {
+            "type": "string"
+          },
+          "media": {
+            "type": "string",
+            "description": "url to media associated with question"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32",
+            "description": "author's id"
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+
+      "PackOffline": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "name": {
+              "type": "string"
+            },
+            "img": {
+              "type": "string"
+            },
+            "rating": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "author": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "questions": {
+              "type": "object",
+              "properties": {
+                "theme0": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme1": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme2": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme3": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                },
+                "theme4": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  }
+                }
+              }
+            },
+            "tags": {
+              "type": "string"
+            }
+          }
+        }
+      },
+
+      "Pack": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "img": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+
       "User": {
         "type": "object",
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int64"
+            "format": "int32"
           },
           "username": {
             "type": "string"

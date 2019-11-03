@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.0+incompatible
@@ -18,5 +19,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/valyala/fasttemplate v1.1.0 // indirect
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 )
