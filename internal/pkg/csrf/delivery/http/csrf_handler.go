@@ -16,6 +16,10 @@ type handler struct {
 	jwtToken csrf.JwtToken
 }
 
+type csrfToken struct {
+	CSRF string
+}
+
 func NewCSRFHandler(e* echo.Echo, token csrf.JwtToken, authMiddleware echo.MiddlewareFunc) {
 	h := handler{
 		jwtToken:token,
@@ -35,6 +39,5 @@ func (h *handler)createCSRF(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-	ctx.Response().Header().Add(HeaderCSRFToken, jwtCSRFToken)
-	return ctx.NoContent(http.StatusCreated)
+	return ctx.JSON(http.StatusCreated, csrfToken{CSRF:jwtCSRFToken})
 }
