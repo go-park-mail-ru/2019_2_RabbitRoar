@@ -33,8 +33,7 @@ func NewUserHandler(
 
 func (uh *handler) self(ctx echo.Context) error {
 	u := ctx.Get("user").(*models.User)
-	u.Password = ""
-	return ctx.JSON(http.StatusOK, *u)
+	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
 }
 
 func (uh *handler) update(ctx echo.Context) error {
@@ -82,8 +81,6 @@ func (uh *handler) avatar(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-
-	u.Password = ""
 
 	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
 }

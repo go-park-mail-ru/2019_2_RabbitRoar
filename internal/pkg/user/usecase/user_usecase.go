@@ -33,6 +33,7 @@ func NewUserUseCase(userRepo user.Repository) user.UseCase {
 func (uc *userUseCase) Sanitize(u models.User) models.User {
 	u.Username = uc.sanitizer.Sanitize(u.Username)
 	u.Email = uc.sanitizer.Sanitize(u.Email)
+	u.Password = ""
 	return u
 }
 
