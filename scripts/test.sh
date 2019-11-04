@@ -3,8 +3,6 @@
 SCRIPT_DIR=$(cd $(dirname $) && pwd)
 WORK_DIR="$SCRIPT_DIR/../"
 
-echo "Running goimport in $WORK_DIR"
-
 pushd $WORK_DIR
 go test ./... -coverprofile cover.out
 echo "------Coverage per function------"

@@ -37,7 +37,7 @@ func setSessionCookie(UUID *uuid.UUID, ctx echo.Context) {
 		Name:     "SessionID",
 		Value:    UUID.String(),
 		Expires:  time.Now().Add(512 * time.Hour),
-		Secure:   false, //TODO: make me secure after ssl
+		Secure:   true, //TODO: make me secure after ssl
 		HttpOnly: true,
 	}
 	ctx.SetCookie(&cookie)

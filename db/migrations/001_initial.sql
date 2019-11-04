@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS "svoyak"."User" (
 CREATE TABLE IF NOT EXISTS "svoyak"."Session" (
   "UUID" VARCHAR(45) NOT NULL,
   "User_id" INT NOT NULL,
-  "CSRF" VARCHAR(45) NOT NULL,
   PRIMARY KEY ("UUID"),
   CONSTRAINT "fk_Session_User"
     FOREIGN KEY ("User_id")

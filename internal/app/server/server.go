@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
@@ -14,6 +16,7 @@ import (
 	_userHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/delivery/http"
 	_userRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/repository"
 	_userUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/usecase"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/op/go-logging"
@@ -55,7 +58,22 @@ func Start() {
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
 	}
 
-	userRepo := _userRepository.NewMemUserRepository()
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/?charset=ut8",
+		viper.GetString("database.user"),
+		viper.GetString("database.pass"),
+		viper.GetString("database.host"),
+		viper.GetString("database.port"),
+	)
+	pgxPool, err := pgxpool.Connect(
+		context.Background(),
+		dsn,
+	)
+	if err != nil {
+		log.Fatal("error connecting to db")
+	}
+
+	userRepo := _userRepository.NewSqlUserRepository(pgxPool)
 	userUseCase := _userUseCase.NewUserUseCase(userRepo)
 
 	sessionRepo := _sessionRepository.NewMemSessionRepository()

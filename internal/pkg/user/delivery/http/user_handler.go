@@ -18,7 +18,7 @@ func NewUserHandler(
 	e *echo.Echo, usecase user.UseCase,
 	authMiddleware echo.MiddlewareFunc,
 	csrfMiddleware echo.MiddlewareFunc,
-	) {
+) {
 
 	handler := &handler{
 		useCase: usecase,
