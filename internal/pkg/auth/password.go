@@ -25,7 +25,8 @@ func hashPassword(password, salt []byte) []byte {
 		1,
 		64*1024,
 		4,
-		32)
+		32,
+	)
 	return append(hashedPassword, salt...)
 }
 
