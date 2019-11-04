@@ -57,8 +57,8 @@ func (h *handler) signUp(ctx echo.Context) error {
 	uc, err := h.userUseCase.Create(u)
 	if err != nil {
 		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "error creating specified user",
+			Code:     http.StatusConflict,
+			Message:  "error user with such username or password already exists",
 			Internal: err,
 		}
 	}
