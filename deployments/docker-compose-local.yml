@@ -20,22 +20,5 @@ services:
     ports:
       - 8080:8080
 
-  swagger:
-    image: swaggerapi/swagger-ui
-    restart: always
-    volumes:
-      - "../api:/app"
-
-#  nginx:
-#    image: nginx:latest
-#    restart: always
-#    depends_on:
-#      - swagger
-#    volumes:
-#      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-#      - "../data:/data"
-#    ports:
-#      - 3000:3000
-
 volumes:
   pg_data:

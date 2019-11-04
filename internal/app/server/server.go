@@ -57,20 +57,21 @@ func Start() {
 	jwtToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
 	}
-
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/?charset=ut8",
-		viper.GetString("database.user"),
-		viper.GetString("database.pass"),
+	dbURL := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		viper.GetString("database.host"),
 		viper.GetString("database.port"),
+		viper.GetString("database.user"),
+		viper.GetString("database.pass"),
+		viper.GetString("database.db"),
 	)
+	log.Info("dbURL: ", dbURL)
 	pgxPool, err := pgxpool.Connect(
 		context.Background(),
-		dsn,
+		dbURL,
 	)
 	if err != nil {
-		log.Fatal("error connecting to db")
+		log.Fatal("error connecting to db: ", err)
 	}
 
 	userRepo := _userRepository.NewSqlUserRepository(pgxPool)
