@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
+	_gameHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/delivery/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_sentry "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sentry"
@@ -67,6 +68,7 @@ func Start() {
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
+	_gameHttp.NewGameHandler(e, authMiddleware)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }

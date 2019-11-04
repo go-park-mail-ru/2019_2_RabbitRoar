@@ -83,7 +83,7 @@ func (uc *userUseCase) Update(u, uUpdate models.User) error {
 	}
 
 	if uUpdate.Username != "" {
-		u.Password = uUpdate.Password
+		u.Username = uUpdate.Username
 	}
 
 	if err := uc.prepare(&u); err != nil {

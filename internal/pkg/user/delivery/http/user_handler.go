@@ -20,7 +20,7 @@ func NewUserHandler(
 	csrfMiddleware echo.MiddlewareFunc,
 	) {
 
-	handler := &handler{
+	handler := handler{
 		useCase: usecase,
 	}
 
