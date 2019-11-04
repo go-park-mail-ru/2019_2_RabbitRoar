@@ -10,6 +10,8 @@ import (
 
 var log = logging.MustGetLogger("CSRF_middleware")
 
+var HeaderCSRFToken = "X-CSRF-Token"
+
 type handler struct {
 	jwtToken csrf.JwtToken
 }
@@ -33,6 +35,6 @@ func (h *handler)createCSRF(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-	ctx.Response().Header().Add("X-CSRF-Token", jwtCSRFToken)
+	ctx.Response().Header().Add(HeaderCSRFToken, jwtCSRFToken)
 	return ctx.NoContent(http.StatusCreated)
 }

@@ -45,7 +45,7 @@ func Start() {
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
 				AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
-				AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType},
+				AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, _csrfHttp.HeaderCSRFToken},
 				AllowCredentials: true,
 			},
 		),
