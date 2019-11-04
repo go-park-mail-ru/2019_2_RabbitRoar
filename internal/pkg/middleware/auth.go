@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 var log = logging.MustGetLogger("auth_middleware")
@@ -43,8 +43,6 @@ func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerF
 
 		ctx.Set("sessionID", UUID)
 		ctx.Set("user", user)
-		logger.Debugf("set sessionID %v", UUID)
-		logger.Debugf("set user %v", user)
 		return next(ctx)
 	}
 }

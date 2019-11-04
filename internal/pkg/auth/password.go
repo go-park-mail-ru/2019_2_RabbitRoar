@@ -25,13 +25,14 @@ func hashPassword(password, salt []byte) []byte {
 		1,
 		64*1024,
 		4,
-		32)
-	return append(salt, hashedPassword...)
+		32,
+	)
+	return append(hashedPassword, salt...)
 }
 
 func CheckPassword(userPassword, passwordHashed string) bool {
 	passwordBytesHashed := []byte(passwordHashed)
-	salt := passwordBytesHashed[0:8]
+	salt := passwordBytesHashed[len(passwordBytesHashed)-8:]
 
 	userPasswordBytes := []byte(userPassword)
 	userPasswordBytesHashed := hashPassword(userPasswordBytes, salt)

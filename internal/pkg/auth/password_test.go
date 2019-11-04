@@ -18,15 +18,15 @@ func TestCheckPassword(t *testing.T) {
 			name: "positive",
 			args: args{
 				userPassword:   "ABC",
-				passwordHashed: string(HashPassword("ABC")),
+				passwordHashed: HashPassword("ABC"),
 			},
 			want: true,
 		},
 		{
 			name: "negative",
 			args: args{
-				userPassword:   "ABC",
-				passwordHashed: "invalid_saltABC",
+				userPassword:   "ABCD",
+				passwordHashed: HashPassword("invalid_pass"),
 			},
 			want: false,
 		},

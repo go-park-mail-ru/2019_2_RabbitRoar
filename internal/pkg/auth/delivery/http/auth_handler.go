@@ -5,7 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
 )
@@ -57,8 +57,8 @@ func (h *handler) signUp(ctx echo.Context) error {
 	uc, err := h.userUseCase.Create(u)
 	if err != nil {
 		return &echo.HTTPError{
-			Code:     http.StatusInternalServerError,
-			Message:  "error creating specified user",
+			Code:     http.StatusConflict,
+			Message:  "error user with such username or password already exists",
 			Internal: err,
 		}
 	}

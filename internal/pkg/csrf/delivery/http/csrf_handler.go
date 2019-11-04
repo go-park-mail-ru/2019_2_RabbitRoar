@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/op/go-logging"
 	"net/http"
 )
