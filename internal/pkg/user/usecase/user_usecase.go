@@ -104,7 +104,7 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 		return nil, errors.New("error Invalid ContentType")
 	}
 
-	filename := strconv.Itoa(u.UID) + "." + ext
+	filename := strconv.Itoa(u.ID) + "." + ext
 
 	// Move to config
 	filePath := filepath.Join(
