@@ -45,20 +45,22 @@ func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
 	return &user, err
 }
 
-func (repo *sqlUserRepository) Create(user models.User) (*models.User, error) {
-	if _, err := repo.GetByName(user.Username); err == nil {
+func (repo *sqlUserRepository) Create(u models.User) (*models.User, error) {
+	if _, err := repo.GetByName(u.Username); err == nil {
 		return nil, errors.New("Unable to create user: Username already exists")
 	}
 
 	idRow := repo.conn.QueryRow(
 		context.Background(),
-		"INSERT INTO svoyak.User VALUES (DEFAULT, '$1', '$2', '$3', $4, '$5') RETURNING id;",
-		user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl,
+		"INSERT INTO svoyak.\"User\" (username, password, email, rating, avatar) " +
+			"VALUES ($1::varchar, $2::bytea, $3::varchar, $4::integer, $5::varchar) " +
+			"RETURNING id;",
+		u.Username, u.Password, u.Email, u.Rating, u.AvatarUrl,
 	)
 
-	err := idRow.Scan(&user.ID)
+	err := idRow.Scan(&u.ID)
 
-	return &user, err
+	return &u, err
 }
 
 func (repo *sqlUserRepository) Update(user models.User) error {
