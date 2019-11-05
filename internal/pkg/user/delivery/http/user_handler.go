@@ -66,7 +66,7 @@ func (uh *handler) avatar(ctx echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
-			Message:  "error handling file",
+			Message:  "error handling file from form data",
 			Internal: err,
 		}
 	}
@@ -77,7 +77,7 @@ func (uh *handler) avatar(ctx echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
-			Message:  "error handling file",
+			Message:  "error processing file",
 			Internal: err,
 		}
 	}
