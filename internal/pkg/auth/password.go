@@ -6,15 +6,13 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-func HashPassword(password []byte) []byte {
-	passwordBytes := []byte(password)
-
+func HashPassword(password string) string {
 	salt := make([]byte, 8)
 	_, _ = rand.Read(salt)
 
-	hashedPassword := hashPassword(passwordBytes, salt)
+	hashedPassword := hashPassword([]byte(password), salt)
 
-	return hashedPassword
+	return string(hashedPassword)
 }
 
 func hashPassword(password, salt []byte) []byte {
@@ -29,11 +27,12 @@ func hashPassword(password, salt []byte) []byte {
 	return append(hashedPassword, salt...)
 }
 
-func CheckPassword(userPassword, passwordHashed []byte) bool {
-	salt := passwordHashed[len(passwordHashed)-8:]
+func CheckPassword(userPassword, passwordHashed string) bool {
+	passwordHashedBytes := []byte(passwordHashed)
+	salt := passwordHashedBytes[len(passwordHashed)-8:]
 
 	userPasswordBytes := []byte(userPassword)
 	userPasswordBytesHashed := hashPassword(userPasswordBytes, salt)
 
-	return bytes.Equal(userPasswordBytesHashed, passwordHashed)
+	return bytes.Equal(userPasswordBytesHashed, passwordHashedBytes)
 }

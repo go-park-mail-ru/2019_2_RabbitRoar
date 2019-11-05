@@ -33,7 +33,7 @@ func NewUserUseCase(userRepo user.Repository) user.UseCase {
 func (uc *userUseCase) Sanitize(u models.User) models.User {
 	u.Username = uc.sanitizer.Sanitize(u.Username)
 	u.Email = uc.sanitizer.Sanitize(u.Email)
-	u.Password = nil
+	u.Password = ""
 	return u
 }
 
@@ -77,8 +77,8 @@ func (uc *userUseCase) prepareUsername(u *models.User) error {
 	return nil
 }
 
-func (uc *userUseCase) Update(u, uUpdate models.User) error {
-	if uUpdate.Password != nil {
+func (uc *userUseCase) Update(u, uUpdate models.User) (*models.User, error) {
+	if uUpdate.Password != "" {
 		u.Password = uUpdate.Password
 	}
 
@@ -87,10 +87,10 @@ func (uc *userUseCase) Update(u, uUpdate models.User) error {
 	}
 
 	if err := uc.prepare(&u); err != nil {
-		return err
+		return nil, err
 	}
 
-	return uc.repository.Update(u)
+	return &u, uc.repository.Update(u)
 }
 
 func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error) {
@@ -128,7 +128,7 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 	url := viper.GetString("server.static.avatar_prefix") + filename
 	u.AvatarUrl = url
 
-	return &u, uc.Update(u,u)
+	return &u, uc.repository.Update(u)
 }
 
 func checkFileContentType(file multipart.File) (bool, string) {

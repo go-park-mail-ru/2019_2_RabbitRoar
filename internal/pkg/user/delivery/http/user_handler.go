@@ -49,7 +49,7 @@ func (uh *handler) update(ctx echo.Context) error {
 
 	u := ctx.Get("user").(*models.User)
 
-	err = uh.useCase.Update(*u, userUpdate)
+	u, err = uh.useCase.Update(*u, userUpdate)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
