@@ -23,8 +23,8 @@ func NewSqlSessionRepository(conn *pgxpool.Pool) session.Repository {
 func (repo sqlSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
 	row := repo.conn.QueryRow(
 		context.Background(),
-		"SELECT id, username, password, email, rating, avatar" +
-			"FROM svoyak.User" +
+		"SELECT id, username, password, email, rating, avatar"+
+			"FROM svoyak.User"+
 			"WHERE id = (SELECT User_id FROM svoyak.Session WHERE uuid = '$1');",
 		sessionID,
 	)
@@ -59,6 +59,7 @@ func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
 		"DELETE FROM svoyak.Session WHERE UUID = '$1';",
+		sessionID,
 	)
 
 	if commandTag.RowsAffected() != 1 {
