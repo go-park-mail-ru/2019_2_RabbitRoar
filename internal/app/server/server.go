@@ -77,7 +77,7 @@ func Start() {
 	userRepo := _userRepository.NewSqlUserRepository(pgxPool)
 	userUseCase := _userUseCase.NewUserUseCase(userRepo)
 
-	sessionRepo := _sessionRepository.NewMemSessionRepository()
+	sessionRepo := _sessionRepository.NewSqlSessionRepository(pgxPool)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
