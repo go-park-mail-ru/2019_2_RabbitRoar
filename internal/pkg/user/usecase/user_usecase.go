@@ -33,6 +33,7 @@ func NewUserUseCase(userRepo user.Repository) user.UseCase {
 func (uc *userUseCase) Sanitize(u models.User) models.User {
 	u.Username = uc.sanitizer.Sanitize(u.Username)
 	u.Email = uc.sanitizer.Sanitize(u.Email)
+	u.Password = nil
 	return u
 }
 
@@ -77,12 +78,12 @@ func (uc *userUseCase) prepareUsername(u *models.User) error {
 }
 
 func (uc *userUseCase) Update(u, uUpdate models.User) error {
-	if uUpdate.Password != "" {
+	if uUpdate.Password != nil {
 		u.Password = uUpdate.Password
 	}
 
 	if uUpdate.Username != "" {
-		u.Password = uUpdate.Password
+		u.Username = uUpdate.Username
 	}
 
 	if err := uc.prepare(&u); err != nil {

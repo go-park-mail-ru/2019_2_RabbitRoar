@@ -22,15 +22,6 @@ services:
     volumes:
       - "../db/migrations/:/docker-entrypoint-initdb.d"
       - "pg_data:/var/lib/postgresql/data"
-    ports:
-      - 5432:5432
-
-  adminer:
-    image: adminer
-    depends_on:
-      - postgres
-    ports:
-      - 8080:8080
 
   swagger:
     image: swaggerapi/swagger-ui
