@@ -9,7 +9,7 @@ CREATE SCHEMA IF NOT EXISTS "svoyak";
 CREATE TABLE IF NOT EXISTS "svoyak"."User" (
   "id" SERIAL,
   "username" VARCHAR(45) NOT NULL,
-  "password" VARCHAR(45) NOT NULL,
+  "password" bytea NOT NULL,
   "email" VARCHAR(45) NOT NULL,
   "rating" INT NOT NULL,
   "avatar" VARCHAR(45) NULL,
