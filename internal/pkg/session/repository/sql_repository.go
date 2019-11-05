@@ -24,8 +24,10 @@ func (repo sqlSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, err
 	row := repo.conn.QueryRow(
 		context.Background(),
 		"SELECT id, username, password, email, rating, avatar"+
-			"FROM svoyak.User"+
-			"WHERE id = (SELECT User_id FROM svoyak.Session WHERE uuid = '$1');",
+			"FROM svoyak.\"User\""+
+			"WHERE id = (SELECT User_id"+
+			"FROM svoyak.\"Session\""+
+			"WHERE uuid = $1::varchar);",
 		sessionID,
 	)
 
@@ -44,7 +46,8 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"INSERT INTO svoyak.Session VALUES ('$1', $2);",
+		"INSERT INTO svoyak.\"Session\" (UUID, User_id)"+
+			"VALUES ($1::varchar, $2::integer);",
 		newUUID, user.ID,
 	)
 
@@ -58,7 +61,8 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"DELETE FROM svoyak.Session WHERE UUID = '$1';",
+		"DELETE FROM svoyak.\"Session\""+
+			"WHERE UUID = $1::varchar;",
 		sessionID,
 	)
 

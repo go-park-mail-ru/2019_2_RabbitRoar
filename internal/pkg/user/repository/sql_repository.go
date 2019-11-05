@@ -23,7 +23,9 @@ func NewSqlUserRepository(conn *pgxpool.Pool) user.Repository {
 func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
 	row := repo.conn.QueryRow(
 		context.Background(),
-		"SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = $1;",
+		"SELECT id, username, password, email, rating, avatar"+
+			"FROM svoyak.\"User\""+
+			"WHERE id = $1::integer;",
 		userID,
 	)
 
@@ -36,7 +38,9 @@ func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
 func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
 	row := repo.conn.QueryRow(
 		context.Background(),
-		"SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE username = '$1';",
+		"SELECT id, username, password, email, rating, avatar"+
+			"FROM svoyak.\"User\""+
+			"WHERE username = $1::varchar;",
 		name,
 	)
 
@@ -53,8 +57,8 @@ func (repo *sqlUserRepository) Create(u models.User) (*models.User, error) {
 
 	idRow := repo.conn.QueryRow(
 		context.Background(),
-		"INSERT INTO svoyak.\"User\" (username, password, email, rating, avatar) " +
-			"VALUES ($1::varchar, $2::bytea, $3::varchar, $4::integer, $5::varchar) " +
+		"INSERT INTO svoyak.\"User\" (id, username, password, email, rating, avatar) "+
+			"VALUES (DEFAULT, $1::varchar, $2::bytea, $3::varchar, $4::integer, $5::varchar) "+
 			"RETURNING id;",
 		u.Username, u.Password, u.Email, u.Rating, u.AvatarUrl,
 	)
@@ -67,7 +71,9 @@ func (repo *sqlUserRepository) Create(u models.User) (*models.User, error) {
 func (repo *sqlUserRepository) Update(user models.User) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"UPDATE svoyak.User SET username = '$1', password = '$2', email = '$3', rating = $4, avatar = '$5' WHERE id = $6;",
+		"UPDATE svoyak.\"User\""+
+			"SET username = $1::varchar, password = $2::bytea, email = $3::varchar, rating = $4::integer, avatar = $5::varchar"+
+			"WHERE id = $6;",
 		user.Username, user.Password, user.Email, user.Rating, user.AvatarUrl, user.ID,
 	)
 

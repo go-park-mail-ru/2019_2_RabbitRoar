@@ -20,10 +20,12 @@ func NewSqlGameRepository(conn *pgxpool.Pool) game.Repository {
 	}
 }
 
-func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {
+func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
 	row := repo.conn.QueryRow(
 		context.Background(),
-		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game WHERE uuid = $1;",
+		"SELECT UUID, name, players_cap, players_joined, state, creator"+
+			"FROM svoyak.\"Game\""+
+			"WHERE UUID = $1::varchar;",
 		gameID,
 	)
 
@@ -36,7 +38,11 @@ func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {
 func (repo sqlGameRepository) GetPlayers(game models.Game) (*[]models.User, error) {
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = ANY(SELECT User_id FROM svoyak.GameUser WHERE Game_UUID = $1);",
+		"SELECT id, username, password, email, rating, avatar"+
+			"FROM svoyak.\"User\""+
+			"WHERE id = ANY(SELECT User_id"+
+			"FROM svoyak.\"GameUser\""+
+			"WHERE Game_UUID = $1::varchar);",
 		game.UUID,
 	)
 
@@ -73,7 +79,9 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game ORDER BY playersJoined $1;",
+		"SELECT UUID, name, players_cap, players_joined, state, creator"+
+			"FROM svoyak.\"Game\""+
+			"ORDER BY players_joined $1::text;",
 		order,
 	)
 
@@ -103,7 +111,9 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) {
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game OFFSET $1 LIMIT $2;",
+		"SELECT UUID, name, players_cap, players_joined, state, creator"+
+			"FROM svoyak.\"Game\""+
+			"OFFSET $1::integer LIMIT $2::integer;",
 		(page * pageSize), pageSize,
 	)
 
@@ -141,7 +151,8 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"INSERT INTO svoyak.Session VALUES ('$1', '$2', $3, $4, $5, $6);",
+		"INSERT INTO svoyak.\"Session\" (UUID, name, players_cap, players_joined, state, creator)"+
+			"VALUES ($1::varchar, $2::varchar, $3::integer, $4::integer, $5::integer, $6::integer);",
 		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator,
 	)
 
@@ -155,7 +166,9 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 func (repo *sqlGameRepository) Update(game models.Game) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"UPDATE svoyak.Pack SET name = '$1', playerCapacity = $2, playerJoined = $3, state = $4, creator = $5 WHERE uuid = '$6';",
+		"UPDATE svoyak.Pack"+
+			"SET name = $1::varchar, player_cap = $2::integer, player_joined = $3::integer, state = $4::integer, creator = $5::integer"+
+			"WHERE uuid = $6::varchar;",
 		game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator, game.UUID,
 	)
 
@@ -169,7 +182,8 @@ func (repo *sqlGameRepository) Update(game models.Game) error {
 func (repo *sqlGameRepository) Delete(gameID int) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"DELETE FROM svoyak.Game WHERE id = $1;",
+		"DELETE FROM svoyak.Game"+
+			"WHERE id = $1::integer;",
 		gameID,
 	)
 
