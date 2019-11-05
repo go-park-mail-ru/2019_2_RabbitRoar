@@ -7,15 +7,17 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlGameRepository struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewSqlGameRepository(conn *pgx.Conn) game.Repository {
-	return &sqlGameRepository{conn}
+func NewSqlGameRepository(conn *pgxpool.Pool) game.Repository {
+	return &sqlGameRepository{
+		conn: conn,
+	}
 }
 
 func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {

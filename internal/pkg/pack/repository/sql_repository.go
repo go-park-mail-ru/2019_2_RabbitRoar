@@ -6,15 +6,17 @@ import (
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlPackRepository struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewSqlPackRepository(conn *pgx.Conn) pack.Repository {
-	return &sqlPackRepository{conn}
+func NewSqlPackRepository(conn *pgxpool.Pool) pack.Repository {
+	return &sqlPackRepository{
+		conn: conn,
+	}
 }
 
 func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
