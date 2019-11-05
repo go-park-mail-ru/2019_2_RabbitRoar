@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
