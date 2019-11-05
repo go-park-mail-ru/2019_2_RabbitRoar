@@ -7,15 +7,17 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlSessionRepository struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewSqlSessionRepository(conn *pgx.Conn) session.Repository {
-	return &sqlSessionRepository{conn}
+func NewSqlSessionRepository(conn *pgxpool.Pool) session.Repository {
+	return &sqlSessionRepository{
+		conn: conn,
+	}
 }
 
 func (repo sqlSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
@@ -56,8 +58,7 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"DELETE FROM svoyak.Session WHERE uuid = '$1';",
-		sessionID,
+		"DELETE FROM svoyak.Session WHERE UUID = '$1';",
 	)
 
 	if commandTag.RowsAffected() != 1 {
