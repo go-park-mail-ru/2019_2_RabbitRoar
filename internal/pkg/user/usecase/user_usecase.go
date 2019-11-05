@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/utils"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"io"
 	"mime/multipart"
@@ -17,6 +18,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+var log = logging.MustGetLogger("user_handler")
 
 type userUseCase struct {
 	repository user.Repository
@@ -96,12 +99,14 @@ func (uc *userUseCase) Update(u, uUpdate models.User) error {
 func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error) {
 	src, err := file.Open()
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	defer src.Close()
 
 	ok, ext := checkFileContentType(src)
 	if !ok {
+		log.Errorf("error invalid contentType")
 		return nil, errors.New("error Invalid ContentType")
 	}
 
@@ -117,11 +122,13 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 
 	dst, err := os.Create(filePath)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, src); err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
