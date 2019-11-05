@@ -27,7 +27,29 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 }
 
 func (repo sqlPackRepository) GetQuestions(pack models.Pack) (*[]models.Question, error) {
-	return nil, errors.New("Function not implemented")
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author, tags FROM svoyak.Question WHERE id = ANY(SELECT Question_id FROM svoyak.PackQuestion WHERE QuestionPack_id = $1);", pack.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var questions []models.Question
+
+	for rows.Next() {
+		var question models.Question
+
+		err := rows.Scan(&question.ID, &question.Text, &question.Media, &question.Answer, &question.Rating, &question.Author, &question.Tags)
+
+		if err != nil {
+			return nil, err
+		}
+
+		questions = append(questions, question)
+	}
+
+	return &questions, rows.Err()
 }
 
 func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int) (*[]models.Pack, error) {

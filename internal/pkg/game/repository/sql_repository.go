@@ -28,7 +28,29 @@ func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {
 }
 
 func (repo sqlGameRepository) GetPlayers(game models.Game) (*[]models.User, error) {
-	return nil, errors.New("Function not implemented")
+	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = ANY(SELECT User_id FROM svoyak.GameUser WHERE Game_UUID = $1);", game.UUID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+
+		err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Rating, &user.AvatarUrl)
+
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return &users, rows.Err()
 }
 
 func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, page int) (*[]models.Game, error) {
