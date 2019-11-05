@@ -19,7 +19,11 @@ func NewSqlGameRepository(conn *pgx.Conn) game.Repository {
 }
 
 func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {
-	row := repo.conn.QueryRow(context.Background(), "SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game WHERE uuid = $1;", gameID)
+	row := repo.conn.QueryRow(
+		context.Background(),
+		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game WHERE uuid = $1;",
+		gameID,
+	)
 
 	var game models.Game
 	err := row.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.State, &game.Creator)
@@ -28,7 +32,11 @@ func (repo sqlGameRepository) GetByID(gameID int) (*models.Game, error) {
 }
 
 func (repo sqlGameRepository) GetPlayers(game models.Game) (*[]models.User, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = ANY(SELECT User_id FROM svoyak.GameUser WHERE Game_UUID = $1);", game.UUID)
+	rows, err := repo.conn.Query(
+		context.Background(),
+		"SELECT id, username, password, email, rating, avatar FROM svoyak.User WHERE id = ANY(SELECT User_id FROM svoyak.GameUser WHERE Game_UUID = $1);",
+		game.UUID,
+	)
 
 	if err != nil {
 		return nil, err
@@ -61,7 +69,11 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 		order = "ASC"
 	}
 
-	rows, err := repo.conn.Query(context.Background(), "SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game ORDER BY playersJoined $1;", order)
+	rows, err := repo.conn.Query(
+		context.Background(),
+		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game ORDER BY playersJoined $1;",
+		order,
+	)
 
 	if err != nil {
 		return nil, err
@@ -87,7 +99,11 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 }
 
 func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game OFFSET $1 LIMIT $2;", (page * pageSize), pageSize)
+	rows, err := repo.conn.Query(
+		context.Background(),
+		"SELECT uuid, name, playersCapacity, playersJoined, state, creator FROM svoyak.Game OFFSET $1 LIMIT $2;",
+		(page * pageSize), pageSize,
+	)
 
 	if err != nil {
 		return nil, err
@@ -121,7 +137,11 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 
 	game.UUID = newUUID
 
-	commandTag, err := repo.conn.Exec(context.Background(), "INSERT INTO svoyak.Session VALUES ('$1', '$2', $3, $4, $5, $6);", game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator)
+	commandTag, err := repo.conn.Exec(
+		context.Background(),
+		"INSERT INTO svoyak.Session VALUES ('$1', '$2', $3, $4, $5, $6);",
+		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator,
+	)
 
 	if commandTag.RowsAffected() != 1 {
 		return nil, errors.New("Unable to create game: Game already exists")
@@ -131,7 +151,11 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 }
 
 func (repo *sqlGameRepository) Update(game models.Game) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Pack SET name = '$1', playerCapacity = $2, playerJoined = $3, state = $4, creator = $5 WHERE uuid = '$6';", game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator, game.UUID)
+	commandTag, err := repo.conn.Exec(
+		context.Background(),
+		"UPDATE svoyak.Pack SET name = '$1', playerCapacity = $2, playerJoined = $3, state = $4, creator = $5 WHERE uuid = '$6';",
+		game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator, game.UUID,
+	)
 
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to update game: No game found")
@@ -141,7 +165,11 @@ func (repo *sqlGameRepository) Update(game models.Game) error {
 }
 
 func (repo *sqlGameRepository) Delete(gameID int) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Game WHERE id = $1;", gameID)
+	commandTag, err := repo.conn.Exec(
+		context.Background(),
+		"DELETE FROM svoyak.Game WHERE id = $1;",
+		gameID,
+	)
 
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to delete game: No game found")

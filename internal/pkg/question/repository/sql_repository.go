@@ -18,7 +18,11 @@ func NewSqlQuestionRepository(conn *pgx.Conn) question.Repository {
 }
 
 func (repo sqlQuestionRepository) GetByID(questionID int) (*models.Question, error) {
-	row := repo.conn.QueryRow(context.Background(), "SELECT id, text, media, answer, rating, author, tags FROM svoyak.Question WHERE id = $1;", questionID)
+	row := repo.conn.QueryRow(
+		context.Background(),
+		"SELECT id, text, media, answer, rating, author, tags FROM svoyak.Question WHERE id = $1;",
+		questionID,
+	)
 
 	var question models.Question
 	err := row.Scan(&question.ID, &question.Text, &question.Media, &question.Answer, &question.Rating, &question.Author, &question.Tags)
@@ -27,7 +31,11 @@ func (repo sqlQuestionRepository) GetByID(questionID int) (*models.Question, err
 }
 
 func (repo sqlQuestionRepository) FetchByTags(tags string, pageSize, page int) (*[]models.Question, error) {
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author FROM svoyak.Question WHERE tags = '$1' OFFSET $2 LIMIT $3;", tags, (page * pageSize), pageSize)
+	rows, err := repo.conn.Query(
+		context.Background(),
+		"SELECT id, text, media, answer, rating, author FROM svoyak.Question WHERE tags = '$1' OFFSET $2 LIMIT $3;",
+		tags, (page * pageSize), pageSize,
+	)
 
 	if err != nil {
 		return nil, err
@@ -62,7 +70,11 @@ func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page
 		order = "ASC"
 	}
 
-	rows, err := repo.conn.Query(context.Background(), "SELECT id, text, media, answer, rating, author, tags FROM svoyak.Question ORDER BY rating $1;", order)
+	rows, err := repo.conn.Query(
+		context.Background(),
+		"SELECT id, text, media, answer, rating, author, tags FROM svoyak.Question ORDER BY rating $1;",
+		order,
+	)
 
 	if err != nil {
 		return nil, err
@@ -88,7 +100,11 @@ func (repo sqlQuestionRepository) FetchOrderedByRating(desc bool, pageSize, page
 }
 
 func (repo *sqlQuestionRepository) Create(question models.Question) (*models.Question, error) {
-	idRow := repo.conn.QueryRow(context.Background(), "INSERT INTO svoyak.Question VALUES (DEFAULT, '$1', '$2', '$3', $4, $5, '$6') RETURNING id;", question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags)
+	idRow := repo.conn.QueryRow(
+		context.Background(),
+		"INSERT INTO svoyak.Question VALUES (DEFAULT, '$1', '$2', '$3', $4, $5, '$6') RETURNING id;",
+		question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags,
+	)
 
 	err := idRow.Scan(&question.ID)
 
@@ -96,7 +112,11 @@ func (repo *sqlQuestionRepository) Create(question models.Question) (*models.Que
 }
 
 func (repo *sqlQuestionRepository) Update(question models.Question) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "UPDATE svoyak.Question SET text = '$1', media = '$2', answer = '$3', rating = $4, author = $5, tags = '$6' WHERE id = $7;", question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags, question.ID)
+	commandTag, err := repo.conn.Exec(
+		context.Background(),
+		"UPDATE svoyak.Question SET text = '$1', media = '$2', answer = '$3', rating = $4, author = $5, tags = '$6' WHERE id = $7;",
+		question.Text, question.Media, question.Answer, question.Rating, question.Author, question.Tags, question.ID,
+	)
 
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to update question: No question found")
@@ -106,7 +126,11 @@ func (repo *sqlQuestionRepository) Update(question models.Question) error {
 }
 
 func (repo *sqlQuestionRepository) Delete(questionID int) error {
-	commandTag, err := repo.conn.Exec(context.Background(), "DELETE FROM svoyak.Question WHERE id = $1;", questionID)
+	commandTag, err := repo.conn.Exec(
+		context.Background(),
+		"DELETE FROM svoyak.Question WHERE id = $1;",
+		questionID,
+	)
 
 	if commandTag.RowsAffected() != 1 {
 		return errors.New("Unable to delete question: No question found")
