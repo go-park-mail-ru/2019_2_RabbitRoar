@@ -22,9 +22,11 @@ func NewSqlPackRepository(conn *pgxpool.Pool) pack.Repository {
 func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 	row := repo.conn.QueryRow(
 		context.Background(),
-		"SELECT id, name, description, img, rating, author, private, tags"+
-			"FROM svoyak.\"Pack\""+
-			"WHERE id = $1::integer;",
+		`
+			SELECT id, name, description, img, rating, author, private, tags
+			FROM "svoyak"."Pack"
+			WHERE id = $1::integer;
+		`,
 		packID,
 	)
 
@@ -37,11 +39,13 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 func (repo sqlPackRepository) GetQuestions(pack models.Pack) (*[]models.Question, error) {
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT id, text, media, answer, rating, author, tags"+
-			"FROM svoyak.\"Question\""+
-			"WHERE id = ANY(SELECT Question_id"+
-			"FROM svoyak.\"PackQuestion\""+
-			"WHERE QuestionPack_id = $1::integer);",
+		`
+			SELECT id, text, media, answer, rating, author, tags
+			FROM "svoyak"."Question"
+			WHERE "id" = ANY(SELECT Question_id
+			FROM "svoyak"."PackQuestion"
+			WHERE "QuestionPack_id" = $1::integer);
+		`,
 		pack.ID,
 	)
 
@@ -78,9 +82,11 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT id, name, description, img, rating, author, private, tags"+
-			"FROM svoyak.\"Pack\""+
-			"ORDER BY rating $1::text;",
+		`	
+			SELECT id, name, description, img, rating, author, private, tags
+			FROM "svoyak"."Pack"
+			ORDER BY rating $1::text;"
+		`,
 		order,
 	)
 
@@ -110,10 +116,12 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 func (repo sqlPackRepository) FetchByTags(tags string, page, pageSize int) (*[]models.Pack, error) {
 	rows, err := repo.conn.Query(
 		context.Background(),
-		"SELECT id, name, description, img, rating, author, private, tags"+
-			"FROM svoyak.\"Pack\""+
-			"WHERE tags = $1::varchar"+
-			"OFFSET $2::integer LIMIT $3::integer;",
+		`
+			SELECT id, name, description, img, rating, author, private, tags
+			FROM "svoyak"."Pack"
+			WHERE tags = $1::varchar
+			OFFSET $2::integer LIMIT $3::integer;
+		`,
 		tags, (page * pageSize), pageSize,
 	)
 
@@ -145,9 +153,11 @@ func (repo sqlPackRepository) FetchByTags(tags string, page, pageSize int) (*[]m
 func (repo *sqlPackRepository) Create(pack models.Pack) (*models.Pack, error) {
 	idRow := repo.conn.QueryRow(
 		context.Background(),
-		"INSERT INTO svoyak.\"Pack\" (id, name, description, img, rating, author, private, tags)"+
-			"VALUES (DEFAULT, $1::varchar, $2::text, $3::varchar, $4::integer, $5::integer, $6::boolean, $7::varchar)"+
-			"RETURNING id;",
+		`
+			INSERT INTO "svoyak"."Pack" (id, name, description, img, rating, author, private, tags)
+			VALUES (DEFAULT, $1::varchar, $2::text, $3::varchar, $4::integer, $5::integer, $6::boolean, $7::varchar)
+			RETURNING id;
+		`,
 		pack.Name, pack.Description, pack.Img, pack.Rating, pack.Author, pack.Private, pack.Tags,
 	)
 
@@ -159,9 +169,11 @@ func (repo *sqlPackRepository) Create(pack models.Pack) (*models.Pack, error) {
 func (repo *sqlPackRepository) Update(pack models.Pack) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"UPDATE svoyak.Pack"+
-			"SET name = $1::varchar, description = $2::text, img = $3::varchar, rating = $4::integer, author = $5::integer, private = $6::boolean, tags = $7::varchar"+
-			"WHERE id = $8::integer;",
+		`
+			UPDATE "svoyak"."Pack"
+			SET name = $1::varchar, description = $2::text, img = $3::varchar, rating = $4::integer, author = $5::integer, private = $6::boolean, tags = $7::varchar
+			WHERE id = $8::integer;
+		`,
 		pack.Name, pack.Description, pack.Img, pack.Rating, pack.Author, pack.Private, pack.Tags, pack.ID,
 	)
 
@@ -175,8 +187,10 @@ func (repo *sqlPackRepository) Update(pack models.Pack) error {
 func (repo *sqlPackRepository) Delete(packID int) error {
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
-		"DELETE FROM svoyak.Pack"+
-			"WHERE id = $1::integer;",
+		`
+			DELETE FROM "svoyak"."Pack"
+			WHERE id = $1::integer;"
+		`,
 		packID,
 	)
 
