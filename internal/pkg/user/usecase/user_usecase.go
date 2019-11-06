@@ -75,8 +75,6 @@ func (uc *userUseCase) preparePassword(u *models.User) error {
 }
 
 func (uc *userUseCase) prepareUsername(u *models.User) error {
-	//TODO: validate username here?
-	//TODO: check username existance or just return err in repository save?
 	return nil
 }
 
