@@ -11,5 +11,5 @@ Notion Page: [link](https://www.notion.so/SVOYAK-f53af7312b784f2bafa785c65e8d81a
 ### How to run:
 
 ```shell script
-cd depoloyments && docker-compose up
+cd depoloyments && docker-compose -f docker-compose-<mode>.yml up
 ```
