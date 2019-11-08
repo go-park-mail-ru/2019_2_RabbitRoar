@@ -1,0 +1,39 @@
+{
+  "logger": {
+    "level": "DEBUG",
+    "file": "/tmp/logs/server.log"
+  },
+
+  "server": {
+    "address": "0.0.0.0:3000",
+    "CORS": {
+      "allowed_hosts": [
+        "http://localhost",
+        "http://localhost:8080",
+        "http://frontend.photocouple.space",
+        "https://localhost",
+        "https://localhost:8080",
+        "https://svoyak.fun",
+        "https://frontend.photocouple.space"
+      ]
+    },
+    "static": {
+      "avatar_prefix": "/uploads/avatar/"
+    },
+    "CSRF": {
+      "secret" : "top_secret_csrf_goes_here"
+    }
+  },
+
+  "sentry": {
+    "DSN": "sentry_DSN_goes_here"
+  },
+
+  "database": {
+    "host": "postgres",
+    "port": "5432",
+    "user": "svoyak",
+    "pass": "top_secret_goes_here",
+    "db": "svoyak"
+  }
+}
