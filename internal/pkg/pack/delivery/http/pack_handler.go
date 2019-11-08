@@ -33,7 +33,7 @@ func (h *handler) byID(ctx echo.Context) error {
 	if id == 0 {
 		return ctx.JSONBlob(http.StatusOK, []byte(packMock0))
 	} else if id == 1 {
-		return ctx.JSONBlob(http.StatusOK, []byte(packMock0))
+		return ctx.JSONBlob(http.StatusOK, []byte(packMock1))
 	}
 	return echo.ErrNotFound
 }
