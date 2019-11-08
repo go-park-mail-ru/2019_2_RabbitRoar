@@ -7,7 +7,6 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/utils"
-	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
@@ -16,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -104,7 +104,7 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 		return nil, errors.New("error Invalid ContentType")
 	}
 
-	filename := uuid.UUID.String(uuid.New()) + "." + ext
+	filename := strconv.Itoa(u.ID) + "." + ext
 
 	// Move to config
 	filePath := filepath.Join(
