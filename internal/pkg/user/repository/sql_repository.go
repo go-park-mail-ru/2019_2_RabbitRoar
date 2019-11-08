@@ -10,7 +10,6 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 )
 
-//TODO: REMOVE USER PARSING COPYPASTE
 
 type sqlUserRepository struct {
 	conn *pgxpool.Pool

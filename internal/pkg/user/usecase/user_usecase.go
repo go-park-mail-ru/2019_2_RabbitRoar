@@ -41,10 +41,6 @@ func (uc *userUseCase) Sanitize(u models.User) models.User {
 }
 
 func (uc *userUseCase) Create(u models.User) (*models.User, error) {
-	if ok, err := govalidator.ValidateStruct(u); !ok {
-		return nil, err
-	}
-
 	if err := uc.prepare(&u); err != nil {
 		return nil, err
 	}
