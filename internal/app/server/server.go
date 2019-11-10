@@ -59,6 +59,8 @@ func Start() {
 					"Connection",
 					"Sec-WebSocket-Version",
 					"Sec-WebSocket-Key",
+					"Sec-WebSocket-Extensions",
+					"Pragma",
 					_csrfHttp.HeaderCSRFToken,
 				},
 				AllowCredentials: true,
