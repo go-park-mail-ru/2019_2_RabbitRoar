@@ -12,22 +12,22 @@ var logLog = logging.MustGetLogger("middleware_log")
 func LogMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		RID := rand.Int()
-		now := time.Now().Nanosecond()
+		start := time.Now()
 		ctx.Set("RID", RID)
 		logLog.Infof(
-			"RID%d pre %s %s",
+			"RID%d %s PRE %s",
 			RID,
 			ctx.Request().Method,
 			ctx.Request().RequestURI,
 		)
 		err := next(ctx)
 		logLog.Infof(
-			"RID%d T%dns %s %s",
+			"RID%d %s %d %s T%d",
 			RID,
-			now - time.Now().Nanosecond(),
 			ctx.Request().Method,
 			ctx.Response().Status,
 			ctx.Request().RequestURI,
+			time.Since(start),
 		)
 		return err
 	}
