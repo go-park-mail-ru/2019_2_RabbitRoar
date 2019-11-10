@@ -584,15 +584,6 @@
           },
           "answer": {
             "type": "string"
-          },
-          "rating": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "author": {
-            "type": "integer",
-            "format": "int32",
-            "description": "author's id"
           }
         }
       },
