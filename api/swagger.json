@@ -1,25 +1,20 @@
 {
   "openapi": "3.0.0",
-
-
   "info": {
     "version": "1",
     "title": "Svoyak game project API",
     "description": "Some day there will be some info..."
   },
-
-
   "servers": [
     {
-      "url": "http://localhost:3000",
+      "url": "http://localhost:3000/",
       "description": "Development server"
     },
     {
-      "url": "http://frontend.photocouple.space",
+      "url": "http://svoyak.fun/api",
       "description": "Production server"
     }
   ],
-
   "paths": {
 
     "/login": {
@@ -132,9 +127,11 @@
         }
       }
     },
-    "/csrf" : {
+
+    "/csrf": {
       "get": {
         "summary": "get CSRF Token associated with session",
+        "description": "Should be sent with all forms in X-CSRF-Token Header",
         "responses": {
           "200": {
             "description": "CSRF Token",
@@ -211,6 +208,7 @@
         }
       }
     },
+
     "/user/avatar": {
       "put": {
         "tags": [
@@ -261,7 +259,6 @@
       }
     },
 
-
     "/pack": {
       "get": {
         "tags": [
@@ -277,11 +274,36 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Pack"
+                    "$ref": "#/components/schemas/PackListView"
                   }
                 }
               }
             }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "create view",
+        "operationId": "",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pack create",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackCreate"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "created"
           }
         }
       }
@@ -292,7 +314,42 @@
         "tags": [
           "pack"
         ],
-        "summary": "pack detail view",
+        "summary": "pack detail view, available only if have played that pack",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pack"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack delete view",
+        "operationId": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          }
+        }
+      }
+    },
+
+    "/pack/offline/public": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "description": "list of public offline packs",
+        "summary": "offline packs",
         "responses": {
           "200": {
             "description": "",
@@ -307,63 +364,23 @@
         }
       }
     },
+
     "/pack/offline": {
       "get": {
         "tags": [
           "pack"
         ],
-        "summary": "offline packs",
+        "summary": "list of offline packs available for user",
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PackOffline"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/question": {
-      "get": {
-        "tags": [
-          "question"
-        ],
-        "summary": "question list view",
-        "responses": {
-          "200": {
-            "description": "",
+            "description": "pack ids available for offline",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Question"
+                    "type": "integer"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/question/{id}": {
-      "get": {
-        "tags": [
-          "question"
-        ],
-        "summary": "question detail view",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                    "$ref": "#/components/schemas/Question"
                 }
               }
             }
@@ -378,6 +395,22 @@
           "game"
         ],
         "summary": "game list view",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort_by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "asc",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -386,31 +419,36 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Game"
+                    "$ref": "#/components/schemas/GameListView"
                   }
                 }
               }
             }
           }
         }
-      }
-    },
-    "/game/{UUID}": {
-      "get": {
+      },
+      "post": {
         "tags": [
           "game"
         ],
-        "summary": "game detail view",
-        "responses": {
-          "200": {
-            "description": "",
+        "summary": "game create view",
+        "operationId": "",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "game create",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Game"
+                  "$ref": "#/components/schemas/GameCreateView"
                 }
               }
             }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "created"
           }
         }
       }
@@ -450,171 +488,18 @@
         ],
         "summary": "establish websocket connection",
         "parameters": [
-
         ],
         "responses": {
-
         }
       }
     }
-
   },
-
   "components": {
     "schemas": {
-
       "Error": {
         "type": "object",
         "properties": {
           "message": {
-            "type": "string"
-          }
-        }
-      },
-
-      "Game": {
-        "type": "object",
-        "properties": {
-          "UUID": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "playersCapacity": {
-            "type": "integer"
-          },
-          "playersJoined": {
-            "type": "integer"
-          },
-          "state": {
-            "type": "integer"
-          },
-          "creator": {
-            "type": "integer"
-          }
-        }
-      },
-
-      "Question": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "text": {
-            "type": "string"
-          },
-          "media": {
-            "type": "string",
-            "description": "url to media associated with question"
-          },
-          "answer": {
-            "type": "string"
-          },
-          "rating": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "author": {
-            "type": "integer",
-            "format": "int32",
-            "description": "author's id"
-          },
-          "tags": {
-            "type": "string"
-          }
-        }
-      },
-
-      "PackOffline": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "name": {
-              "type": "string"
-            },
-            "img": {
-              "type": "string"
-            },
-            "rating": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "author": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "questions": {
-              "type": "object",
-              "properties": {
-                "theme0": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  }
-                },
-                "theme1": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  }
-                },
-                "theme2": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  }
-                },
-                "theme3": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  }
-                },
-                "theme4": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  }
-                }
-              }
-            },
-            "tags": {
-              "type": "string"
-            }
-          }
-        }
-      },
-
-      "Pack": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string"
-          },
-          "img": {
-            "type": "string"
-          },
-          "rating": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "author": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "tags": {
             "type": "string"
           }
         }
@@ -641,8 +526,180 @@
             "type": "string"
           }
         }
+      },
+
+      "GameCreateView": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "playersCapacity": {
+            "type": "integer"
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "pack": {
+            "type": "integer"
+          }
+        }
+      },
+
+      "GameListView": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "UUID": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "capacity": {
+              "type": "integer"
+            },
+            "joined": {
+              "type": "integer"
+            },
+            "packName": {
+              "type": "string"
+            },
+            "packID": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+
+      "Question": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32",
+            "description": "author's id"
+          }
+        }
+      },
+
+      "Theme": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "minLength": 5,
+            "maxLength": 5,
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+
+      "PackCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "img": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questions": {
+            "type": "array",
+            "minLength": 5,
+            "maxLength": 5,
+            "items": {
+              "$ref": "#/components/schemas/Theme"
+            }
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+
+      "Pack": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "img": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questions": {
+            "type": "array",
+            "minLength": 5,
+            "maxLength": 5,
+            "items": {
+              "$ref": "#/components/schemas/Theme"
+            }
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+
+      "PackListView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
       }
+
     }
   }
-
 }
