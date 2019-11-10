@@ -46,6 +46,8 @@ func Start() {
 		),
 	)
 
+	e.Use(_middleware.LogMiddleware)
+
 	e.Use(
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{

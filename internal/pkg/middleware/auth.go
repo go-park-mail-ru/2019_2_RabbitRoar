@@ -2,15 +2,12 @@ package middleware
 
 import (
 	"github.com/google/uuid"
-	"github.com/op/go-logging"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 
 	"github.com/labstack/echo/v4"
 )
-
-var log = logging.MustGetLogger("auth_middleware")
 
 type authMiddleware struct {
 	useCase session.UseCase
