@@ -634,9 +634,6 @@
           "name": {
             "type": "string"
           },
-          "img": {
-            "type": "string"
-          },
           "rating": {
             "type": "integer",
             "format": "int32"
