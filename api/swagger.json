@@ -356,7 +356,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Pack"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pack"
+                  }
                 }
               }
             }
@@ -617,18 +620,7 @@
           "name": {
             "type": "string"
           },
-          "img": {
-            "type": "string"
-          },
-          "rating": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "author": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questions": {
+          "pack": {
             "type": "array",
             "minLength": 5,
             "maxLength": 5,
@@ -662,7 +654,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "questions": {
+          "pack": {
             "type": "array",
             "minLength": 5,
             "maxLength": 5,
