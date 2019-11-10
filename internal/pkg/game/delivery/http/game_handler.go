@@ -16,7 +16,7 @@ func NewGameHandler(
 ) {
 	handler := handler{}
 
-	group := e.Group("/game", authMiddleware)
+	group := e.Group("/game")
 	group.GET("/ws", handler.ws)
 }
 
