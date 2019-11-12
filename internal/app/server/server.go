@@ -3,12 +3,15 @@ package server
 import (
 	"context"
 	"fmt"
+
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
 	_gameHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/delivery/http"
+	_gameRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/repository"
+	_gameUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/usecase"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_packHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/delivery/http"
@@ -51,8 +54,8 @@ func Start() {
 	e.Use(
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
-				AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
-				AllowHeaders:     []string{
+				AllowOrigins: viper.GetStringSlice("server.CORS.allowed_hosts"),
+				AllowHeaders: []string{
 					echo.HeaderOrigin,
 					echo.HeaderContentType,
 					echo.HeaderUpgrade,
@@ -94,6 +97,9 @@ func Start() {
 	sessionRepo := _sessionRepository.NewSqlSessionRepository(pgxPool)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
+	gameRepo := _gameRepository.NewSqlGameRepository(pgxPool)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo)
+
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 	csrfMiddleware := _middleware.NewCSRFMiddleware(jwtToken)
 
@@ -101,7 +107,7 @@ func Start() {
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
 	_packHttp.NewPackHandler(e, authMiddleware)
-	_gameHttp.NewGameHandler(e, authMiddleware)
+	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }
