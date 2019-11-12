@@ -613,8 +613,8 @@
           },
           "pack": {
             "type": "array",
-            "minLength": 5,
-            "maxLength": 5,
+            "minItems": 5,
+            "maxItems": 5,
             "items": {
               "$ref": "#/components/schemas/Theme"
             }
@@ -644,8 +644,8 @@
           },
           "pack": {
             "type": "array",
-            "minLength": 5,
-            "maxLength": 5,
+            "minItems": 5,
+            "maxItems": 5,
             "items": {
               "$ref": "#/components/schemas/Theme"
             }
