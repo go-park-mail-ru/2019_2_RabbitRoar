@@ -149,14 +149,6 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 }
 
 func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
-	newUUID, err := uuid.NewUUID()
-
-	if err != nil {
-		return nil, err
-	}
-
-	game.UUID = newUUID
-
 	commandTag, err := repo.conn.Exec(
 		context.Background(),
 		`
