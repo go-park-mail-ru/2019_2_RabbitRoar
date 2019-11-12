@@ -2,6 +2,14 @@ package usecase
 
 import (
 	"errors"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
@@ -10,26 +18,19 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
-	"io"
-	"mime/multipart"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 var log = logging.MustGetLogger("user_handler")
 
 type userUseCase struct {
 	repository user.Repository
-	sanitizer *bluemonday.Policy
+	sanitizer  *bluemonday.Policy
 }
 
 func NewUserUseCase(userRepo user.Repository) user.UseCase {
 	return &userUseCase{
 		repository: userRepo,
-		sanitizer: bluemonday.UGCPolicy(),
+		sanitizer:  bluemonday.UGCPolicy(),
 	}
 }
 
@@ -147,7 +148,7 @@ func checkFileContentType(file multipart.File) (bool, string) {
 	return false, ""
 }
 
-func getFileContentType(file multipart.File) (string, error){
+func getFileContentType(file multipart.File) (string, error) {
 	buffer := make([]byte, 512)
 
 	_, err := file.Read(buffer)
