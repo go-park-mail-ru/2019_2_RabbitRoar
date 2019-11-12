@@ -35,5 +35,9 @@
     "user": "svoyak",
     "pass": "top_secret_goes_here",
     "db": "svoyak"
+  },
+
+  "internal": {
+    "page_size": 5
   }
 }
