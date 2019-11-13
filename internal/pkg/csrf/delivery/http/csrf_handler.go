@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/op/go-logging"
 	"net/http"
@@ -31,7 +30,7 @@ func NewCSRFHandler(e* echo.Echo, token csrf.JwtToken, authMiddleware echo.Middl
 func (h *handler)createCSRF(ctx echo.Context) error {
 	SessionID := ctx.Get("sessionID")
 	log.Debugf("got SessionID %v", SessionID)
-	jwtCSRFToken, err := h.jwtToken.Create(SessionID.(uuid.UUID))
+	jwtCSRFToken, err := h.jwtToken.Create(SessionID.(string))
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,

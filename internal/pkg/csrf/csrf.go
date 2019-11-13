@@ -12,11 +12,11 @@ type JwtToken struct {
 }
 
 type JwtCsrfClaims struct {
-	SessionID uuid.UUID
+	SessionID string
 	jwt.StandardClaims
 }
 
-func (tk *JwtToken) Create(s uuid.UUID) (string, error) {
+func (tk *JwtToken) Create(s string) (string, error) {
 	data := JwtCsrfClaims{
 		SessionID: s,
 		StandardClaims: jwt.StandardClaims{
