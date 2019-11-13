@@ -8,4 +8,5 @@ type Game struct {
 	PlayersCapacity int
 	PlayersJoined   int
 	Creator         int
+	PackID          int
 }

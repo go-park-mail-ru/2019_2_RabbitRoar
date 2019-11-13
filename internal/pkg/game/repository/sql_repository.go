@@ -1,30 +1,28 @@
 package repository
 
 import (
-	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlGameRepository struct {
-	conn *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewSqlGameRepository(conn *pgxpool.Pool) game.Repository {
+func NewSqlGameRepository(db *sql.DB) game.Repository {
 	return &sqlGameRepository{
-		conn: conn,
+		db: db,
 	}
 }
 
 func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
-	row := repo.conn.QueryRow(
-		context.Background(),
+	row := repo.db.QueryRow(
 		`
-			SELECT UUID, name, players_cap, players_joined, state, creator
+			SELECT UUID, name, players_cap, players_joined, creator, Pack_id
 			FROM "svoyak"."Game"
 			WHERE "UUID" = $1::varchar;
 		`,
@@ -32,14 +30,13 @@ func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
 	)
 
 	var game models.Game
-	err := row.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.State, &game.Creator)
+	err := row.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID)
 
 	return &game, err
 }
 
 func (repo sqlGameRepository) GetPlayers(game models.Game) (*[]models.User, error) {
-	rows, err := repo.conn.Query(
-		context.Background(),
+	rows, err := repo.db.Query(
 		`
 			SELECT id, username, password, email, rating, avatar
 			FROM "svoyak"."User"
@@ -81,10 +78,9 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 		order = "ASC"
 	}
 
-	rows, err := repo.conn.Query(
-		context.Background(),
+	rows, err := repo.db.Query(
 		`
-			SELECT UUID, name, players_cap, players_joined, state, creator
+			SELECT UUID, name, players_cap, players_joined, creator, Pack_id
 			FROM "svoyak"."Game"
 			ORDER BY players_joined $1::text;
 		`,
@@ -102,7 +98,7 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 	for rows.Next() {
 		var game models.Game
 
-		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.State, &game.Creator)
+		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID)
 
 		if err != nil {
 			return nil, err
@@ -115,10 +111,9 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 }
 
 func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) {
-	rows, err := repo.conn.Query(
-		context.Background(),
+	rows, err := repo.db.Query(
 		`
-			SELECT UUID, name, players_cap, players_joined, state, creator
+			SELECT UUID, name, players_cap, players_joined, creator, Pack_id
 			FROM "svoyak"."Game"
 			OFFSET $1::integer LIMIT $2::integer;
 		`,
@@ -136,7 +131,7 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 	for rows.Next() {
 		var game models.Game
 
-		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.State, &game.Creator)
+		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID)
 
 		if err != nil {
 			return nil, err
@@ -149,16 +144,20 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 }
 
 func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
-			INSERT INTO "svoyak"."Session" (UUID, name, players_cap, players_joined, state, creator)
+			INSERT INTO "svoyak"."Game" (UUID, name, players_cap, players_joined, creator, Pack_id)
 			VALUES ($1::varchar, $2::varchar, $3::integer, $4::integer, $5::integer, $6::integer);
 		`,
-		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator,
+		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.PackID,
 	)
 
-	if commandTag.RowsAffected() != 1 {
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := res.RowsAffected()
+	if c != 1 {
 		return nil, errors.New("Unable to create game: Game already exists")
 	}
 
@@ -166,17 +165,21 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 }
 
 func (repo *sqlGameRepository) Update(game models.Game) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
-			UPDATE "svoyak"."Pack"
-			SET name = $1::varchar, player_cap = $2::integer, player_joined = $3::integer, state = $4::integer, creator = $5::integer
+			UPDATE "svoyak"."Game"
+			SET name = $1::varchar, players_cap = $2::integer, players_joined = $3::integer, creator = $4::integer, Pack_id = $5::integer
 			WHERE "UUID" = $6::varchar;"
 		`,
-		game.Name, game.PlayersCapacity, game.PlayersJoined, game.State, game.Creator, game.UUID,
+		game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.PackID, game.UUID,
 	)
 
-	if commandTag.RowsAffected() != 1 {
+	if err != nil {
+		return err
+	}
+
+	c, err := res.RowsAffected()
+	if c != 1 {
 		return errors.New("Unable to update game: No game found")
 	}
 
@@ -184,8 +187,7 @@ func (repo *sqlGameRepository) Update(game models.Game) error {
 }
 
 func (repo *sqlGameRepository) Delete(gameID int) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
 			DELETE FROM "svoyak"."Game"
 			WHERE id = $1::integer;
@@ -193,7 +195,12 @@ func (repo *sqlGameRepository) Delete(gameID int) error {
 		gameID,
 	)
 
-	if commandTag.RowsAffected() != 1 {
+	if err != nil {
+		return err
+	}
+
+	c, err := res.RowsAffected()
+	if c != 1 {
 		return errors.New("Unable to delete game: No game found")
 	}
 
