@@ -22,14 +22,15 @@ func NewGameHandler(
 	e *echo.Echo,
 	uc game.UseCase,
 	authMiddleware echo.MiddlewareFunc,
+	csrfMiddleware echo.MiddlewareFunc,
 ) {
 	handler := handler{
 		usecase: uc,
 	}
 
-	group := e.Group("/game")
+	group := e.Group("/game", authMiddleware)
 	group.GET("/", handler.self)
-	// group.POST("/")
+	group.POST("/", csrfMiddleware(handler.create))
 	// group.POST("/:uuid/join")
 	// group.DELETE("/leave")
 	group.GET("/ws", handler.ws)
@@ -59,6 +60,10 @@ func (gh *handler) self(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, content)
+}
+
+func (gh *handler) create(ctx echo.Context) error {
+
 }
 
 func (gh *handler) ws(ctx echo.Context) error {

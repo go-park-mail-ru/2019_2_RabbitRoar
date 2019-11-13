@@ -107,7 +107,7 @@ func Start() {
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
 	_packHttp.NewPackHandler(e, authMiddleware)
-	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware)
+	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }
