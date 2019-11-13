@@ -28,13 +28,14 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Session"
 
 CREATE TABLE IF NOT EXISTS "svoyak"."Pack"
 (
-    "id"          SERIAL        NOT NULL,
-    "name"        VARCHAR(45)   NOT NULL,
-    "author"      INT           NOT NULL,
-    "rating"      INT DEFAULT 0 NOT NULL,
-    "description" text          NOT NULL,
-    "tags"        VARCHAR(256)  NOT NULL,
-    "pack"        json          NOT NULL,
+    "id"          SERIAL             NOT NULL,
+    "name"        VARCHAR(45)        NOT NULL,
+    "author"      INT                NOT NULL,
+    "rating"      INT  DEFAULT 0     NOT NULL,
+    "description" text               NOT NULL,
+    "tags"        VARCHAR(256)       NOT NULL,
+    "pack"        json               NOT NULL,
+    "offline"     bool DEFAULT FALSE NOT NULL,
     PRIMARY KEY ("id"),
     CONSTRAINT "fk_QuestionPack_User"
         FOREIGN KEY ("author")
@@ -82,6 +83,22 @@ CREATE TABLE IF NOT EXISTS "svoyak"."GameUser"
             ON UPDATE NO ACTION
 );
 
+CREATE TABLE IF NOT EXISTS "svoyak"."GameUserHist"
+(
+    "User_id" INT NOT NULL,
+    "Pack_id" INT NOT NULL,
+    PRIMARY KEY ("User_id", "Pack_id"),
+    CONSTRAINT "fk_UserPack_User"
+        FOREIGN KEY ("User_id")
+        REFERENCES "svoyak"."User" ("id")
+        ON DELETE NO ACTION
+        ON UPDATE NO ACTION,
+    CONSTRAINT "fk_UserPack_Pack"
+        FOREIGN KEY ("Pack_id")
+            REFERENCES svoyak."Pack" ("id")
+            ON DELETE NO ACTION
+            ON UPDATE NO ACTION
+);
 
 CREATE TABLE IF NOT EXISTS "svoyak"."UserPack"
 (
@@ -99,6 +116,3 @@ CREATE TABLE IF NOT EXISTS "svoyak"."UserPack"
             ON DELETE NO ACTION
             ON UPDATE NO ACTION
 );
-
-
--- INSERT INTO "svoyak"."User"
