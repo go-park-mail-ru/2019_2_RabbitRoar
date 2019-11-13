@@ -3,7 +3,6 @@ package csrf
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -12,11 +11,11 @@ type JwtToken struct {
 }
 
 type JwtCsrfClaims struct {
-	SessionID uuid.UUID
+	SessionID string
 	jwt.StandardClaims
 }
 
-func (tk *JwtToken) Create(s uuid.UUID) (string, error) {
+func (tk *JwtToken) Create(s string) (string, error) {
 	data := JwtCsrfClaims{
 		SessionID: s,
 		StandardClaims: jwt.StandardClaims{
@@ -36,7 +35,7 @@ func (tk *JwtToken) parseSecretGetter(token *jwt.Token) (interface{}, error) {
 	return tk.Secret, nil
 }
 
-func (tk *JwtToken) Check(s uuid.UUID, inputToken string) (bool, error) {
+func (tk *JwtToken) Check(s string, inputToken string) (bool, error) {
 	payload := &JwtCsrfClaims{}
 	_, err := jwt.ParseWithClaims(inputToken, payload, tk.parseSecretGetter)
 	if err != nil {

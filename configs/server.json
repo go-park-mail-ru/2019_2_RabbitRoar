@@ -22,6 +22,9 @@
     },
     "CSRF": {
       "secret" : "top_secret_csrf_goes_here"
+    },
+    "schema": {
+      "pack": "internal/pkg/pack/pack_schema.json"
     }
   },
 

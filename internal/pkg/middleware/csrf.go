@@ -3,7 +3,6 @@ package middleware
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -21,7 +20,7 @@ func NewCSRFMiddleware(token csrf.JwtToken) echo.MiddlewareFunc {
 
 func (mw csrfMiddleware) CSRFMiddlewareFunc(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		SessionID := ctx.Get("sessionID").(uuid.UUID)
+		SessionID := ctx.Get("sessionID").(string)
 		CSRF := ctx.Request().Header.Get(_csrfHttp.HeaderCSRFToken)
 
 		if ok, err := mw.jwtToken.Check(SessionID, CSRF); !ok {

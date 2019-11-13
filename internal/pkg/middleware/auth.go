@@ -1,26 +1,23 @@
 package middleware
 
 import (
-	"github.com/google/uuid"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"net/http"
-
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 
 	"github.com/labstack/echo/v4"
 )
 
 type authMiddleware struct {
-	useCase session.UseCase
+	useCase user.UseCase
 }
 
-func NewAuthMiddleware(useCase session.UseCase) echo.MiddlewareFunc {
+func NewAuthMiddleware(useCase user.UseCase) echo.MiddlewareFunc {
 	am := authMiddleware{
 		useCase: useCase,
 	}
 	return am.AuthMiddlewareFunc
 }
 
-//TODO: make session renew on close to expire
 func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		SessionID, err := ctx.Cookie("SessionID")
@@ -28,18 +25,13 @@ func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerF
 			return echo.NewHTTPError(http.StatusUnauthorized, "No session.")
 		}
 
-		UUID, err := uuid.Parse(SessionID.Value)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Session invalid.")
-		}
-
-		user, err := u.useCase.GetUserByUUID(UUID)
+		u, err := u.useCase.GetBySessionID(SessionID.Value)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Session not found.")
 		}
 
-		ctx.Set("sessionID", UUID)
-		ctx.Set("user", user)
+		ctx.Set("sessionID", SessionID.Value)
+		ctx.Set("user", u)
 		return next(ctx)
 	}
 }

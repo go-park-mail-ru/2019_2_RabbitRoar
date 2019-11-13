@@ -1,12 +1,11 @@
 package models
 
 type Pack struct {
-	ID          int
-	Name        string
-	Description string
-	Img         string
-	Rating      int
-	Author      int
-	Private     bool
-	Tags        string     // someday change it to slice
+	ID          int         `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description, omitempty"`
+	Rating      int         `json:"rating"`
+	Author      int         `json:"author"`
+	Tags        string      `json:"tags"`
+	Questions   interface{} `json:"pack,omitempty"`
 }
