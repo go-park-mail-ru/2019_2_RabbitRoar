@@ -1,78 +1,189 @@
 package repository
 
 import (
-	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/labstack/gommon/log"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlPackRepository struct {
-	conn *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewSqlPackRepository(conn *pgxpool.Pool) pack.Repository {
+func NewSqlPackRepository(db *sql.DB) pack.Repository {
 	return &sqlPackRepository{
-		conn: conn,
+		db: db,
 	}
 }
 
-func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
-	row := repo.conn.QueryRow(
-		context.Background(),
+func scanPackRow(row *sql.Row) (*models.Pack, error) {
+	var p models.Pack
+	var questions []byte
+
+	err := row.Scan(
+		&p.ID,
+		&p.Name,
+		&p.Description,
+		&p.Rating,
+		&p.Author,
+		&p.Tags,
+		&questions,
+	)
+
+	if err = json.Unmarshal(questions, &p.Questions); err != nil {
+		return nil, err
+	}
+
+	return &p, err
+}
+
+func scanPackRows(rows *sql.Rows) (*models.Pack, error) {
+	var p models.Pack
+	err := rows.Scan(
+		&p.ID,
+		&p.Name,
+		&p.Description,
+		&p.Rating,
+		&p.Author,
+		&p.Tags,
+	)
+
+	return &p, err
+}
+
+func (repo *sqlPackRepository) Create(pack *models.Pack) error {
+	pPack, err := json.Marshal(pack.Questions)
+	if err != nil {
+		return nil
+	}
+	idRow := repo.db.QueryRow(
 		`
-			SELECT id, name, description, img, rating, author, private, tags
+			INSERT INTO "svoyak"."Pack" (id, name, description, rating, author, tags, pack)
+			VALUES (DEFAULT, $1::varchar, $2::text, $3::integer, $4::integer, $5::varchar, $6::json)
+			RETURNING id;
+		`,
+		pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags, pPack,
+	)
+
+	return idRow.Scan(&pack.ID)
+}
+
+func (repo *sqlPackRepository) Update(pack *models.Pack) error {
+	res, err := repo.db.Exec(
+		`
+			UPDATE "svoyak"."Pack"
+			SET name        = $1::varchar,
+    			description = $2::text,
+    			rating      = $3::integer,
+    			author      = $4::integer,
+    			tags        = $5::varchar,
+    			pack        = $6::json
+			WHERE id = $7::integer;
+		`,
+		pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags,pack.Questions, pack.ID,
+	)
+	if err != nil {
+		return nil
+	}
+
+	c, err := res.RowsAffected()
+	if c != 1 {
+		return errors.New("unable to update pack: no pack found")
+	}
+
+	return err
+}
+
+func (repo *sqlPackRepository) Delete(packID int) error {
+	res, err := repo.db.Exec(
+		`
+			DELETE FROM "svoyak"."Pack"
+			WHERE id = $1::integer;
+		`,
+		packID,
+	)
+	if err != nil {
+		return err
+	}
+
+	c, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if c != 1 {
+		return errors.New("unable to delete pack: no pack found")
+	}
+
+	return nil
+}
+
+
+func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
+	row := repo.db.QueryRow(
+		`
+			SELECT id, name, description, rating, author, tags, pack
 			FROM "svoyak"."Pack"
 			WHERE id = $1::integer;
 		`,
 		packID,
 	)
 
-	var pack models.Pack
-	err := row.Scan(&pack.ID, &pack.Name, &pack.Description, &pack.Img, &pack.Rating, &pack.Author, &pack.Private, &pack.Tags)
-
-	return &pack, err
+	return scanPackRow(row)
 }
 
-func (repo sqlPackRepository) GetQuestions(pack models.Pack) (*[]models.Question, error) {
-	rows, err := repo.conn.Query(
-		context.Background(),
-		`
-			SELECT id, text, media, answer, rating, author, tags
-			FROM "svoyak"."Question"
-			WHERE "id" = ANY(SELECT Question_id
-			FROM "svoyak"."PackQuestion"
-			WHERE "QuestionPack_id" = $1::integer);
-		`,
-		pack.ID,
+func (repo sqlPackRepository) FetchOfflinePublic() ([]int, error) {
+	rows, err := repo.db.Query(
+	`
+		SELECT id
+		FROM "svoyak"."Pack"
+		WHERE offline = TRUE
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	var pid int
+	var pids []int
+	for rows.Next() {
+		if err := rows.Scan(&pid); err != nil {
+			return nil, err
+		}
+		pids = append(pids, pid)
+	}
+	return pids, nil
+}
+
+func (repo sqlPackRepository) FetchOffline(caller models.User) ([]int, error) {
+	rows, err := repo.db.Query(
+	`
+		SELECT DISTINCT "Pack_id"
+		FROM "svoyak"."GameUserHist"
+		WHERE "User_id" = $1::int
+	`,
+	caller.ID,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	var questions []models.Question
-
+	var pid int
+	var pids = make([]int, 0, 64)
 	for rows.Next() {
-		var question models.Question
-
-		err := rows.Scan(&question.ID, &question.Text, &question.Media, &question.Answer, &question.Rating, &question.Author, &question.Tags)
-
-		if err != nil {
+		if err := rows.Scan(&pid); err != nil {
 			return nil, err
 		}
-
-		questions = append(questions, question)
+		pids = append(pids, pid)
 	}
-
-	return &questions, rows.Err()
+	return pids, nil
 }
 
-func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int) (*[]models.Pack, error) {
+func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int) ([]models.Pack, error) {
 	var order string
 	if desc {
 		order = "DESC"
@@ -80,123 +191,69 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 		order = "ASC"
 	}
 
-	rows, err := repo.conn.Query(
-		context.Background(),
-		`	
-			SELECT id, name, description, img, rating, author, private, tags
+	rows, err := repo.db.Query(
+		fmt.Sprintf(
+		`
+			SELECT id, name, description, rating, author, tags
 			FROM "svoyak"."Pack"
-			ORDER BY rating $1::text;"
-		`,
-		order,
+			ORDER BY rating %s;
+		`, order,
+		),
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	var packs []models.Pack
+	var packs = make([]models.Pack, 0, pageSize)
 
 	for rows.Next() {
-		var pack models.Pack
-
-		err := rows.Scan(&pack.ID, &pack.Name, &pack.Description, &pack.Img, &pack.Rating, &pack.Author, &pack.Private, &pack.Tags)
+		p, err := scanPackRows(rows)
 
 		if err != nil {
 			return nil, err
 		}
 
-		packs = append(packs, pack)
+		packs = append(packs, *p)
 	}
 
-	return &packs, rows.Err()
+	defer rows.Close()
+
+	return packs, nil
 }
 
-func (repo sqlPackRepository) FetchByTags(tags string, page, pageSize int) (*[]models.Pack, error) {
-	rows, err := repo.conn.Query(
-		context.Background(),
+func (repo sqlPackRepository) FetchByAuthor(u models.User) ([]models.Pack, error) {
+	return nil, nil
+}
+
+func (repo sqlPackRepository) FetchByTags(tags string, page, pageSize int) ([]models.Pack, error) {
+	rows, err := repo.db.Query(
 		`
-			SELECT id, name, description, img, rating, author, private, tags
+			SELECT id, name, description, rating, author, tags
 			FROM "svoyak"."Pack"
 			WHERE tags = $1::varchar
 			OFFSET $2::integer LIMIT $3::integer;
 		`,
-		tags, (page * pageSize), pageSize,
+		tags, page * pageSize, pageSize,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer log.Error(rows.Close())
 
-	var packs []models.Pack
+	var packs = make([]models.Pack, 0, pageSize)
 
 	for rows.Next() {
-		pack := models.Pack{
-			Tags: tags,
-		}
-
-		err := rows.Scan(&pack.ID, &pack.Name, &pack.Description, &pack.Img, &pack.Rating, &pack.Author, &pack.Private)
+		p, err := scanPackRows(rows)
 
 		if err != nil {
 			return nil, err
 		}
 
-		packs = append(packs, pack)
+		packs = append(packs, *p)
 	}
 
-	return &packs, rows.Err()
-}
-
-func (repo *sqlPackRepository) Create(pack models.Pack) (*models.Pack, error) {
-	idRow := repo.conn.QueryRow(
-		context.Background(),
-		`
-			INSERT INTO "svoyak"."Pack" (id, name, description, img, rating, author, private, tags)
-			VALUES (DEFAULT, $1::varchar, $2::text, $3::varchar, $4::integer, $5::integer, $6::boolean, $7::varchar)
-			RETURNING id;
-		`,
-		pack.Name, pack.Description, pack.Img, pack.Rating, pack.Author, pack.Private, pack.Tags,
-	)
-
-	err := idRow.Scan(&pack.ID)
-
-	return &pack, err
-}
-
-func (repo *sqlPackRepository) Update(pack models.Pack) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
-		`
-			UPDATE "svoyak"."Pack"
-			SET name = $1::varchar, description = $2::text, img = $3::varchar, rating = $4::integer, author = $5::integer, private = $6::boolean, tags = $7::varchar
-			WHERE id = $8::integer;
-		`,
-		pack.Name, pack.Description, pack.Img, pack.Rating, pack.Author, pack.Private, pack.Tags, pack.ID,
-	)
-
-	if commandTag.RowsAffected() != 1 {
-		return errors.New("Unable to update pack: No pack found")
-	}
-
-	return err
-}
-
-func (repo *sqlPackRepository) Delete(packID int) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
-		`
-			DELETE FROM "svoyak"."Pack"
-			WHERE id = $1::integer;"
-		`,
-		packID,
-	)
-
-	if commandTag.RowsAffected() != 1 {
-		return errors.New("Unable to delete pack: No pack found")
-	}
-
-	return err
+	return packs, rows.Err()
 }

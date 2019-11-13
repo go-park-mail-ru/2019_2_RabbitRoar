@@ -6,16 +6,12 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/getsentry/sentry-go v0.3.0
-	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.0
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgconn v1.1.0
-	github.com/jackc/pgx v3.6.0+incompatible
 	github.com/jackc/pgx/v4 v4.1.2
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/labstack/gommon v0.3.0
+	github.com/lib/pq v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
@@ -25,6 +21,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/valyala/fasttemplate v1.1.0 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 )

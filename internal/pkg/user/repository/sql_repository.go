@@ -1,29 +1,48 @@
 package repository
 
 import (
-	"context"
+	"database/sql"
 	"errors"
-
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 )
 
-
 type sqlUserRepository struct {
-	conn *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewSqlUserRepository(conn *pgxpool.Pool) user.Repository {
+func NewSqlUserRepository(db *sql.DB) user.Repository {
 	return &sqlUserRepository{
-		conn: conn,
+		db: db,
 	}
 }
 
+func scanUser(row pgx.Row) (*models.User, error) {
+	var u models.User
+	password := make([]byte, 36)
+
+	err := row.Scan(
+		&u.ID,
+		&u.Username,
+		&password,
+		&u.Email,
+		&u.Rating,
+		&u.AvatarUrl,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	u.Password = string(password)
+
+	return &u, err
+}
+
 func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
-	row := repo.conn.QueryRow(
-		context.Background(),
+	row := repo.db.QueryRow(
 		`
 			SELECT id, username, password, email, rating, avatar
 			FROM "svoyak"."User"
@@ -32,18 +51,24 @@ func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
 		userID,
 	)
 
-	var u models.User
-	uPassword := make([]byte, 45)
-	err := row.Scan(&u.ID, &u.Username, &uPassword, &u.Email, &u.Rating, &u.AvatarUrl)
+	return scanUser(row)
+}
 
-	u.Password = string(uPassword)
+func (repo *sqlUserRepository) GetBySessionID(sessionID string) (*models.User, error) {
+	row := repo.db.QueryRow(
+		`
+			SELECT id, username, password, email, rating, avatar
+			FROM "svoyak"."User"
+			WHERE "id" = (SELECT "User_id" FROM "svoyak"."Session" WHERE "UUID" = $1::varchar);
+		`,
+		sessionID,
+	)
 
-	return &u, err
+	return scanUser(row)
 }
 
 func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
-	row := repo.conn.QueryRow(
-		context.Background(),
+	row := repo.db.QueryRow(
 		`
 			SELECT id, username, password, email, rating, avatar
 			FROM "svoyak"."User"
@@ -52,23 +77,11 @@ func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
 		name,
 	)
 
-	var u models.User
-	uPassword := make([]byte, 45)
-	err := row.Scan(&u.ID, &u.Username, &uPassword, &u.Email, &u.Rating, &u.AvatarUrl)
-
-	u.Password = string(uPassword)
-
-	return &u, err
+	return scanUser(row)
 }
 
 func (repo *sqlUserRepository) Create(u models.User) (*models.User, error) {
-	if _, err := repo.GetByName(u.Username); err == nil {
-		return nil, errors.New("Unable to create user: Username already exists")
-	}
-
-	idRow := repo.conn.QueryRow(
-		context.Background(),
-		`
+	idRow := repo.db.QueryRow(`
 			INSERT INTO "svoyak"."User" (id, username, password, email, rating, avatar)
 			VALUES (DEFAULT, $1::varchar, $2::bytea, $3::varchar, $4::integer, $5::varchar)
 			RETURNING id;
@@ -82,8 +95,7 @@ func (repo *sqlUserRepository) Create(u models.User) (*models.User, error) {
 }
 
 func (repo *sqlUserRepository) Update(user models.User) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
 			UPDATE "svoyak"."User"
 			SET username = $1::varchar, password = $2::bytea, email = $3::varchar, rating = $4::integer, avatar = $5::varchar
@@ -92,9 +104,17 @@ func (repo *sqlUserRepository) Update(user models.User) error {
 		user.Username, []byte(user.Password), user.Email, user.Rating, user.AvatarUrl, user.ID,
 	)
 
-	if commandTag.RowsAffected() != 1 {
-		return errors.New("Unable to update user: No user found")
+	if err != nil {
+		return err
 	}
 
-	return err
+	c, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if c != 1 {
+		return errors.New("unable to update user: no user found")
+	}
+
+	return nil
 }

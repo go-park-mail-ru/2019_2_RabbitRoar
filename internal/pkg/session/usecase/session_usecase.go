@@ -16,22 +16,10 @@ func NewSessionUseCase(repository session.Repository) session.UseCase {
 	}
 }
 
-func (uc sessionUseCase) GetUserByUUID(u uuid.UUID) (*models.User, error) {
-	return uc.repository.GetUser(u)
-}
-
-func (uc sessionUseCase) GetUserByStringUUID(su string) (*models.User, error) {
-	UUID, err := uuid.Parse(su)
-	if err != nil {
-		return nil, err
-	}
-	return uc.repository.GetUser(UUID)
-}
-
 func (uc sessionUseCase) Create(u models.User) (*uuid.UUID, error) {
 	return uc.repository.Create(u)
 }
 
 func (uc sessionUseCase) Destroy(sessionId uuid.UUID) {
-	uc.repository.Destroy(sessionId)
+	_ = uc.repository.Destroy(sessionId)
 }

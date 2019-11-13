@@ -3,8 +3,6 @@ package repository
 import (
 	"errors"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
-
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 )
 
@@ -16,9 +14,9 @@ type memUserRepository struct {
 var ErrUserNotFound = errors.New("error user not found")
 var ErrUserConflict = errors.New("error conflict")
 
-func NewMemUserRepository() user.Repository {
-	return &memUserRepository{}
-}
+//func NewMemUserRepository() user.Repository {
+//	return &memUserRepository{}
+//}
 
 func (repo *memUserRepository) GetByName(name string) (*models.User, error) {
 	for _, u := range repo.users {

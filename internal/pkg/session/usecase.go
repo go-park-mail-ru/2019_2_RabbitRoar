@@ -6,8 +6,6 @@ import (
 )
 
 type UseCase interface {
-	GetUserByUUID(uuid.UUID) (*models.User, error)
-	GetUserByStringUUID(string) (*models.User, error)
 	Create(models.User) (*uuid.UUID, error)
 	Destroy(uuid.UUID)
 }

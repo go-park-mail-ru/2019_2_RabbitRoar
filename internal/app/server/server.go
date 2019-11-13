@@ -1,7 +1,7 @@
 package server
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
@@ -12,17 +12,21 @@ import (
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_packHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/delivery/http"
+	_packRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/repository"
+	_packUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/usecase"
 	_sentry "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sentry"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
 	_userHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/delivery/http"
 	_userRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/repository"
 	_userUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/usecase"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/lib/pq"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
+	"github.com/xeipuuv/gojsonschema"
+	"io/ioutil"
 )
 
 var log = logging.MustGetLogger("server")
@@ -71,7 +75,8 @@ func Start() {
 	jwtToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
 	}
-	dbURL := fmt.Sprintf(
+
+	dbDSN := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		viper.GetString("database.host"),
 		viper.GetString("database.port"),
@@ -79,28 +84,39 @@ func Start() {
 		viper.GetString("database.pass"),
 		viper.GetString("database.db"),
 	)
-	log.Info("dbURL: ", dbURL)
-	pgxPool, err := pgxpool.Connect(
-		context.Background(),
-		dbURL,
+	log.Info("dbURL: ", dbDSN)
+	db, err := sql.Open(
+		"postgres",
+		dbDSN,
 	)
 	if err != nil {
 		log.Fatal("error connecting to db: ", err)
 	}
 
-	userRepo := _userRepository.NewSqlUserRepository(pgxPool)
+	userRepo := _userRepository.NewSqlUserRepository(db)
 	userUseCase := _userUseCase.NewUserUseCase(userRepo)
 
-	sessionRepo := _sessionRepository.NewSqlSessionRepository(pgxPool)
+	sessionRepo := _sessionRepository.NewSqlSessionRepository(db)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
-	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
+	schemaBytes, err := ioutil.ReadFile(viper.GetString("server.schema.pack"))
+	if err != nil {
+		log.Fatal("error reading schema for pack", err)
+	}
+	packSchema, err := gojsonschema.NewSchema(gojsonschema.NewBytesLoader(schemaBytes))
+	if err != nil {
+		log.Fatal("error parsing schema for pack", err)
+	}
+	packRepo := _packRepository.NewSqlPackRepository(db)
+	packUseCase := _packUseCase.NewUserUseCase(packRepo)
+
+	authMiddleware := _middleware.NewAuthMiddleware(userUseCase)
 	csrfMiddleware := _middleware.NewCSRFMiddleware(jwtToken)
 
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
-	_packHttp.NewPackHandler(e, authMiddleware)
+	_packHttp.NewPackHandler(e, packUseCase, authMiddleware, csrfMiddleware, packSchema)
 	_gameHttp.NewGameHandler(e, authMiddleware)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))

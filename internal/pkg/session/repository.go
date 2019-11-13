@@ -6,7 +6,6 @@ import (
 )
 
 type Repository interface {
-	GetUser(sessionID uuid.UUID) (*models.User, error)
 	Create(user models.User) (*uuid.UUID, error)
 	Destroy(sessionID uuid.UUID) error
 }

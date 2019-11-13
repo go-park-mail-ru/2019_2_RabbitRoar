@@ -1,43 +1,22 @@
 package repository
 
 import (
-	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type sqlSessionRepository struct {
-	conn *pgxpool.Pool
+	db *sql.DB
 }
 
-func NewSqlSessionRepository(conn *pgxpool.Pool) session.Repository {
+func NewSqlSessionRepository(db *sql.DB) session.Repository {
 	return &sqlSessionRepository{
-		conn: conn,
+		db: db,
 	}
-}
-
-func (repo sqlSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
-	row := repo.conn.QueryRow(
-		context.Background(),
-		`
-			SELECT id, username, password, email, rating, avatar
-			FROM "svoyak"."User"
-			WHERE "id" = (SELECT "User_id" FROM "svoyak"."Session" WHERE "UUID" = $1::varchar);
-		`,
-		sessionID,
-	)
-
-	var u models.User
-	uPassword := make([]byte, 45)
-	err := row.Scan(&u.ID, &u.Username, &uPassword, &u.Email, &u.Rating, &u.AvatarUrl)
-
-	u.Password = string(uPassword)
-
-	return &u, err
 }
 
 func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
@@ -47,16 +26,24 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 		return nil, err
 	}
 
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
 			INSERT INTO "svoyak"."Session" ("UUID", "User_id")
 			VALUES ($1::varchar, $2::integer);
 		`,
 		newUUID, user.ID,
 	)
+	if err != nil {
+		return nil, err
+	}
 
-	if commandTag.RowsAffected() != 1 {
+	c, err := res.RowsAffected()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if c != 1 {
 		return nil, errors.New("unable to create session: Session already exists")
 	}
 
@@ -64,16 +51,22 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 }
 
 func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
-	commandTag, err := repo.conn.Exec(
-		context.Background(),
+	res, err := repo.db.Exec(
 		`
 			DELETE FROM "svoyak"."Session"
 			WHERE "UUID" = $1::varchar;
 		`,
 		sessionID,
 	)
+	if err != nil {
+		return err
+	}
 
-	if commandTag.RowsAffected() != 1 {
+	c, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if c != 1 {
 		return errors.New("unable to destroy session: No session found")
 	}
 
