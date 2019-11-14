@@ -11,7 +11,7 @@ import (
 
 type handler struct {
 	packUseCase pack.UseCase
-	packSchema *gojsonschema.Schema
+	packSchema  *gojsonschema.Schema
 }
 
 func NewPackHandler(
@@ -21,9 +21,9 @@ func NewPackHandler(
 	csrfMiddleware echo.MiddlewareFunc,
 	packSchema *gojsonschema.Schema,
 ) {
-	handler := handler {
+	handler := handler{
 		packUseCase: packUseCase,
-		packSchema: packSchema,
+		packSchema:  packSchema,
 	}
 
 	group := e.Group("/pack", authMiddleware)
