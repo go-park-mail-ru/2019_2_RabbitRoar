@@ -39,7 +39,7 @@ func NewGameHandler(
 	group.POST("/", csrfMiddleware(handler.create))
 	group.POST("/:uuid/join", handler.join)
 	group.DELETE("/leave", handler.leave)
-	group.GET("/ws", handler.ws)
+	group.GET("/:uuid/ws", handler.ws)
 }
 
 func (gh *handler) self(ctx echo.Context) error {
@@ -133,7 +133,6 @@ func (gh *handler) ws(ctx echo.Context) error {
 	defer ws.Close()
 
 	var wg sync.WaitGroup
-
 	wg.Add(2)
 
 	go func(readChan chan []byte, stop chan bool) {
