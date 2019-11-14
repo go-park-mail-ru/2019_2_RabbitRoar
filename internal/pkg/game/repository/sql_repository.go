@@ -143,7 +143,7 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 	return &games, rows.Err()
 }
 
-func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
+func (repo *sqlGameRepository) Create(game models.Game) error {
 	res, err := repo.db.Exec(
 		`
 			INSERT INTO "svoyak"."Game" (UUID, name, players_cap, players_joined, creator, Pack_id)
@@ -153,15 +153,15 @@ func (repo *sqlGameRepository) Create(game models.Game) (*models.Game, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	c, err := res.RowsAffected()
 	if c != 1 {
-		return nil, errors.New("Unable to create game: Game already exists")
+		return errors.New("Unable to create game: Game already exists")
 	}
 
-	return &game, err
+	return err
 }
 
 func (repo *sqlGameRepository) Update(game models.Game) error {

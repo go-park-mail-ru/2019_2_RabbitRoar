@@ -9,4 +9,5 @@ type Game struct {
 	PlayersJoined   int
 	Creator         int
 	PackID          int
+	PackName        string
 }

@@ -7,7 +7,7 @@ import (
 
 type UseCase interface {
 	GetByID(uuid uuid.UUID) (*models.Game, error)
-	Create(g models.Game) (*models.Game, error)
+	Create(g models.Game, u models.User) error
 	Update(g, gUpdate models.Game) (*models.Game, error)
 	Fetch(page int) (*[]models.Game, error)
 }

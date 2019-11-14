@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"net/http"
 )
 
 type handler struct {
@@ -68,7 +68,23 @@ func (gh *handler) self(ctx echo.Context) error {
 }
 
 func (gh *handler) create(ctx echo.Context) error {
+	var g models.Game
+	err := ctx.Bind(&g)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUnprocessableEntity,
+			Message:  "can't parse game object",
+			Internal: err,
+		}
+	}
 
+	creator := ctx.Get("user").(*models.User)
+
+	if err := gh.usecase.Create(g, *creator); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	return ctx.NoContent(http.StatusCreated)
 }
 
 func (gh *handler) ws(ctx echo.Context) error {
