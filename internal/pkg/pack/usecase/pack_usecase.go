@@ -62,6 +62,10 @@ func (useCase* packUseCase) FetchOrderedByRating(desc bool, page, pageSize int) 
 	return useCase.repo.FetchOrderedByRating(desc, page, pageSize)
 }
 
+func (useCase* packUseCase) FetchByAuthor(author models.User, desc bool, page, pageSize int) ([]models.Pack, error) {
+	return useCase.repo.FetchByAuthor(author, true, page, pageSize)
+}
+
 func (useCase* packUseCase) FetchByTags(tags string, page, pageSize int) ([]models.Pack, error) {
-	return useCase.repo.FetchByTags(tags, page, pageSize)
+	return useCase.repo.FetchByTags(tags, true, page, pageSize)
 }

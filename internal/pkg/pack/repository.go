@@ -9,7 +9,7 @@ type Repository interface {
 	GetByID(ID int) (*models.Pack, error)
 	FetchOffline(caller models.User) ([]int, error)
 	FetchOfflinePublic() ([]int, error)
-	FetchByAuthor(u models.User) ([]models.Pack, error)
+	FetchByAuthor(u models.User, desc bool, page, pageSize int) ([]models.Pack, error)
 	FetchOrderedByRating(desc bool, page, pageSize int) ([]models.Pack, error)
-	FetchByTags(tags string, page, pageSize int) ([]models.Pack, error)
+	FetchByTags(tags string, desc bool, page, pageSize int) ([]models.Pack, error)
 }

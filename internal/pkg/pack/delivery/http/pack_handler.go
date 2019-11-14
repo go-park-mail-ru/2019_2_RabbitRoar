@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/xeipuuv/gojsonschema"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 type handler struct {
 	packUseCase pack.UseCase
 	packSchema *gojsonschema.Schema
+	sanitizer *bluemonday.Policy
 }
 
 func NewPackHandler(
@@ -24,31 +26,36 @@ func NewPackHandler(
 	handler := handler {
 		packUseCase: packUseCase,
 		packSchema: packSchema,
+		sanitizer: bluemonday.UGCPolicy(),
 	}
 
 	group := e.Group("/pack", authMiddleware)
-	group.GET("", handler.list)
 	group.POST("", csrfMiddleware(handler.create))
+	group.DELETE("/:id", handler.delete)
+	group.GET("", handler.list)
 	group.GET("/offline", handler.offline)
 	group.GET("/offline/public", handler.offlinePublic)
-	group.DELETE("/:id", handler.delete)
+	group.GET("/author", handler.listAuthor)
 	group.GET("/:id", handler.byID)
 }
 
-func prepareListView(packs []models.Pack) {
-	for _, p := range packs {
-		p.Description = ""
-		p.Questions = nil
+func (h *handler)sanitizeQuestions(p *interface{}) {
+	//TODO: implement me
+}
+
+func (h *handler)sanitize(p models.Pack) models.Pack {
+	p.Name = h.sanitizer.Sanitize(p.Name)
+	p.Description = h.sanitizer.Sanitize(p.Description)
+	p.Tags = h.sanitizer.Sanitize(p.Tags)
+	h.sanitizeQuestions(&p.Questions)
+	return p
+}
+
+func (h *handler)sanitizeSlice(p []models.Pack) []models.Pack {
+	for i := 0; i < len(p); i++ {
+		p[i] = h.sanitize(p[i])
 	}
-	return
-}
-
-func sanitize(p *models.Pack) {
-	//TODO: do it:)
-}
-
-func sanitizeSlice(p []models.Pack) {
-	//TODO: do it:)
+	return p
 }
 
 func extractErrors(es []gojsonschema.ResultError) []string {
@@ -85,14 +92,18 @@ func (h *handler) create(ctx echo.Context) error {
 
 	caller := ctx.Get("user").(*models.User)
 	if err := h.packUseCase.Create(&p, *caller); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error creating pack",
+			Internal: err,
+		}
 	}
 
-	return ctx.JSON(http.StatusCreated, p)
+	return ctx.JSON(http.StatusCreated, h.sanitize(p))
 }
 
 func (h *handler) offline(ctx echo.Context) error {
-	caller := ctx.Get("user").(*models.User) //TODO: err on empty ?
+	caller := ctx.Get("user").(*models.User)
 
 	ids, err := h.packUseCase.FetchOffline(*caller)
 	if err != nil {
@@ -113,13 +124,41 @@ func (h *handler) offlinePublic(ctx echo.Context) error {
 }
 
 func (h *handler) list(ctx echo.Context) error {
-	//TODO: implement params
-	pids, err := h.packUseCase.FetchOrderedByRating(true, 0, 10)
+	order := ctx.Param("order")
+	desc := false
+	if order == "rating" {
+		desc = true
+	}
+	var page = 0
+	pageParam := ctx.Param("page")
+	pageInt, err := strconv.Atoi(pageParam)
+	if err != nil || pageInt < 0 {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "bad page number",
+			Internal: err,
+		}
+	}
+	page = pageInt
+
+	packs, err := h.packUseCase.FetchOrderedByRating(desc, page, 20)
 	if err != nil {
 		return nil
 	}
-	prepareListView(pids)
-	return ctx.JSON(http.StatusOK, pids)
+	return ctx.JSON(http.StatusOK, packs)
+}
+
+func (h* handler) listAuthor(ctx echo.Context) error {
+	caller := ctx.Get("user").(*models.User)
+	packs, err := h.packUseCase.FetchByAuthor(*caller, true, 0, 20)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching packs by author",
+			Internal: err,
+		}
+	}
+	return ctx.JSON(http.StatusOK, packs)
 }
 
 func (h *handler) delete(ctx echo.Context) error {

@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
-	"github.com/labstack/gommon/log"
-
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 )
+
+//TODO: move order by generation to function
+//TODO: move offset and page generation to function
 
 type sqlPackRepository struct {
 	db *sql.DB
@@ -38,20 +39,6 @@ func scanPackRow(row *sql.Row) (*models.Pack, error) {
 	if err = json.Unmarshal(questions, &p.Questions); err != nil {
 		return nil, err
 	}
-
-	return &p, err
-}
-
-func scanPackRows(rows *sql.Rows) (*models.Pack, error) {
-	var p models.Pack
-	err := rows.Scan(
-		&p.ID,
-		&p.Name,
-		&p.Description,
-		&p.Rating,
-		&p.Author,
-		&p.Tags,
-	)
 
 	return &p, err
 }
@@ -183,6 +170,30 @@ func (repo sqlPackRepository) FetchOffline(caller models.User) ([]int, error) {
 	return pids, nil
 }
 
+func scanPackRows(rows *sql.Rows, pageSize int) ([]models.Pack, error) {
+	var packs = make([]models.Pack, 0, pageSize)
+
+	for rows.Next() {
+		var p models.Pack
+		err :=  rows.Scan(
+			&p.ID,
+			&p.Name,
+			&p.Description,
+			&p.Rating,
+			&p.Author,
+			&p.Tags,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		packs = append(packs, p)
+	}
+
+	return packs, nil
+}
+
 func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int) ([]models.Pack, error) {
 	var order string
 	if desc {
@@ -191,73 +202,77 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 		order = "ASC"
 	}
 
-	rows, err := repo.db.Query(
-		fmt.Sprintf(
+	query := fmt.Sprintf(
 		`
 			SELECT id, name, description, rating, author, tags
 			FROM "svoyak"."Pack"
-			ORDER BY rating %s;
+			ORDER BY rating %s
+			OFFSET $1::integer LIMIT $2::integer;
 		`, order,
-		),
 	)
+
+	rows, err := repo.db.Query(query, pageSize * page, pageSize)
+
+	defer rows.Close()
 
 	if err != nil {
 		return nil, err
 	}
 
-	var packs = make([]models.Pack, 0, pageSize)
+	return scanPackRows(rows, pageSize)
+}
 
-	for rows.Next() {
-		p, err := scanPackRows(rows)
-
-		if err != nil {
-			return nil, err
-		}
-
-		packs = append(packs, *p)
+func (repo sqlPackRepository) FetchByAuthor(u models.User, desc bool, page, pageSize int) ([]models.Pack, error) {
+	var order string
+	if desc {
+		order = "DESC"
+	} else {
+		order = "ASC"
 	}
 
+	query := fmt.Sprintf(
+	`
+		SELECT id, name, description, rating, author, tags
+		FROM "svoyak"."Pack"
+		WHERE author = $1
+		ORDER BY rating %s
+		OFFSET $2::integer LIMIT $3::integer;
+	`, order)
+	rows, err := repo.db.Query(query, u.ID, page * pageSize, pageSize)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
-	return packs, nil
+	return scanPackRows(rows, pageSize)
 }
 
-func (repo sqlPackRepository) FetchByAuthor(u models.User) ([]models.Pack, error) {
-	//rows, err := repo.db.Query(
-	//`SELECT id, name, description, rating, author, tags
-	//`,
-	//)
-	return nil, nil
-}
+func (repo sqlPackRepository) FetchByTags(tags string, desc bool, page, pageSize int) ([]models.Pack, error) {
+	var order string
+	if desc {
+		order = "DESC"
+	} else {
+		order = "ASC"
+	}
 
-func (repo sqlPackRepository) FetchByTags(tags string, page, pageSize int) ([]models.Pack, error) {
-	rows, err := repo.db.Query(
+	query := fmt.Sprintf(
 		`
 			SELECT id, name, description, rating, author, tags
 			FROM "svoyak"."Pack"
 			WHERE tags = $1::varchar
+			ORDER BY rating %s
 			OFFSET $2::integer LIMIT $3::integer;
 		`,
-		tags, page * pageSize, pageSize,
+		order,
 	)
+
+	rows, err := repo.db.Query(query, tags, page * pageSize, pageSize)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer log.Error(rows.Close())
+	defer rows.Close()
 
-	var packs = make([]models.Pack, 0, pageSize)
-
-	for rows.Next() {
-		p, err := scanPackRows(rows)
-
-		if err != nil {
-			return nil, err
-		}
-
-		packs = append(packs, *p)
-	}
-
-	return packs, rows.Err()
+	return scanPackRows(rows, pageSize)
 }
