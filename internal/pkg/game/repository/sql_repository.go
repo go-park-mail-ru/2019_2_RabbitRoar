@@ -32,7 +32,7 @@ func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
 				p.name
 			FROM "svoyak"."Game" g
 			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
-			WHERE "UUID" = $1::varchar;
+			WHERE "g"."UUID" = $1::varchar;
 		`,
 		gameID,
 	)
@@ -97,7 +97,7 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 				p.name
 			FROM "svoyak"."Game" g
 			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
-			WHERE "pending" = TRUE
+			WHERE "g"."pending" = TRUE
 			ORDER BY players_joined $1::text;
 		`,
 		order,
@@ -140,7 +140,7 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 			FROM
 				"svoyak"."Game" g
 			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
-			WHERE "pending" = TRUE
+			WHERE "g"."pending" = TRUE
 			OFFSET $1::integer LIMIT $2::integer;
 		`,
 		(page * pageSize), pageSize,
@@ -191,7 +191,7 @@ func (repo *sqlGameRepository) JoinPlayer(userID int, gameID uuid.UUID) error {
 func (repo *sqlGameRepository) KickPlayer(playerID int) (uuid.UUID, error) {
 	row := repo.db.QueryRow(`
 			DELETE FROM "svoyak"."GameUser"
-			WHERE User_id = $1::integer
+			WHERE "User_id" = $1::integer
 			RETURNING Game_UUID;
 		`,
 		playerID,
