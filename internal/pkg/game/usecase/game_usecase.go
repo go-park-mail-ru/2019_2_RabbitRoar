@@ -89,6 +89,10 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	}
 
 	game.PlayersJoined--
+
+	if game.PlayersJoined <= 0 {
+		uc.gameRepo.Delete(game.UUID)
+	}
 	uc.gameRepo.Update(*game)
 
 	return nil
