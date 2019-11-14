@@ -103,9 +103,6 @@ func Start() {
 	sessionRepo := _sessionRepository.NewSqlSessionRepository(db)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
-	gameRepo := _gameRepository.NewSqlGameRepository(db)
-	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo)
-
 	schemaBytes, err := ioutil.ReadFile(viper.GetString("server.schema.pack"))
 	if err != nil {
 		log.Fatal("error reading schema for pack", err)
@@ -116,6 +113,9 @@ func Start() {
 	}
 	packRepo := _packRepository.NewSqlPackRepository(db)
 	packUseCase := _packUseCase.NewUserUseCase(packRepo)
+
+	gameRepo := _gameRepository.NewSqlGameRepository(db)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo)
 
 	authMiddleware := _middleware.NewAuthMiddleware(userUseCase)
 
