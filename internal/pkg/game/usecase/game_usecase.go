@@ -38,12 +38,9 @@ func (uc *gameUseCase) Create(g models.Game, u models.User) error {
 	g.UUID = newUUID
 	g.PlayersJoined = 0
 	g.Creator = u.ID
+	g.Pending = true
 
 	return uc.gameRepo.Create(g)
-}
-
-func (uc *gameUseCase) Update(g, gUpdate models.Game) (*models.Game, error) {
-	return &g, uc.gameRepo.Update(g)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
@@ -66,6 +63,11 @@ func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
 	}
 
 	game.PlayersJoined++
+
+	if game.PlayersJoined == game.PlayersCapacity {
+		game.Pending = false
+	}
+
 	uc.gameRepo.Update(*game)
 
 	return uc.gameRepo.JoinPlayer(playerID, game.UUID)

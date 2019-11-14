@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Game"
     "players_cap"    SMALLINT           NOT NULL,
     "players_joined" SMALLINT DEFAULT 0 NOT NULL,
     "creator"        INT                NOT NULL,
+    "pending"        BOOLEAN            NOT NULL,
     "Pack_id"        INT                NOT NULL,
     PRIMARY KEY ("UUID"),
     CONSTRAINT "fk_Game_User"

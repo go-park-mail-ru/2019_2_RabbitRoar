@@ -8,6 +8,7 @@ type Game struct {
 	PlayersCapacity int
 	PlayersJoined   int
 	Creator         int
+	Pending         bool
 	PackID          int
 	PackName        string
 }

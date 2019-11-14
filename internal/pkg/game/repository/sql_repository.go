@@ -27,6 +27,7 @@ func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
 				g.players_cap,
 				g.players_joined,
 				g.creator,
+				g.pending,
 				g.Pack_id,
 				p.name
 			FROM "svoyak"."Game" g
@@ -37,7 +38,7 @@ func (repo sqlGameRepository) GetByID(gameID uuid.UUID) (*models.Game, error) {
 	)
 
 	var game models.Game
-	err := row.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID, &game.PackName)
+	err := row.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.Pending, &game.PackID, &game.PackName)
 
 	return &game, err
 }
@@ -91,10 +92,12 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 				g.players_cap,
 				g.players_joined,
 				g.creator,
+				g.pending,
 				g.Pack_id,
 				p.name
 			FROM "svoyak"."Game" g
 			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
+			WHERE "pending" = TRUE
 			ORDER BY players_joined $1::text;
 		`,
 		order,
@@ -111,7 +114,7 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 	for rows.Next() {
 		var game models.Game
 
-		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID, &game.PackName)
+		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.Pending, &game.PackID, &game.PackName)
 
 		if err != nil {
 			return nil, err
@@ -131,11 +134,13 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 				g.players_cap,
 				g.players_joined,
 				g.creator,
+				g.pending,
 				g.Pack_id,
 				p.name
 			FROM
 				"svoyak"."Game" g
 			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
+			WHERE "pending" = TRUE
 			OFFSET $1::integer LIMIT $2::integer;
 		`,
 		(page * pageSize), pageSize,
@@ -152,7 +157,7 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 	for rows.Next() {
 		var game models.Game
 
-		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.PackID, &game.PackName)
+		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.Pending, &game.PackID, &game.PackName)
 		if err != nil {
 			return nil, err
 		}
@@ -201,10 +206,10 @@ func (repo *sqlGameRepository) KickPlayer(playerID int) (uuid.UUID, error) {
 
 func (repo *sqlGameRepository) Create(game models.Game) error {
 	res, err := repo.db.Exec(`
-			INSERT INTO "svoyak"."Game" (UUID, name, players_cap, players_joined, creator, Pack_id)
-			VALUES ($1::varchar, $2::varchar, $3::integer, $4::integer, $5::integer, $6::integer);
+			INSERT INTO "svoyak"."Game" (UUID, name, players_cap, players_joined, creator, pending, Pack_id)
+			VALUES ($1::varchar, $2::varchar, $3::integer, $4::integer, $5::integer, $6::boolean, $7::integer);
 		`,
-		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.PackID,
+		game.UUID, game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.Pending, game.PackID,
 	)
 
 	if err != nil {
@@ -222,10 +227,10 @@ func (repo *sqlGameRepository) Create(game models.Game) error {
 func (repo *sqlGameRepository) Update(game models.Game) error {
 	res, err := repo.db.Exec(`
 			UPDATE "svoyak"."Game"
-			SET name = $1::varchar, players_cap = $2::integer, players_joined = $3::integer, creator = $4::integer, Pack_id = $5::integer
-			WHERE "UUID" = $6::varchar;"
+			SET name = $1::varchar, players_cap = $2::integer, players_joined = $3::integer, creator = $4::integer, pending = $5::boolean, Pack_id = $6::integer
+			WHERE "UUID" = $7::varchar;"
 		`,
-		game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.PackID, game.UUID,
+		game.Name, game.PlayersCapacity, game.PlayersJoined, game.Creator, game.Pending, game.PackID, game.UUID,
 	)
 
 	if err != nil {
@@ -243,7 +248,7 @@ func (repo *sqlGameRepository) Update(game models.Game) error {
 func (repo *sqlGameRepository) Delete(gameID int) error {
 	res, err := repo.db.Exec(`
 			DELETE FROM "svoyak"."Game"
-			WHERE id = $1::integer;
+			WHERE UUID = $1::integer;
 		`,
 		gameID,
 	)
