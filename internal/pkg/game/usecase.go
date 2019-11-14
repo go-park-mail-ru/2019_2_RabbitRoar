@@ -10,4 +10,6 @@ type UseCase interface {
 	Create(g models.Game, u models.User) error
 	Update(g, gUpdate models.Game) (*models.Game, error)
 	Fetch(page int) (*[]models.Game, error)
+	JoinPlayerToGame(playerID int, gameID uuid.UUID) error
+	KickPlayerFromGame(playerID int) error
 }

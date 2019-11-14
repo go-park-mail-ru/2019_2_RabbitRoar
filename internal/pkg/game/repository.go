@@ -10,6 +10,8 @@ type Repository interface {
 	GetPlayers(game models.Game) (*[]models.User, error)
 	FetchOrderedByPlayersJoined(desc bool, pageSize, page int) (*[]models.Game, error)
 	Fetch(pageSize, page int) (*[]models.Game, error)
+	JoinPlayer(playerID int, gameID uuid.UUID) error
+	KickPlayer(playerID int) (uuid.UUID, error)
 	Create(pack models.Game) error
 	Update(pack models.Game) error
 	Delete(gameID int) error

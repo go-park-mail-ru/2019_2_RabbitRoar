@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -36,8 +37,8 @@ func NewGameHandler(
 	group := e.Group("/game", authMiddleware)
 	group.GET("/", handler.self)
 	group.POST("/", csrfMiddleware(handler.create))
-	// group.POST("/:uuid/join")
-	// group.DELETE("/leave")
+	group.POST("/:uuid/join", handler.join)
+	group.DELETE("/leave", handler.leave)
 	group.GET("/ws", handler.ws)
 }
 
@@ -85,6 +86,43 @@ func (gh *handler) create(ctx echo.Context) error {
 	}
 
 	return ctx.NoContent(http.StatusCreated)
+}
+
+func (gh *handler) join(ctx echo.Context) error {
+	gameID, err := uuid.Parse(ctx.Param("uuid"))
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUnprocessableEntity,
+			Message:  "can't parse game uuid",
+			Internal: err,
+		}
+	}
+
+	userID := ctx.Get("user").(*models.User).ID
+
+	if err := gh.usecase.JoinPlayerToGame(userID, gameID); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error joining the game",
+			Internal: err,
+		}
+	}
+
+	return ctx.NoContent(http.StatusOK)
+}
+
+func (gh *handler) leave(ctx echo.Context) error {
+	userID := ctx.Get("user").(*models.User).ID
+
+	if err := gh.usecase.KickPlayerFromGame(userID); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error leaving the game",
+			Internal: err,
+		}
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }
 
 func (gh *handler) ws(ctx echo.Context) error {

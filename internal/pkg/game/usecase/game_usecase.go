@@ -1,9 +1,10 @@
 package usecase
 
 import (
+	"errors"
+
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
@@ -14,14 +15,12 @@ var log = logging.MustGetLogger("game_handler")
 
 type gameUseCase struct {
 	gameRepo  game.Repository
-	packRepo  pack.Repository
 	sanitizer *bluemonday.Policy
 }
 
-func NewGameUseCase(gameRepo game.Repository, packRepo pack.Repository) game.UseCase {
+func NewGameUseCase(gameRepo game.Repository) game.UseCase {
 	return &gameUseCase{
 		gameRepo:  gameRepo,
-		packRepo:  packRepo,
 		sanitizer: bluemonday.UGCPolicy(),
 	}
 }
@@ -53,14 +52,42 @@ func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 		return nil, err
 	}
 
-	for _, game := range *games {
-		gamePack, err := uc.packRepo.GetByID(game.PackID)
-		if err != nil {
-			return nil, err
-		}
+	return games, nil
+}
 
-		game.PackName = gamePack.Name
+func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
+	game, err := uc.gameRepo.GetByID(gameID)
+	if err != nil {
+		return err
 	}
 
-	return games, nil
+	if game.PlayersJoined >= game.PlayersCapacity {
+		return errors.New("unable to join the room: room is full")
+	}
+
+	game.PlayersJoined++
+	uc.gameRepo.Update(*game)
+
+	return uc.gameRepo.JoinPlayer(playerID, game.UUID)
+}
+
+func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
+	gameID, err := uc.gameRepo.KickPlayer(playerID)
+	if err != nil {
+		return err
+	}
+
+	game, err := uc.gameRepo.GetByID(gameID)
+	if err != nil {
+		return err
+	}
+
+	if game.PlayersJoined <= 0 {
+		return errors.New("unable to leave the room: room is empty")
+	}
+
+	game.PlayersJoined--
+	uc.gameRepo.Update(*game)
+
+	return nil
 }
