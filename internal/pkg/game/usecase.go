@@ -12,4 +12,7 @@ type UseCase interface {
 	JoinPlayerToGame(playerID int, gameID uuid.UUID) error
 	KickPlayerFromGame(playerID int) error
 	FetchAllReadyGames() (*[]models.Game, error)
+
+	NewConnection() PlayerConnection
+	JoinConnectionToGame(gameID uuid.UUID, conn PlayerConnection) error
 }

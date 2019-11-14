@@ -130,10 +130,31 @@ func (gh *handler) ws(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	defer ws.Close()
 
 	var wg sync.WaitGroup
 	wg.Add(2)
+
+	conn := gh.usecase.NewConnection()
+
+	gameID, err := uuid.Parse(ctx.Param("uuid"))
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUnprocessableEntity,
+			Message:  "can't parse game uuid",
+			Internal: err,
+		}
+	}
+
+	err = gh.usecase.JoinConnectionToGame(gameID, conn)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "invalid game uuid",
+			Internal: err,
+		}
+	}
 
 	go func(readChan chan []byte, stop chan bool) {
 		defer wg.Done()
@@ -156,7 +177,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 				readChan <- msg
 			}
 		}
-	}()
+	}(conn.GetReceiveChan(), conn.GetStopReceiveChan())
 
 	go func(writeChan chan []byte, stop chan bool) {
 		defer wg.Done()
@@ -184,7 +205,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 				}
 			}
 		}
-	}()
+	}(conn.GetSendChan(), conn.GetStopSendChan())
 
 	wg.Wait()
 

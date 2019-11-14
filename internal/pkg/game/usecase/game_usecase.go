@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/connection"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
@@ -14,19 +15,21 @@ import (
 var log = logging.MustGetLogger("game_handler")
 
 type gameUseCase struct {
-	gameRepo  game.Repository
+	sqlRepo   game.SQLRepository
+	memRepo   game.MemRepository
 	sanitizer *bluemonday.Policy
 }
 
-func NewGameUseCase(gameRepo game.Repository) game.UseCase {
+func NewGameUseCase(sqlRepo game.SQLRepository, memRepo game.MemRepository) game.UseCase {
 	return &gameUseCase{
-		gameRepo:  gameRepo,
+		sqlRepo:   sqlRepo,
+		memRepo:   memRepo,
 		sanitizer: bluemonday.UGCPolicy(),
 	}
 }
 
 func (uc *gameUseCase) GetByID(uuid uuid.UUID) (*models.Game, error) {
-	return uc.gameRepo.GetByID(uuid)
+	return uc.sqlRepo.GetByID(uuid)
 }
 
 func (uc *gameUseCase) Create(g models.Game, u models.User) error {
@@ -40,11 +43,11 @@ func (uc *gameUseCase) Create(g models.Game, u models.User) error {
 	g.Creator = u.ID
 	g.Pending = true
 
-	return uc.gameRepo.Create(g)
+	return uc.sqlRepo.Create(g)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
-	games, err := uc.gameRepo.Fetch(viper.GetInt("internal.page_size"), page)
+	games, err := uc.sqlRepo.Fetch(viper.GetInt("internal.page_size"), page)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +56,7 @@ func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 }
 
 func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
-	game, err := uc.gameRepo.GetByID(gameID)
+	game, err := uc.sqlRepo.GetByID(gameID)
 	if err != nil {
 		return err
 	}
@@ -68,18 +71,18 @@ func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
 		game.Pending = false
 	}
 
-	uc.gameRepo.Update(*game)
+	uc.sqlRepo.Update(*game)
 
-	return uc.gameRepo.JoinPlayer(playerID, game.UUID)
+	return uc.sqlRepo.JoinPlayer(playerID, game.UUID)
 }
 
 func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
-	gameID, err := uc.gameRepo.KickPlayer(playerID)
+	gameID, err := uc.sqlRepo.KickPlayer(playerID)
 	if err != nil {
 		return err
 	}
 
-	game, err := uc.gameRepo.GetByID(gameID)
+	game, err := uc.sqlRepo.GetByID(gameID)
 	if err != nil {
 		return err
 	}
@@ -91,14 +94,27 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	game.PlayersJoined--
 
 	if game.PlayersJoined <= 0 {
-		uc.gameRepo.Delete(game.UUID)
+		uc.sqlRepo.Delete(game.UUID)
 	} else {
-		uc.gameRepo.Update(*game)
+		uc.sqlRepo.Update(*game)
 	}
 
 	return nil
 }
 
 func (uc *gameUseCase) FetchAllReadyGames() (*[]models.Game, error) {
-	return uc.gameRepo.FetchAllReadyGames()
+	return uc.sqlRepo.FetchAllReadyGames()
+}
+
+func (uc *gameUseCase) NewConnection() game.PlayerConnection {
+	sendChan := make(chan []byte)
+	receiveChan := make(chan []byte)
+	stopSend := make(chan bool)
+	stopReceive := make(chan bool)
+
+	return connection.NewConnection(sendChan, receiveChan, stopSend, stopReceive)
+}
+
+func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, conn game.PlayerConnection) error {
+	return uc.memRepo.JoinConnection(gameID, conn)
 }

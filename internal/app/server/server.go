@@ -114,8 +114,9 @@ func Start() {
 	packRepo := _packRepository.NewSqlPackRepository(db)
 	packUseCase := _packUseCase.NewUserUseCase(packRepo)
 
-	gameRepo := _gameRepository.NewSqlGameRepository(db)
-	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo)
+	gameSQLRepo := _gameRepository.NewSqlGameRepository(db)
+	gameMemRepo := _gameRepository.NewMemGameRepository()
+	gameUseCase := _gameUseCase.NewGameUseCase(gameSQLRepo, gameMemRepo)
 
 	authMiddleware := _middleware.NewAuthMiddleware(userUseCase)
 

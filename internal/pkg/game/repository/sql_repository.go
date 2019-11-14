@@ -13,7 +13,7 @@ type sqlGameRepository struct {
 	db *sql.DB
 }
 
-func NewSqlGameRepository(db *sql.DB) game.Repository {
+func NewSqlGameRepository(db *sql.DB) game.SQLRepository {
 	return &sqlGameRepository{
 		db: db,
 	}
