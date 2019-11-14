@@ -20,17 +20,17 @@ func NewAuthMiddleware(useCase user.UseCase) echo.MiddlewareFunc {
 
 func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		SessionID, err := ctx.Cookie("SessionID")
+		sessionID, err := ctx.Cookie("SessionID")
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "No session.")
 		}
 
-		u, err := u.useCase.GetBySessionID(SessionID.Value)
+		u, err := u.useCase.GetBySessionID(sessionID.Value)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Session not found.")
 		}
 
-		ctx.Set("sessionID", SessionID.Value)
+		ctx.Set("sessionID", sessionID.Value)
 		ctx.Set("user", u)
 		return next(ctx)
 	}

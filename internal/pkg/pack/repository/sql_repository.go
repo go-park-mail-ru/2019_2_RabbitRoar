@@ -223,6 +223,10 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 }
 
 func (repo sqlPackRepository) FetchByAuthor(u models.User) ([]models.Pack, error) {
+	//rows, err := repo.db.Query(
+	//`SELECT id, name, description, rating, author, tags
+	//`,
+	//)
 	return nil, nil
 }
 

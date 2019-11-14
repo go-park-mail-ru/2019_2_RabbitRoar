@@ -19,8 +19,8 @@ func NewSqlSessionRepository(db *sql.DB) session.Repository {
 	}
 }
 
-func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
-	newUUID, err := uuid.NewUUID()
+func (repo *sqlSessionRepository) Create(user models.User) (*string, error) {
+	UUID, err := uuid.NewUUID()
 
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 			INSERT INTO "svoyak"."Session" ("UUID", "User_id")
 			VALUES ($1::varchar, $2::integer);
 		`,
-		newUUID, user.ID,
+		UUID, user.ID,
 	)
 	if err != nil {
 		return nil, err
@@ -46,11 +46,12 @@ func (repo *sqlSessionRepository) Create(user models.User) (*uuid.UUID, error) {
 	if c != 1 {
 		return nil, errors.New("unable to create session: Session already exists")
 	}
+	sessionID := UUID.String()
 
-	return &newUUID, err
+	return &sessionID, err
 }
 
-func (repo *sqlSessionRepository) Destroy(sessionID uuid.UUID) error {
+func (repo *sqlSessionRepository) Destroy(sessionID string) error {
 	res, err := repo.db.Exec(
 		`
 			DELETE FROM "svoyak"."Session"
