@@ -12,6 +12,7 @@ type Repository interface {
 	Fetch(pageSize, page int) (*[]models.Game, error)
 	JoinPlayer(playerID int, gameID uuid.UUID) error
 	KickPlayer(playerID int) (uuid.UUID, error)
+	FetchAllReadyGames() (*[]models.Game, error)
 	Create(pack models.Game) error
 	Update(pack models.Game) error
 	Delete(gameID uuid.UUID) error

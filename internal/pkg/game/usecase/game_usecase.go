@@ -92,8 +92,13 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 
 	if game.PlayersJoined <= 0 {
 		uc.gameRepo.Delete(game.UUID)
+	} else {
+		uc.gameRepo.Update(*game)
 	}
-	uc.gameRepo.Update(*game)
 
 	return nil
+}
+
+func (uc *gameUseCase) FetchAllReadyGames() (*[]models.Game, error) {
+	return uc.gameRepo.FetchAllReadyGames()
 }

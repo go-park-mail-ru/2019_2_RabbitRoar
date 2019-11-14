@@ -204,6 +204,50 @@ func (repo *sqlGameRepository) KickPlayer(playerID int) (uuid.UUID, error) {
 	return gameID, err
 }
 
+func (repo sqlGameRepository) FetchAllReadyGames() (*[]models.Game, error) {
+	rows, err := repo.db.Query(`
+			SELECT 
+				g.UUID,
+				g.name,
+				g.players_cap,
+				g.players_joined,
+				g.creator,
+				g.pending,
+				g.Pack_id,
+				p.name
+			FROM
+				"svoyak"."Game" g
+			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
+			WHERE
+				"g"."player_cap" = "g"."players_joined"
+			AND
+				"g"."pending" = TRUE;
+		`,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var games []models.Game
+
+	for rows.Next() {
+		var game models.Game
+
+		err := rows.Scan(&game.UUID, &game.Name, &game.PlayersCapacity, &game.PlayersJoined, &game.Creator, &game.Pending, &game.PackID, &game.PackName)
+
+		if err != nil {
+			return nil, err
+		}
+
+		games = append(games, game)
+	}
+
+	return &games, rows.Err()
+}
+
 func (repo *sqlGameRepository) Create(game models.Game) error {
 	res, err := repo.db.Exec(`
 			INSERT INTO "svoyak"."Game" (UUID, name, players_cap, players_joined, creator, pending, Pack_id)
