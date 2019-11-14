@@ -245,10 +245,10 @@ func (repo *sqlGameRepository) Update(game models.Game) error {
 	return err
 }
 
-func (repo *sqlGameRepository) Delete(gameID int) error {
+func (repo *sqlGameRepository) Delete(gameID uuid.UUID) error {
 	res, err := repo.db.Exec(`
 			DELETE FROM "svoyak"."Game"
-			WHERE UUID = $1::integer;
+			WHERE UUID = $1::varchar;
 		`,
 		gameID,
 	)

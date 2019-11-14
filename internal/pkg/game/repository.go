@@ -14,5 +14,5 @@ type Repository interface {
 	KickPlayer(playerID int) (uuid.UUID, error)
 	Create(pack models.Game) error
 	Update(pack models.Game) error
-	Delete(gameID int) error
+	Delete(gameID uuid.UUID) error
 }
