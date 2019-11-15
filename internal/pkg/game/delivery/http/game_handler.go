@@ -4,14 +4,12 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 )
 
 type handler struct {
@@ -39,7 +37,7 @@ func NewGameHandler(
 	group.POST("/", csrfMiddleware(handler.create))
 	group.POST("/:uuid/join", handler.join)
 	group.DELETE("/leave", handler.leave)
-	group.GET("/:uuid/ws", handler.ws)
+	group.GET("/ws", handler.ws)
 }
 
 func (gh *handler) self(ctx echo.Context) error {
@@ -65,7 +63,7 @@ func (gh *handler) self(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, content)
+	return ctx.JSON(http.StatusOK, *content)
 }
 
 func (gh *handler) create(ctx echo.Context) error {
@@ -81,7 +79,11 @@ func (gh *handler) create(ctx echo.Context) error {
 
 	creator := ctx.Get("user").(*models.User)
 
-	if err := gh.usecase.Create(g, *creator); err != nil {
+	if err := gh.usecase.SQLCreate(g, *creator); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	if err := gh.usecase.MemCreate(g, *creator); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
@@ -100,6 +102,15 @@ func (gh *handler) join(ctx echo.Context) error {
 
 	userID := ctx.Get("user").(*models.User).ID
 
+	g, err := gh.usecase.GetByID(gameID)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "error finding the game",
+			Internal: err,
+		}
+	}
+
 	if err := gh.usecase.JoinPlayerToGame(userID, gameID); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
@@ -108,7 +119,7 @@ func (gh *handler) join(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusOK, *g)
 }
 
 func (gh *handler) leave(ctx echo.Context) error {
@@ -133,79 +144,33 @@ func (gh *handler) ws(ctx echo.Context) error {
 
 	defer ws.Close()
 
-	var wg sync.WaitGroup
-	wg.Add(2)
+	user := ctx.Get("user").(*models.User)
 
 	conn := gh.usecase.NewConnection()
 
-	gameID, err := uuid.Parse(ctx.Param("uuid"))
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusUnprocessableEntity,
-			Message:  "can't parse game uuid",
-			Internal: err,
-		}
-	}
-
-	err = gh.usecase.JoinConnectionToGame(gameID, conn)
+	gameID, err := gh.usecase.GetGameIDByUserID(user.ID)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
-			Message:  "invalid game uuid",
+			Message:  "error finding game ID",
 			Internal: err,
 		}
 	}
 
-	go func(readChan chan []byte, stop chan bool) {
-		defer wg.Done()
-
-		for {
-			select {
-			case <-stop:
-				close(readChan)
-				log.Info("Stopped reading from websocket manually")
-				return
-
-			default:
-				_, msg, err := ws.ReadMessage()
-				if err != nil {
-					close(readChan)
-					log.Info(err)
-					return
-				}
-
-				readChan <- msg
-			}
+	err = gh.usecase.JoinConnectionToGame(gameID, *user, conn)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "unable to join the game",
+			Internal: err,
 		}
-	}(conn.GetReceiveChan(), conn.GetStopReceiveChan())
+	}
 
-	go func(writeChan chan []byte, stop chan bool) {
-		defer wg.Done()
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-		ticker := time.NewTicker(10 * time.Second)
-
-		for {
-			select {
-			case <-stop:
-				log.Info("Stopped writing into websocket manually")
-				return
-
-			case msg := <-writeChan:
-				err = ws.WriteMessage(websocket.TextMessage, msg)
-				if err != nil {
-					log.Info(err)
-					return
-				}
-
-			case <-ticker.C:
-				err := ws.WriteMessage(websocket.PingMessage, []byte{})
-				if err != nil {
-					log.Info(err)
-					return
-				}
-			}
-		}
-	}(conn.GetSendChan(), conn.GetStopSendChan())
+	go conn.RunReceive(ws, &wg)
+	go conn.RunSend(ws, &wg)
 
 	wg.Wait()
 
