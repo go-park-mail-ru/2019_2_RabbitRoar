@@ -13,7 +13,6 @@ type SQLRepository interface {
 	Fetch(pageSize, page int) (*[]models.Game, error)
 	JoinPlayer(playerID int, gameID uuid.UUID) error
 	KickPlayer(playerID int) (uuid.UUID, error)
-	// FetchAllReadyGames() (*[]models.Game, error)
 	Create(game models.Game) error
 	Update(game models.Game) error
 	Delete(gameID uuid.UUID) error
