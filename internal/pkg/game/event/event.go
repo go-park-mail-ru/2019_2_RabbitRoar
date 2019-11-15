@@ -8,6 +8,13 @@ func NewEvent(et game.EventType, data ...interface{}) *game.Event {
 	}
 
 	switch et {
+	case game.UserConnected:
+		e.Payload = game.UserConnectedPayload{
+			RoomName: data[0].(string),
+			PackName: data[1].(string),
+			Players:  data[2].([]game.PlayerInfo),
+		}
+
 	case game.GameStart:
 		e.Payload = game.GameStartPayload{
 			Themes: data[0].([5]string),
@@ -44,7 +51,7 @@ func NewEvent(et game.EventType, data ...interface{}) *game.Event {
 			PlayerID: data[0].(int),
 		}
 
-	case game.VerictGivenBack:
+	case game.VerdictGivenBack:
 		e.Payload = game.VerictPayload{
 			Verdict: data[0].(bool),
 		}
