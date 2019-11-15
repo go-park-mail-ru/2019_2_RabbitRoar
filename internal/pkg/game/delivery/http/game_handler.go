@@ -2,10 +2,10 @@ package http
 
 import (
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -41,14 +41,7 @@ func NewGameHandler(
 }
 
 func (gh *handler) self(ctx echo.Context) error {
-	page, err := strconv.Atoi(ctx.QueryParam("page"))
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusBadRequest,
-			Message:  "cannot parse page",
-			Internal: err,
-		}
-	}
+	page := http_utils.GetIntParam(ctx, 0)
 
 	if page < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "page less than 0 provided")
