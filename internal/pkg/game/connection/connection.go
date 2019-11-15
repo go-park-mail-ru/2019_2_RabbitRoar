@@ -11,7 +11,6 @@ import (
 )
 
 type gameConnection struct {
-	userID      int
 	sendChan    chan game.Event
 	receiveChan chan game.Event
 	stopSend    chan bool
@@ -21,12 +20,10 @@ type gameConnection struct {
 var log = logging.MustGetLogger("connection")
 
 func NewConnection(
-	userID int,
 	sendChan, receiveChan chan game.Event,
 	stopSend, stopReceive chan bool,
 ) game.Connection {
 	return &gameConnection{
-		userID:      userID,
 		sendChan:    sendChan,
 		receiveChan: receiveChan,
 		stopSend:    stopSend,
@@ -93,10 +90,6 @@ func (conn *gameConnection) RunSend(ws *websocket.Conn, wg *sync.WaitGroup) erro
 func (conn *gameConnection) Stop() {
 	conn.stopSend <- true
 	conn.stopReceive <- true
-}
-
-func (conn *gameConnection) GetUserID() int {
-	return conn.userID
 }
 
 func (conn *gameConnection) GetSendChan() chan game.Event {
