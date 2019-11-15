@@ -1,8 +1,11 @@
 package game
 
-import "github.com/google/uuid"
+import (
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/google/uuid"
+)
 
 type MemRepository interface {
-	Create(gameID uuid.UUID, hostID int) error
-	JoinConnection(gameID uuid.UUID, conn Connection) error
+	Create(gameID uuid.UUID, host models.User) error
+	JoinConnection(gameID uuid.UUID, u models.User, conn Connection) error
 }

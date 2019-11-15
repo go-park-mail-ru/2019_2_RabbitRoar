@@ -4,13 +4,18 @@ import (
 	"errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 )
 
+type player struct {
+	info game.PlayerInfo
+	conn game.Connection
+}
+
 type gameObj struct {
-	hostID       int
-	hostConn     game.Connection
-	playersConns []game.Connection
+	host    player
+	players []player
 }
 
 type memGameRepository struct {
@@ -23,27 +28,45 @@ func NewMemGameRepository() game.MemRepository {
 	}
 }
 
-func (repo *memGameRepository) Create(gameID uuid.UUID, hostID int) error {
+func (repo *memGameRepository) Create(gameID uuid.UUID, host models.User) error {
 	if _, exists := repo.games[gameID]; exists {
 		return errors.New("game already exists")
 	}
 
 	repo.games[gameID] = &gameObj{
-		hostID: hostID,
+		host: player{
+			info: game.PlayerInfo{
+				ID:       host.ID,
+				Username: host.Username,
+				Avatar:   host.AvatarUrl,
+				Score:    0,
+			},
+		},
 	}
 
 	return nil
 }
 
-func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, conn game.Connection) error {
+func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, u models.User, conn game.Connection) error {
 	if _, exists := repo.games[gameID]; !exists {
 		return errors.New("no game found to join connection")
 	}
 
-	if conn.GetUserID() == repo.games[gameID].hostID {
-		repo.games[gameID].hostConn = conn
+	if u.ID == repo.games[gameID].host.info.ID {
+		repo.games[gameID].host.conn = conn
 	} else {
-		repo.games[gameID].playersConns = append(repo.games[gameID].playersConns, conn)
+		repo.games[gameID].players = append(
+			repo.games[gameID].players,
+			player{
+				info: game.PlayerInfo{
+					ID:       u.ID,
+					Username: u.Username,
+					Avatar:   u.AvatarUrl,
+					Score:    0,
+				},
+				conn: conn,
+			},
+		)
 	}
 
 	return nil
