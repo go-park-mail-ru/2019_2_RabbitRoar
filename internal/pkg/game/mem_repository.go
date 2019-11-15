@@ -3,5 +3,6 @@ package game
 import "github.com/google/uuid"
 
 type MemRepository interface {
-	JoinConnection(gameID uuid.UUID, conn PlayerConnection) error
+	Create(gameID uuid.UUID, hostID int) error
+	JoinConnection(gameID uuid.UUID, conn Connection) error
 }
