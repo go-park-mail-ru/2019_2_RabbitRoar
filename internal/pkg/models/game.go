@@ -6,9 +6,9 @@ type Game struct {
 	UUID            uuid.UUID
 	Name            string `json:"name"`
 	PlayersCapacity int    `json:"playersCapacity"`
-	PlayersJoined   int    `json:"-"`
+	PlayersJoined   int    `json:"playersJoined"`
 	Creator         int    `json:"-"`
 	Pending         bool   `json:"-"`
 	PackID          int    `json:"pack"`
-	PackName        string `json:"-"`
+	PackName        string `json:"packName"`
 }
