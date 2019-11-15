@@ -106,19 +106,19 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	return nil
 }
 
-func (uc *gameUseCase) NewConnection(userID int) game.Connection {
+func (uc *gameUseCase) NewConnection() game.Connection {
 	sendChan := make(chan game.Event, 5)
 	receiveChan := make(chan game.Event, 5)
 	stopSend := make(chan bool)
 	stopReceive := make(chan bool)
 
-	return connection.NewConnection(userID, sendChan, receiveChan, stopSend, stopReceive)
+	return connection.NewConnection(sendChan, receiveChan, stopSend, stopReceive)
 }
 
 func (uc *gameUseCase) MemCreate(g models.Game, u models.User) error {
-	return uc.memRepo.Create(g.UUID, u.ID)
+	return uc.memRepo.Create(g.UUID, u)
 }
 
-func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, conn game.Connection) error {
-	return uc.memRepo.JoinConnection(gameID, conn)
+func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.Connection) error {
+	return uc.memRepo.JoinConnection(gameID, u, conn)
 }

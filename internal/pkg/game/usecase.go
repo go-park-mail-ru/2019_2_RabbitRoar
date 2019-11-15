@@ -13,7 +13,7 @@ type UseCase interface {
 	JoinPlayerToGame(playerID int, gameID uuid.UUID) error
 	KickPlayerFromGame(playerID int) error
 
-	NewConnection(userID int) Connection
+	NewConnection() Connection
 	MemCreate(g models.Game, u models.User) error
-	JoinConnectionToGame(gameID uuid.UUID, conn Connection) error
+	JoinConnectionToGame(gameID uuid.UUID, u models.User, conn Connection) error
 }
