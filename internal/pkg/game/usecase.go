@@ -7,12 +7,13 @@ import (
 
 type UseCase interface {
 	GetByID(uuid uuid.UUID) (*models.Game, error)
-	Create(g models.Game, u models.User) error
+	GetGameIDByUserID(userID int) (uuid.UUID, error)
+	SQLCreate(g models.Game, u models.User) error
 	Fetch(page int) (*[]models.Game, error)
 	JoinPlayerToGame(playerID int, gameID uuid.UUID) error
 	KickPlayerFromGame(playerID int) error
-	FetchAllReadyGames() (*[]models.Game, error)
 
-	NewConnection() PlayerConnection
-	JoinConnectionToGame(gameID uuid.UUID, conn PlayerConnection) error
+	NewConnection(userID int) Connection
+	MemCreate(g models.Game, u models.User) error
+	JoinConnectionToGame(gameID uuid.UUID, conn Connection) error
 }
