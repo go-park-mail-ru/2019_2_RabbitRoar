@@ -3,8 +3,6 @@ package repository
 import (
 	"errors"
 
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
-
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 )
@@ -14,12 +12,12 @@ type memSessionRepository struct {
 	lastUserUID int64
 }
 
-func NewMemSessionRepository() session.Repository {
-	return &memSessionRepository{
-		sessions:    map[uuid.UUID]models.Session{},
-		lastUserUID: 0,
-	}
-}
+//func NewMemSessionRepository() session.Repository {
+//	return &memSessionRepository{
+//		sessions:    map[uuid.UUID]models.Session{},
+//		lastUserUID: 0,
+//	}
+//}
 
 func (repo memSessionRepository) GetUser(sessionID uuid.UUID) (*models.User, error) {
 	if s, success := repo.sessions[sessionID]; success {

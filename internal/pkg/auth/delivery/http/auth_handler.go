@@ -4,7 +4,6 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -32,10 +31,10 @@ func NewAuthHandler(
 	e.DELETE("/logout", authMiddleware(h.logout))
 }
 
-func setSessionCookie(UUID *uuid.UUID, ctx echo.Context) {
+func setSessionCookie(sessionID string, ctx echo.Context) {
 	cookie := http.Cookie{
 		Name:     "SessionID",
-		Value:    UUID.String(),
+		Value:    sessionID,
 		Expires:  time.Now().Add(512 * time.Hour),
 		Secure:   false, //TODO: make me secure after ssl
 		HttpOnly: true,
@@ -63,8 +62,17 @@ func (h *handler) signUp(ctx echo.Context) error {
 		}
 	}
 
-	UUID, err := h.sessionUseCase.Create(*uc)
-	setSessionCookie(UUID, ctx)
+	sessionID, err := h.sessionUseCase.Create(*uc)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error creating session",
+			Internal: err,
+		}
+	}
+
+	setSessionCookie(*sessionID, ctx)
+
 	return ctx.NoContent(http.StatusCreated)
 }
 
@@ -84,7 +92,7 @@ func (h *handler) login(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusUnauthorized)
 	}
 
-	UUID, err := h.sessionUseCase.Create(*uv)
+	sessionID, err := h.sessionUseCase.Create(*uv)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,
@@ -93,12 +101,13 @@ func (h *handler) login(ctx echo.Context) error {
 		}
 	}
 
-	setSessionCookie(UUID, ctx)
+	setSessionCookie(*sessionID, ctx)
+
 	return ctx.NoContent(http.StatusOK)
 }
 
 func (h *handler) logout(ctx echo.Context) error {
-	UUID := ctx.Get("sessionID").(uuid.UUID)
-	h.sessionUseCase.Destroy(UUID)
+	sessionID := ctx.Get("sessionID").(string)
+	h.sessionUseCase.Destroy(sessionID)
 	return nil
 }

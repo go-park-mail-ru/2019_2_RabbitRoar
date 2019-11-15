@@ -3,7 +3,6 @@ package usecase
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
-	"github.com/google/uuid"
 )
 
 type sessionUseCase struct {
@@ -16,10 +15,10 @@ func NewSessionUseCase(repository session.Repository) session.UseCase {
 	}
 }
 
-func (uc sessionUseCase) Create(u models.User) (*uuid.UUID, error) {
+func (uc sessionUseCase) Create(u models.User) (*string, error) {
 	return uc.repository.Create(u)
 }
 
-func (uc sessionUseCase) Destroy(sessionId uuid.UUID) {
+func (uc sessionUseCase) Destroy(sessionId string) {
 	_ = uc.repository.Destroy(sessionId)
 }

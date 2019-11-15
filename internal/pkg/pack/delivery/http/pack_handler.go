@@ -1,9 +1,11 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/labstack/echo/v4"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/xeipuuv/gojsonschema"
 	"net/http"
 	"strconv"
@@ -12,6 +14,7 @@ import (
 type handler struct {
 	packUseCase pack.UseCase
 	packSchema  *gojsonschema.Schema
+	sanitizer   *bluemonday.Policy
 }
 
 func NewPackHandler(
@@ -24,40 +27,37 @@ func NewPackHandler(
 	handler := handler{
 		packUseCase: packUseCase,
 		packSchema:  packSchema,
+		sanitizer:   bluemonday.UGCPolicy(),
 	}
 
 	group := e.Group("/pack", authMiddleware)
-	group.GET("", handler.list)
 	group.POST("", csrfMiddleware(handler.create))
-	group.GET("/offline", handler.offline)
-	group.GET("/offline/public", handler.offlinePublic)
 	group.DELETE("/:id", handler.delete)
+	group.GET("", handler.list)
+	group.GET("/offline", handler.offline)
+	group.GET("/offline/author", handler.offlineAuthor)
+	group.GET("/offline/public", handler.offlinePublic)
+	group.GET("/author", handler.listAuthor)
 	group.GET("/:id", handler.byID)
 }
 
-func prepareListView(packs []models.Pack) {
-	for _, p := range packs {
-		p.Description = ""
-		p.Questions = nil
+func (h *handler) sanitizeQuestions(p *interface{}) {
+	//TODO: implement me
+}
+
+func (h *handler) sanitize(p models.Pack) models.Pack {
+	p.Name = h.sanitizer.Sanitize(p.Name)
+	p.Description = h.sanitizer.Sanitize(p.Description)
+	p.Tags = h.sanitizer.Sanitize(p.Tags)
+	h.sanitizeQuestions(&p.Questions)
+	return p
+}
+
+func (h *handler) sanitizeSlice(p []models.Pack) []models.Pack {
+	for i := 0; i < len(p); i++ {
+		p[i] = h.sanitize(p[i])
 	}
-	return
-}
-
-func sanitize(p *models.Pack) {
-	//TODO: do it:)
-}
-
-func sanitizeSlice(p []models.Pack) {
-	//TODO: do it:)
-}
-
-func extractErrors(es []gojsonschema.ResultError) []string {
-	//TODO: rework error handling
-	var errs []string
-	for _, e := range es {
-		errs = append(errs, e.Description())
-	}
-	return errs
+	return p
 }
 
 func (h *handler) create(ctx echo.Context) error {
@@ -67,7 +67,6 @@ func (h *handler) create(ctx echo.Context) error {
 		return err
 	}
 
-	//TODO: overthink maybe better place is useCase coz pack structure business logic?
 	loader := gojsonschema.NewGoLoader(p.Questions)
 	res, err := h.packSchema.Validate(loader)
 	if err != nil {
@@ -76,50 +75,93 @@ func (h *handler) create(ctx echo.Context) error {
 			"error parsing pack",
 		)
 	}
+
 	if !res.Valid() {
 		return echo.NewHTTPError(
 			http.StatusBadRequest,
-			extractErrors(res.Errors()),
+			http_utils.ExtractErrors(res.Errors()),
 		)
 	}
 
 	caller := ctx.Get("user").(*models.User)
 	if err := h.packUseCase.Create(&p, *caller); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error creating pack",
+			Internal: err,
+		}
 	}
 
-	return ctx.JSON(http.StatusCreated, p)
+	return ctx.JSON(http.StatusCreated, h.sanitize(p))
 }
 
 func (h *handler) offline(ctx echo.Context) error {
-	caller := ctx.Get("user").(*models.User) //TODO: err on empty ?
+	caller := ctx.Get("user").(*models.User)
 
 	ids, err := h.packUseCase.FetchOffline(*caller)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching offline",
+			Internal: err,
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, ids)
 }
 
 func (h *handler) offlinePublic(ctx echo.Context) error {
-	pids, err := h.packUseCase.FetchOfflinePublic()
-
+	ids, err := h.packUseCase.FetchOfflinePublic()
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching offline public packs",
+			Internal: err,
+		}
 	}
 
-	return ctx.JSON(http.StatusOK, pids)
+	return ctx.JSON(http.StatusOK, ids)
+}
+
+func (h *handler) offlineAuthor(ctx echo.Context) error {
+	caller := ctx.Get("user").(*models.User)
+
+	ids, err := h.packUseCase.FetchOfflineAuthor(*caller)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching offline user created packs",
+			Internal: err,
+		}
+	}
+
+	return ctx.JSON(http.StatusOK, ids)
 }
 
 func (h *handler) list(ctx echo.Context) error {
-	//TODO: implement params
-	pids, err := h.packUseCase.FetchOrderedByRating(true, 0, 10)
+	page := http_utils.GetIntParam(ctx, 0)
+
+	packs, err := h.packUseCase.FetchOrderedByRating(true, page, 20)
 	if err != nil {
 		return nil
 	}
-	prepareListView(pids)
-	return ctx.JSON(http.StatusOK, pids)
+
+	return ctx.JSON(http.StatusOK, h.sanitizeSlice(packs))
+}
+
+func (h *handler) listAuthor(ctx echo.Context) error {
+	caller := ctx.Get("user").(*models.User)
+	page := http_utils.GetIntParam(ctx, 0)
+	packs, err := h.packUseCase.FetchByAuthor(*caller, true, page, 20)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching packs by author",
+			Internal: err,
+		}
+	}
+
+	return ctx.JSON(http.StatusOK, h.sanitizeSlice(packs))
 }
 
 func (h *handler) delete(ctx echo.Context) error {
@@ -131,8 +173,30 @@ func (h *handler) delete(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
+
+	p, err := h.packUseCase.GetByID(ID)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusNotFound,
+			Message:  "no pack with such id",
+			Internal: err,
+		}
+	}
+
 	caller := ctx.Get("user").(*models.User)
-	return h.packUseCase.Delete(ID, *caller)
+	if p.Author != caller.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "you can delete only own packs")
+	}
+
+	if err := h.packUseCase.Delete(ID); err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error removing pack",
+			Internal: err,
+		}
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }
 
 func (h *handler) byID(ctx echo.Context) error {
@@ -144,8 +208,9 @@ func (h *handler) byID(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
+
 	caller := ctx.Get("user").(*models.User)
-	p, err := h.packUseCase.GetByID(ID, *caller)
+	p, err := h.packUseCase.GetByID(ID)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusNotFound,
@@ -153,5 +218,10 @@ func (h *handler) byID(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-	return ctx.JSON(http.StatusOK, p)
+
+	if p.Offline || p.Author == caller.ID || h.packUseCase.Played(p.ID, caller.ID) {
+		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+	}
+
+	return echo.NewHTTPError(http.StatusForbidden, "you can view only own, played, created packs")
 }

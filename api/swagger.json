@@ -16,7 +16,6 @@
     }
   ],
   "paths": {
-
     "/login": {
       "post": {
         "tags": [
@@ -59,7 +58,6 @@
         }
       }
     },
-
     "/signup": {
       "post": {
         "tags": [
@@ -109,7 +107,6 @@
         }
       }
     },
-
     "/logout": {
       "delete": {
         "tags": [
@@ -127,9 +124,11 @@
         }
       }
     },
-
     "/csrf": {
       "get": {
+        "tags": [
+          "csrf"
+        ],
         "summary": "get CSRF Token associated with session",
         "description": "Should be sent with all forms in X-CSRF-Token Header",
         "responses": {
@@ -151,7 +150,6 @@
         }
       }
     },
-
     "/user": {
       "get": {
         "tags": [
@@ -208,7 +206,6 @@
         }
       }
     },
-
     "/user/avatar": {
       "put": {
         "tags": [
@@ -225,7 +222,6 @@
         }
       }
     },
-
     "/user/{id}": {
       "get": {
         "tags": [
@@ -258,7 +254,6 @@
         }
       }
     },
-
     "/pack": {
       "get": {
         "tags": [
@@ -266,6 +261,23 @@
         ],
         "summary": "packs list view",
         "description": "Sorted by rating by default.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Should be one of [rating]",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -308,7 +320,47 @@
         }
       }
     },
-
+    "/pack/author": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "packs list view",
+        "description": "Sorted by rating by default.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Should be one of [rating]",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackListView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pack/{id}": {
       "get": {
         "tags": [
@@ -342,7 +394,6 @@
         }
       }
     },
-
     "/pack/offline/public": {
       "get": {
         "tags": [
@@ -358,7 +409,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Pack"
+                    "type": "integer"
                   }
                 }
               }
@@ -367,7 +418,6 @@
         }
       }
     },
-
     "/pack/offline": {
       "get": {
         "tags": [
@@ -391,7 +441,6 @@
         }
       }
     },
-
     "/game": {
       "get": {
         "tags": [
@@ -471,6 +520,19 @@
         }
       }
     },
+    "/game/ws": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "open websocket with game",
+        "responses": {
+          "101": {
+            "description": "upgrade"
+          }
+        }
+      }
+    },
     "/game/leave": {
       "delete": {
         "tags": [
@@ -481,18 +543,6 @@
           "200": {
             "description": "successfully leaved"
           }
-        }
-      }
-    },
-    "/game/ws": {
-      "get": {
-        "tags": [
-          "game"
-        ],
-        "summary": "establish websocket connection",
-        "parameters": [
-        ],
-        "responses": {
         }
       }
     }
@@ -507,7 +557,6 @@
           }
         }
       },
-
       "User": {
         "type": "object",
         "properties": {
@@ -530,7 +579,6 @@
           }
         }
       },
-
       "GameCreateView": {
         "type": "object",
         "properties": {
@@ -548,34 +596,29 @@
           }
         }
       },
-
       "GameListView": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "UUID": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            },
-            "capacity": {
-              "type": "integer"
-            },
-            "joined": {
-              "type": "integer"
-            },
-            "packName": {
-              "type": "string"
-            },
-            "packID": {
-              "type": "integer"
-            }
+        "type": "object",
+        "properties": {
+          "UUID": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "joined": {
+            "type": "integer"
+          },
+          "packName": {
+            "type": "string"
+          },
+          "packID": {
+            "type": "integer"
           }
         }
       },
-
       "Question": {
         "type": "object",
         "properties": {
@@ -587,7 +630,6 @@
           }
         }
       },
-
       "Theme": {
         "type": "object",
         "properties": {
@@ -604,7 +646,6 @@
           }
         }
       },
-
       "PackCreate": {
         "type": "object",
         "properties": {
@@ -624,7 +665,6 @@
           }
         }
       },
-
       "Pack": {
         "type": "object",
         "properties": {
@@ -655,7 +695,6 @@
           }
         }
       },
-
       "PackListView": {
         "type": "object",
         "properties": {
@@ -679,7 +718,6 @@
           }
         }
       }
-
     }
   }
 }
