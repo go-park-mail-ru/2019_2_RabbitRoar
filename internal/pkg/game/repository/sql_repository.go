@@ -145,21 +145,21 @@ func (repo sqlGameRepository) FetchOrderedByPlayersJoined(desc bool, pageSize, p
 func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) {
 	rows, err := repo.db.Query(`
 			SELECT 
-				g.UUID,
+				g."UUID",
 				g.name,
 				g.players_cap,
 				g.players_joined,
 				g.creator,
 				g.pending,
-				g.Pack_id,
+				g."Pack_id",
 				p.name
 			FROM
 				"svoyak"."Game" g
-			INNER JOIN "svoyak"."Pack" p ON g.Pack_id = p.id
+			INNER JOIN "svoyak"."Pack" p ON g."Pack_id" = p.id
 			WHERE "g"."pending" = TRUE
 			OFFSET $1::integer LIMIT $2::integer;
 		`,
-		(page * pageSize), pageSize,
+		page * pageSize, pageSize,
 	)
 
 	if err != nil {
@@ -168,7 +168,7 @@ func (repo sqlGameRepository) Fetch(pageSize, page int) (*[]models.Game, error) 
 
 	defer rows.Close()
 
-	var games []models.Game
+	games := make([]models.Game, 0, pageSize)
 
 	for rows.Next() {
 		var game models.Game
