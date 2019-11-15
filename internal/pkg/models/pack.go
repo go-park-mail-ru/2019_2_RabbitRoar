@@ -7,5 +7,6 @@ type Pack struct {
 	Rating      int         `json:"rating"`
 	Author      int         `json:"author"`
 	Tags        string      `json:"tags"`
+	Offline     bool        `json:"-"`
 	Questions   interface{} `json:"pack,omitempty"`
 }

@@ -55,8 +55,8 @@ func Start() {
 	e.Use(
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
-				AllowOrigins:     viper.GetStringSlice("server.CORS.allowed_hosts"),
-				AllowHeaders:     []string{
+				AllowOrigins: viper.GetStringSlice("server.CORS.allowed_hosts"),
+				AllowHeaders: []string{
 					echo.HeaderOrigin,
 					echo.HeaderContentType,
 					echo.HeaderUpgrade,
@@ -64,7 +64,6 @@ func Start() {
 					"Sec-WebSocket-Version",
 					"Sec-WebSocket-Key",
 					"Sec-WebSocket-Extensions",
-					"Pragma",
 					_csrfHttp.HeaderCSRFToken,
 				},
 				AllowCredentials: true,

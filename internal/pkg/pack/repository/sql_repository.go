@@ -33,10 +33,15 @@ func scanPackRow(row *sql.Row) (*models.Pack, error) {
 		&p.Rating,
 		&p.Author,
 		&p.Tags,
+		&p.Offline,
 		&questions,
 	)
 
-	if err = json.Unmarshal(questions, &p.Questions); err != nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(questions, &p.Questions); err != nil {
 		return nil, err
 	}
 
@@ -109,11 +114,30 @@ func (repo *sqlPackRepository) Delete(packID int) error {
 	return nil
 }
 
+func (repo sqlPackRepository) Played(packID, userID int) (bool, error) {
+	row := repo.db.QueryRow(
+		`
+			SELECT 1
+			FROM "svoyak"."GameUserHist"
+			WHERE "Pack_id" = $1::integer AND "User_id" = $2::integer;
+		`,
+		packID, userID,
+	)
+	var played int
+	err := row.Scan(&played)
+	if err != nil {
+		return false, nil
+	}
+	if played == 1 {
+		return true, nil
+	}
+	return false, nil
+}
 
 func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 	row := repo.db.QueryRow(
 		`
-			SELECT id, name, description, rating, author, tags, pack
+			SELECT id, name, description, rating, author, tags, offline, pack
 			FROM "svoyak"."Pack"
 			WHERE id = $1::integer;
 		`,
@@ -143,6 +167,28 @@ func (repo sqlPackRepository) FetchOfflinePublic() ([]int, error) {
 		pids = append(pids, pid)
 	}
 	return pids, nil
+}
+
+func (repo sqlPackRepository) FetchOfflineAuthor(caller models.User) ([]int, error) {
+	rows, err := repo.db.Query(
+		`
+		SELECT id
+		FROM "svoyak"."Pack"
+		WHERE author = $1::integer
+	`, caller.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var id int
+	var ids []int
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
 
 func (repo sqlPackRepository) FetchOffline(caller models.User) ([]int, error) {

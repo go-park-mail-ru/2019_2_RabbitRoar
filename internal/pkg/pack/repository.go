@@ -7,7 +7,9 @@ type Repository interface {
 	Update(pack *models.Pack) error
 	Delete(ID int) error
 	GetByID(ID int) (*models.Pack, error)
+	Played(packID, userID int) (bool, error)
 	FetchOffline(caller models.User) ([]int, error)
+	FetchOfflineAuthor(caller models.User) ([]int, error)
 	FetchOfflinePublic() ([]int, error)
 	FetchByAuthor(u models.User, desc bool, page, pageSize int) ([]models.Pack, error)
 	FetchOrderedByRating(desc bool, page, pageSize int) ([]models.Pack, error)
