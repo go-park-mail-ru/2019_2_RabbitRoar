@@ -4,11 +4,11 @@ import "github.com/google/uuid"
 
 type Game struct {
 	UUID            uuid.UUID
-	Name            string
-	PlayersCapacity int
-	PlayersJoined   int
-	Creator         int
-	Pending         bool
-	PackID          int
-	PackName        string
+	Name            string `json:"name"`
+	PlayersCapacity int    `json:"playersCapacity"`
+	PlayersJoined   int    `json:"-"`
+	Creator         int    `json:"-"`
+	Pending         bool   `json:"-"`
+	PackID          int    `json:"pack"`
+	PackName        string `json:"-"`
 }
