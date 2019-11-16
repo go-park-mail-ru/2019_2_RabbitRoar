@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type handler struct {
@@ -68,6 +69,10 @@ func (gh *handler) create(ctx echo.Context) error {
 			Message:  "can't parse game object",
 			Internal: err,
 		}
+	}
+
+	if g.PlayersCapacity > viper.GetInt("internal.players_cap_limit") {
+		return echo.NewHTTPError(http.StatusBadRequest, "players capacity is too big")
 	}
 
 	creator := ctx.Get("user").(*models.User)
