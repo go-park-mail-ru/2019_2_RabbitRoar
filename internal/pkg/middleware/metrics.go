@@ -31,7 +31,9 @@ func NewMetricsMiddleware() echo.MiddlewareFunc {
 	)
 
 	http.Handle("/metrics", promhttp.Handler())
-	go log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+	go func() {
+		log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+	}()
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
