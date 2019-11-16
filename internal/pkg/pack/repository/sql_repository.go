@@ -159,7 +159,7 @@ func (repo sqlPackRepository) FetchOfflinePublic() ([]int, error) {
 	}
 
 	var pid int
-	var pids []int
+	var pids = make([]int, 0, 20)
 	for rows.Next() {
 		if err := rows.Scan(&pid); err != nil {
 			return nil, err
@@ -181,7 +181,7 @@ func (repo sqlPackRepository) FetchOfflineAuthor(caller models.User) ([]int, err
 	}
 
 	var id int
-	var ids []int
+	var ids = make([]int, 0, 20)
 	for rows.Next() {
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
