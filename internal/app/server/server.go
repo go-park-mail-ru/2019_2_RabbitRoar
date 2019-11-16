@@ -3,7 +3,6 @@ package server
 import (
 	"database/sql"
 	"fmt"
-
 	"io/ioutil"
 
 	sentryecho "github.com/getsentry/sentry-go/echo"
@@ -53,6 +52,8 @@ func Start() {
 			},
 		),
 	)
+
+	e.Use(_middleware.NewMetricsMiddleware())
 
 	e.Use(_middleware.LogMiddleware)
 
