@@ -3,6 +3,7 @@ package game
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 type UseCase interface {
@@ -13,7 +14,7 @@ type UseCase interface {
 	JoinPlayerToGame(playerID int, gameID uuid.UUID) (*models.Game, error)
 	KickPlayerFromGame(playerID int) error
 
-	NewConnection() Connection
+	NewConnection(ws *websocket.Conn) Connection
 	MemCreate(g models.Game, u models.User) error
 	JoinConnectionToGame(gameID uuid.UUID, u models.User, conn Connection) error
 }

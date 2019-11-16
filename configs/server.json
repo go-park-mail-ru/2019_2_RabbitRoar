@@ -41,6 +41,7 @@
   },
 
   "internal": {
-    "page_size": 5
+    "page_size": 20,
+    "players_cap_limit": 6
   }
 }

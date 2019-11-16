@@ -2,7 +2,6 @@ package http
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
@@ -10,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type handler struct {
@@ -68,6 +68,10 @@ func (gh *handler) create(ctx echo.Context) error {
 			Message:  "can't parse game object",
 			Internal: err,
 		}
+	}
+
+	if g.PlayersCapacity > viper.GetInt("internal.players_cap_limit") {
+		return echo.NewHTTPError(http.StatusBadRequest, "players capacity is too big")
 	}
 
 	creator := ctx.Get("user").(*models.User)
@@ -135,11 +139,9 @@ func (gh *handler) ws(ctx echo.Context) error {
 		return err
 	}
 
-	defer ws.Close()
-
 	user := ctx.Get("user").(*models.User)
 
-	conn := gh.usecase.NewConnection()
+	conn := gh.usecase.NewConnection(ws)
 
 	gameID, err := gh.usecase.GetGameIDByUserID(user.ID)
 	if err != nil {
@@ -159,13 +161,8 @@ func (gh *handler) ws(ctx echo.Context) error {
 		}
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go conn.RunReceive(ws, &wg)
-	go conn.RunSend(ws, &wg)
-
-	wg.Wait()
+	go conn.RunReceive(user.ID)
+	go conn.RunSend()
 
 	return nil
 }

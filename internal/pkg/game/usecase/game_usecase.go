@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/connection"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
@@ -109,13 +110,13 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	return nil
 }
 
-func (uc *gameUseCase) NewConnection() game.Connection {
-	sendChan := make(chan game.Event, 5)
-	receiveChan := make(chan game.Event, 5)
+func (uc *gameUseCase) NewConnection(ws *websocket.Conn) game.Connection {
+	sendChan := make(chan game.EventWrapper, 5)
+	receiveChan := make(chan game.EventWrapper, 5)
 	stopSend := make(chan bool)
 	stopReceive := make(chan bool)
 
-	return connection.NewConnection(sendChan, receiveChan, stopSend, stopReceive)
+	return connection.NewConnection(ws, sendChan, receiveChan, stopSend, stopReceive)
 }
 
 func (uc *gameUseCase) MemCreate(g models.Game, u models.User) error {
