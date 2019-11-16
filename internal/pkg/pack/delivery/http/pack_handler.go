@@ -30,15 +30,15 @@ func NewPackHandler(
 		sanitizer:   bluemonday.UGCPolicy(),
 	}
 
-	group := e.Group("/pack", authMiddleware)
-	group.POST("", csrfMiddleware(handler.create))
-	group.DELETE("/:id", handler.delete)
-	group.GET("", handler.list)
-	group.GET("/offline", handler.offline)
-	group.GET("/offline/author", handler.offlineAuthor)
+	group := e.Group("/pack")
+	group.POST("", authMiddleware(csrfMiddleware(handler.create)))
+	group.DELETE("/:id", authMiddleware(handler.delete))
+	group.GET("", authMiddleware(handler.list))
+	group.GET("/offline", authMiddleware(handler.offline))
+	group.GET("/offline/author", authMiddleware(handler.offlineAuthor))
 	group.GET("/offline/public", handler.offlinePublic)
-	group.GET("/author", handler.listAuthor)
-	group.GET("/:id", handler.byID)
+	group.GET("/author", authMiddleware(handler.listAuthor))
+	group.GET("/:id", authMiddleware(handler.byID))
 }
 
 
