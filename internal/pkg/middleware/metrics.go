@@ -13,14 +13,16 @@ import (
 func NewMetricsMiddleware() echo.MiddlewareFunc {
 	requestDurationSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name:        "request_duration_ms",
+			Namespace: "svoyak",
+			Name:      "request_duration_ms",
 		},
 		[]string{"method", "path"},
 	)
 
 	requestStatusCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:        "request_counter_status",
+			Namespace: "svoyak",
+			Name:      "request_counter_status",
 		},
 		[]string{"path", "status"},
 	)
