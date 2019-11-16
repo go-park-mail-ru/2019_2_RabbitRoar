@@ -59,14 +59,19 @@ func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 	return games, nil
 }
 
-func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
+func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) (*models.Game, error) {
 	game, err := uc.sqlRepo.GetByID(gameID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if game.PlayersJoined >= game.PlayersCapacity {
-		return errors.New("unable to join the room: room is full")
+		return nil, errors.New("unable to join the room: room is full")
+	}
+
+	err = uc.sqlRepo.JoinPlayer(playerID, game.UUID)
+	if err != nil {
+		return nil, err
 	}
 
 	game.PlayersJoined++
@@ -75,9 +80,7 @@ func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) error {
 		game.Pending = false
 	}
 
-	uc.sqlRepo.Update(*game)
-
-	return uc.sqlRepo.JoinPlayer(playerID, game.UUID)
+	return game, uc.sqlRepo.Update(*game)
 }
 
 func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {

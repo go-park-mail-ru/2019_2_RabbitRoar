@@ -41,15 +41,15 @@ func NewPackHandler(
 	group.GET("/:id", handler.byID)
 }
 
-func (h *handler) sanitizeQuestions(p *interface{}) {
-	//TODO: implement me
+
+func (h *handler) sanitizeQuestions(p interface{}) {
 }
 
 func (h *handler) sanitize(p models.Pack) models.Pack {
 	p.Name = h.sanitizer.Sanitize(p.Name)
 	p.Description = h.sanitizer.Sanitize(p.Description)
 	p.Tags = h.sanitizer.Sanitize(p.Tags)
-	h.sanitizeQuestions(&p.Questions)
+	h.sanitizeQuestions(p.Questions)
 	return p
 }
 

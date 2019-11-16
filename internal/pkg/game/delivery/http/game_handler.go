@@ -109,7 +109,7 @@ func (gh *handler) join(ctx echo.Context) error {
 		}
 	}
 
-	if err := gh.usecase.JoinPlayerToGame(userID, gameID); err != nil {
+	if g, err = gh.usecase.JoinPlayerToGame(userID, gameID); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "error joining the game",
