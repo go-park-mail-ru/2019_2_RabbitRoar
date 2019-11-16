@@ -35,4 +35,5 @@ func (game *Game) getEvent() {
 	}
 
 	_, eventWrap, _ := reflect.Select(sc)
+	eventWrap.IsValid()
 }
