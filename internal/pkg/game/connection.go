@@ -1,18 +1,12 @@
 package game
 
-import (
-	"sync"
-
-	"github.com/gorilla/websocket"
-)
-
 type Connection interface {
-	RunReceive(ws *websocket.Conn, wg *sync.WaitGroup) error
-	RunSend(ws *websocket.Conn, wg *sync.WaitGroup) error
+	RunReceive(senderID int) error
+	RunSend() error
 	Stop()
 
-	GetSendChan() chan Event
-	GetReceiveChan() chan Event
+	GetSendChan() chan EventWrapper
+	GetReceiveChan() chan EventWrapper
 	GetStopSendChan() chan bool
 	GetStopReceiveChan() chan bool
 }

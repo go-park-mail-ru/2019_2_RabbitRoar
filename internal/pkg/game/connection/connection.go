@@ -2,7 +2,6 @@ package connection
 
 import (
 	"encoding/json"
-	"sync"
 	"time"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
@@ -11,8 +10,9 @@ import (
 )
 
 type gameConnection struct {
-	sendChan    chan game.Event
-	receiveChan chan game.Event
+	ws          *websocket.Conn
+	sendChan    chan game.EventWrapper
+	receiveChan chan game.EventWrapper
 	stopSend    chan bool
 	stopReceive chan bool
 }
@@ -20,10 +20,12 @@ type gameConnection struct {
 var log = logging.MustGetLogger("connection")
 
 func NewConnection(
-	sendChan, receiveChan chan game.Event,
+	ws *websocket.Conn,
+	sendChan, receiveChan chan game.EventWrapper,
 	stopSend, stopReceive chan bool,
 ) game.Connection {
 	return &gameConnection{
+		ws:          ws,
 		sendChan:    sendChan,
 		receiveChan: receiveChan,
 		stopSend:    stopSend,
@@ -31,9 +33,7 @@ func NewConnection(
 	}
 }
 
-func (conn *gameConnection) RunReceive(ws *websocket.Conn, wg *sync.WaitGroup) error {
-	defer wg.Done()
-
+func (conn *gameConnection) RunReceive(senderID int) error {
 	for {
 		select {
 		case <-conn.stopReceive:
@@ -42,29 +42,33 @@ func (conn *gameConnection) RunReceive(ws *websocket.Conn, wg *sync.WaitGroup) e
 			return nil
 
 		default:
-			_, msg, err := ws.ReadMessage()
+			_, msg, err := conn.ws.ReadMessage()
 			if err != nil {
 				close(conn.receiveChan)
 				return err
 			}
 
-			var event game.Event
-			json.Unmarshal(msg, &event)
+			eventWrap := game.EventWrapper{
+				SenderID: senderID,
+			}
 
-			conn.receiveChan <- event
+			err = json.Unmarshal(msg, &eventWrap.Event)
+			if err != nil {
+				log.Info("Invalid event json received")
+			}
+
+			conn.receiveChan <- eventWrap
 		}
 	}
 }
 
-func (conn *gameConnection) RunSend(ws *websocket.Conn, wg *sync.WaitGroup) error {
-	defer wg.Done()
-
+func (conn *gameConnection) RunSend() error {
 	ticker := time.NewTicker(10 * time.Second)
 
 	for {
 		select {
 		case <-conn.stopSend:
-			err := ws.WriteMessage(websocket.CloseNormalClosure, []byte{})
+			err := conn.ws.WriteMessage(websocket.CloseNormalClosure, []byte{})
 			if err != nil {
 				return err
 			}
@@ -73,13 +77,13 @@ func (conn *gameConnection) RunSend(ws *websocket.Conn, wg *sync.WaitGroup) erro
 
 		case event := <-conn.sendChan:
 			msg, _ := json.Marshal(event)
-			err := ws.WriteMessage(websocket.TextMessage, msg)
+			err := conn.ws.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				return err
 			}
 
 		case <-ticker.C:
-			err := ws.WriteMessage(websocket.PingMessage, []byte{})
+			err := conn.ws.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				return err
 			}
@@ -90,20 +94,21 @@ func (conn *gameConnection) RunSend(ws *websocket.Conn, wg *sync.WaitGroup) erro
 func (conn *gameConnection) Stop() {
 	conn.stopSend <- true
 	conn.stopReceive <- true
+	conn.ws.Close()
 }
 
-func (conn *gameConnection) GetSendChan() chan game.Event {
+func (conn gameConnection) GetSendChan() chan game.EventWrapper {
 	return conn.sendChan
 }
 
-func (conn *gameConnection) GetReceiveChan() chan game.Event {
+func (conn gameConnection) GetReceiveChan() chan game.EventWrapper {
 	return conn.receiveChan
 }
 
-func (conn *gameConnection) GetStopSendChan() chan bool {
+func (conn gameConnection) GetStopSendChan() chan bool {
 	return conn.stopSend
 }
 
-func (conn *gameConnection) GetStopReceiveChan() chan bool {
+func (conn gameConnection) GetStopReceiveChan() chan bool {
 	return conn.stopReceive
 }
