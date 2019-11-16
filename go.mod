@@ -9,13 +9,14 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.0
 	github.com/jackc/pgx/v4 v4.1.2
+	github.com/labstack/echo-contrib v0.7.0
 	github.com/labstack/echo/v4 v4.1.10
-	github.com/labstack/gommon v0.3.0
 	github.com/lib/pq v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.5.0 // indirect
+	github.com/prometheus/client_golang v1.2.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

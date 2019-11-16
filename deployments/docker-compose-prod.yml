@@ -13,6 +13,7 @@ services:
     depends_on:
       - postgres
     ports:
+      - 8010:8080
       - 3010:3000
 
   postgres:
