@@ -10,7 +10,7 @@ type UseCase interface {
 	GetGameIDByUserID(userID int) (uuid.UUID, error)
 	SQLCreate(g models.Game, u models.User) error
 	Fetch(page int) (*[]models.Game, error)
-	JoinPlayerToGame(playerID int, gameID uuid.UUID) error
+	JoinPlayerToGame(playerID int, gameID uuid.UUID) (*models.Game, error)
 	KickPlayerFromGame(playerID int) error
 
 	NewConnection() Connection
