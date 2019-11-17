@@ -50,3 +50,8 @@ type AnswerPayload struct {
 type VerictPayload struct {
 	Verdict bool `json:"verdict"`
 }
+
+type EventWrapper struct {
+	SenderID int
+	Event    Event
+}
