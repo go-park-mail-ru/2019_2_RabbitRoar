@@ -4,7 +4,7 @@ import "reflect"
 
 type Player struct {
 	Info PlayerInfo
-	Conn Connection
+	Conn ConnectionWrapper
 }
 
 type Game struct {

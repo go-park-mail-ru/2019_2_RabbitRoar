@@ -133,7 +133,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
 		return &echo.HTTPError{
-			Code:     http.StatusNotModified,
+			Code:     http.StatusUpgradeRequired,
 			Message:  "error establishing websocket connection",
 			Internal: err,
 		}
@@ -141,7 +141,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 
 	user := ctx.Get("user").(*models.User)
 
-	conn := gh.usecase.NewConnection(ws)
+	conn := gh.usecase.NewConnectionWrapper(ws)
 
 	gameID, err := gh.usecase.GetGameIDByUserID(user.ID)
 	if err != nil {

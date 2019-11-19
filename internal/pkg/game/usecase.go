@@ -14,6 +14,6 @@ type UseCase interface {
 	JoinPlayerToGame(playerID int, gameID uuid.UUID) (*models.Game, error)
 	KickPlayerFromGame(playerID int) error
 
-	NewConnection(ws *websocket.Conn) Connection
-	JoinConnectionToGame(gameID uuid.UUID, u models.User, conn Connection) error
+	NewConnectionWrapper(ws *websocket.Conn) ConnectionWrapper
+	JoinConnectionToGame(gameID uuid.UUID, u models.User, conn ConnectionWrapper) error
 }

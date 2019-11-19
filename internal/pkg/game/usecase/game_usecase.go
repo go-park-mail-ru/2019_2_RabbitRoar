@@ -125,15 +125,15 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	return err
 }
 
-func (uc *gameUseCase) NewConnection(ws *websocket.Conn) game.Connection {
+func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {
 	sendChan := make(chan game.EventWrapper, 5)
 	receiveChan := make(chan game.EventWrapper, 5)
 	stopSend := make(chan bool)
 	stopReceive := make(chan bool)
 
-	return connection.NewConnection(ws, sendChan, receiveChan, stopSend, stopReceive)
+	return connection.NewConnectionWrapper(ws, sendChan, receiveChan, stopSend, stopReceive)
 }
 
-func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.Connection) error {
+func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.ConnectionWrapper) error {
 	return uc.memRepo.JoinConnection(gameID, u, conn)
 }

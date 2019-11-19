@@ -19,11 +19,11 @@ type gameConnection struct {
 
 var log = logging.MustGetLogger("connection")
 
-func NewConnection(
+func NewConnectionWrapper(
 	ws *websocket.Conn,
 	sendChan, receiveChan chan game.EventWrapper,
 	stopSend, stopReceive chan bool,
-) game.Connection {
+) game.ConnectionWrapper {
 	return &gameConnection{
 		ws:          ws,
 		sendChan:    sendChan,
