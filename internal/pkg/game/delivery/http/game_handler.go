@@ -76,12 +76,8 @@ func (gh *handler) create(ctx echo.Context) error {
 
 	creator := ctx.Get("user").(*models.User)
 
-	if err := gh.usecase.SQLCreate(g, *creator); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-
-	if err := gh.usecase.MemCreate(g, *creator); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+	if err := gh.usecase.Create(g, *creator); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return ctx.NoContent(http.StatusCreated)
@@ -136,7 +132,11 @@ func (gh *handler) leave(ctx echo.Context) error {
 func (gh *handler) ws(ctx echo.Context) error {
 	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
-		return err
+		return &echo.HTTPError{
+			Code:     http.StatusNotModified,
+			Message:  "error establishing websocket connection",
+			Internal: err,
+		}
 	}
 
 	user := ctx.Get("user").(*models.User)
@@ -164,5 +164,5 @@ func (gh *handler) ws(ctx echo.Context) error {
 	go conn.RunReceive(user.ID)
 	go conn.RunSend()
 
-	return nil
+	return ctx.NoContent(http.StatusOK)
 }
