@@ -35,8 +35,8 @@ func NewGameHandler(
 	group := e.Group("/game", authMiddleware)
 	group.GET("/", handler.self)
 	group.POST("/", csrfMiddleware(handler.create))
-	group.POST("/:uuid/join", handler.join)
-	group.DELETE("/leave", handler.leave)
+	group.POST("/:uuid/join", csrfMiddleware(handler.join))
+	group.DELETE("/leave", csrfMiddleware(handler.leave))
 	group.GET("/ws", handler.ws)
 }
 
