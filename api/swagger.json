@@ -195,7 +195,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation Error"
@@ -214,10 +221,20 @@
         "summary": "upload user avatar",
         "responses": {
           "200": {
-            "description": "User avatar updated."
+            "description": "OK."
           },
           "400": {
-            "description": "Error validating avatar."
+            "description": "Validation error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised"
           }
         }
       }
@@ -250,6 +267,31 @@
           },
           "404": {
             "description": "User not found"
+          }
+        }
+      }
+    },
+    "/user/leaderboard": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "leader board list view",
+        "parameters": [
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -367,6 +409,24 @@
           "pack"
         ],
         "summary": "pack detail view, available only if have played that pack",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pack"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack update view, available only if created that pack",
         "responses": {
           "200": {
             "description": "",
@@ -553,7 +613,13 @@
         "type": "object",
         "properties": {
           "message": {
-            "type": "string"
+            "type": "string",
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
