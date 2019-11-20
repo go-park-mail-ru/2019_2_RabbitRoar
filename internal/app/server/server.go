@@ -53,6 +53,8 @@ func Start() {
 		),
 	)
 
+	e.Pre(middleware.RemoveTrailingSlash())
+
 	e.Use(_middleware.NewMetricsMiddleware())
 
 	e.Use(_middleware.LogMiddleware)

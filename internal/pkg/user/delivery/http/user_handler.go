@@ -25,8 +25,8 @@ func NewUserHandler(
 	}
 
 	group := e.Group("/user", authMiddleware)
-	group.GET("/", handler.self)
-	group.PUT("/", csrfMiddleware(handler.update))
+	group.GET("", handler.self)
+	group.PUT("", csrfMiddleware(handler.update))
 	group.PUT("/avatar", middleware.BodyLimit("2M")(csrfMiddleware(handler.avatar)))
 	group.GET("/:id", handler.byID)
 }
