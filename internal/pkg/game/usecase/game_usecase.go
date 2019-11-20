@@ -37,7 +37,7 @@ func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
 	return uc.sqlRepo.GetGameIDByUserID(userID)
 }
 
-func (uc *gameUseCase) SQLCreate(g models.Game, u models.User) error {
+func (uc *gameUseCase) Create(g models.Game, u models.User) error {
 	newUUID, err := uuid.NewUUID()
 	if err != nil {
 		return err
@@ -48,7 +48,22 @@ func (uc *gameUseCase) SQLCreate(g models.Game, u models.User) error {
 	g.Creator = u.ID
 	g.Pending = true
 
-	return uc.sqlRepo.Create(g)
+	err = uc.sqlRepo.Create(g)
+	if err != nil {
+		return err
+	}
+
+	err = uc.memRepo.Create(g.UUID, u)
+	if err != nil {
+		delErr := uc.sqlRepo.Delete(g.UUID)
+		if delErr != nil {
+			return errors.New(err.Error() + delErr.Error())
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
@@ -102,27 +117,23 @@ func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
 	game.PlayersJoined--
 
 	if game.PlayersJoined <= 0 {
-		uc.sqlRepo.Delete(game.UUID)
+		err = uc.sqlRepo.Delete(game.UUID)
 	} else {
-		uc.sqlRepo.Update(*game)
+		err = uc.sqlRepo.Update(*game)
 	}
 
-	return nil
+	return err
 }
 
-func (uc *gameUseCase) NewConnection(ws *websocket.Conn) game.Connection {
+func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {
 	sendChan := make(chan game.EventWrapper, 5)
 	receiveChan := make(chan game.EventWrapper, 5)
 	stopSend := make(chan bool)
 	stopReceive := make(chan bool)
 
-	return connection.NewConnection(ws, sendChan, receiveChan, stopSend, stopReceive)
+	return connection.NewConnectionWrapper(ws, sendChan, receiveChan, stopSend, stopReceive)
 }
 
-func (uc *gameUseCase) MemCreate(g models.Game, u models.User) error {
-	return uc.memRepo.Create(g.UUID, u)
-}
-
-func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.Connection) error {
+func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.ConnectionWrapper) error {
 	return uc.memRepo.JoinConnection(gameID, u, conn)
 }

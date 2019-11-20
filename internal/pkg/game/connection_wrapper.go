@@ -1,6 +1,6 @@
 package game
 
-type Connection interface {
+type ConnectionWrapper interface {
 	RunReceive(senderID int) error
 	RunSend() error
 	Stop()

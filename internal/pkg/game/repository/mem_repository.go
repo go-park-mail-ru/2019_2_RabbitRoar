@@ -41,7 +41,7 @@ func (repo *memGameRepository) Create(gameID uuid.UUID, host models.User) error 
 	return nil
 }
 
-func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, u models.User, conn game.Connection) error {
+func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, u models.User, conn game.ConnectionWrapper) error {
 	if _, exists := repo.games[gameID]; !exists {
 		return errors.New("no game found to join connection")
 	}

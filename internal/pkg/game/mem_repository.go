@@ -7,5 +7,5 @@ import (
 
 type MemRepository interface {
 	Create(gameID uuid.UUID, host models.User) error
-	JoinConnection(gameID uuid.UUID, u models.User, conn Connection) error
+	JoinConnection(gameID uuid.UUID, u models.User, conn ConnectionWrapper) error
 }
