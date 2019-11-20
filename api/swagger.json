@@ -427,6 +427,19 @@
           "pack"
         ],
         "summary": "pack update view, available only if created that pack",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pack update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackCreate"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
