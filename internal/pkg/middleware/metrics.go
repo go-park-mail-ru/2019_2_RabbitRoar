@@ -14,7 +14,7 @@ func NewMetricsMiddleware() echo.MiddlewareFunc {
 	requestDurationSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: "svoyak",
-			Name:      "request_duration_ms",
+			Name:      "request_duration_s",
 		},
 		[]string{"method", "path"},
 	)
