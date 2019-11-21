@@ -306,17 +306,10 @@
         "parameters": [
           {
             "in": "query",
-            "name": "sort",
-            "description": "Should be one of [rating]",
+            "name": "page",
+            "description": "page to display",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "int"
             }
           }
         ],
@@ -523,16 +516,10 @@
         "parameters": [
           {
             "in": "query",
-            "name": "sort_by",
+            "name": "page",
+            "description": "page to display",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "asc",
-            "schema": {
-              "type": "integer"
             }
           }
         ],
