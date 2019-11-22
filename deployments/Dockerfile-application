@@ -4,7 +4,10 @@ WORKDIR /application
 
 COPY . .
 
-RUN go install -v cmd/server/server.go
+RUN go get github.com/mailru/easyjson/...
+RUN go generate -v ./internal/pkg/models
+RUN go get -d -v ./...
+RUN go install -v ./...
 
 EXPOSE 3000
 CMD ["server"]

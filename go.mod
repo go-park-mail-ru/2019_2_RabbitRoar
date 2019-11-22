@@ -9,7 +9,6 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.0
 	github.com/jackc/pgx/v4 v4.1.2
-	github.com/labstack/echo-contrib v0.7.0
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/lib/pq v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect

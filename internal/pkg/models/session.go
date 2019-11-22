@@ -1,5 +1,7 @@
 package models
 
+//go:generate easyjson -all
+
 import (
 	"github.com/google/uuid"
 )
