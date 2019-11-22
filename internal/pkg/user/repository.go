@@ -10,4 +10,5 @@ type Repository interface {
 	GetBySessionID(sessionID string) (*models.User, error)
 	Create(user models.User) (*models.User, error)
 	Update(user models.User) error
+	FetchLeaderBoard(page, pageSize int) ([]models.User, error)
 }

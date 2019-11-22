@@ -6,16 +6,16 @@ import (
 	"strconv"
 )
 
-func GetIntParam(ctx echo.Context, defaultValue int) int {
-	pageNumString := ctx.QueryParam("page")
-	if pageNumString == "" {
+func GetIntParam(ctx echo.Context, name string, defaultValue int) int {
+	param := ctx.QueryParam(name)
+	if param == "" {
 		return defaultValue
 	}
-	pageNum, err := strconv.Atoi(pageNumString)
+	paramInt, err := strconv.Atoi(param)
 	if err != nil {
 		return defaultValue
 	}
-	return pageNum
+	return paramInt
 }
 
 func ExtractErrors(es []gojsonschema.ResultError) []string {

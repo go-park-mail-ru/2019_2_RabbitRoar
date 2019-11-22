@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
@@ -24,11 +25,12 @@ func NewUserHandler(
 		useCase: usecase,
 	}
 
-	group := e.Group("/user", authMiddleware)
-	group.GET("", handler.self)
-	group.PUT("", csrfMiddleware(handler.update))
-	group.PUT("/avatar", middleware.BodyLimit("2M")(csrfMiddleware(handler.avatar)))
-	group.GET("/:id", handler.byID)
+	group := e.Group("/user")
+	group.GET("" ,authMiddleware(handler.self))
+	group.PUT("", authMiddleware(csrfMiddleware(handler.update)))
+	group.PUT("/avatar", authMiddleware(middleware.BodyLimit("2M")(csrfMiddleware(handler.avatar))))
+	group.GET("/:id", authMiddleware(handler.byID))
+	group.GET("/leaderboard", handler.leaderboard)
 }
 
 func (uh *handler) self(ctx echo.Context) error {
@@ -97,4 +99,26 @@ func (uh *handler) byID(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, uh.useCase.Sanitize(*u))
+}
+
+func (uh *handler) leaderboard(ctx echo.Context) error {
+	page := http_utils.GetIntParam(ctx, "page",0)
+	if page < 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "wrong page provided")
+	}
+	pageSize := http_utils.GetIntParam(ctx, "limit", 10)
+	if pageSize < 1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "wrong page limit provided")
+	}
+
+	packs, err := uh.useCase.FetchLeaderBoard(page, pageSize)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error fetching packs",
+			Internal: err,
+		}
+	}
+
+	return ctx.JSON(http.StatusOK, packs)
 }

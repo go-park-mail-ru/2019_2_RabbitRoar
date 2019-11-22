@@ -14,4 +14,5 @@ type UseCase interface {
 	UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error)
 	IsPasswordCorrect(models.User) (*models.User, bool)
 	Sanitize(models.User) models.User
+	FetchLeaderBoard(page, pageSize int) ([]models.User, error)
 }

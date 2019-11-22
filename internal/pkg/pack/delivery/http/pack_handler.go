@@ -158,7 +158,7 @@ func (h *handler) offlineAuthor(ctx echo.Context) error {
 }
 
 func (h *handler) list(ctx echo.Context) error {
-	page := http_utils.GetIntParam(ctx, 0)
+	page := http_utils.GetIntParam(ctx, "page",0)
 
 	packs, err := h.packUseCase.FetchOrderedByRating(true, page, 20)
 	if err != nil {
@@ -174,7 +174,7 @@ func (h *handler) list(ctx echo.Context) error {
 
 func (h *handler) listAuthor(ctx echo.Context) error {
 	caller := ctx.Get("user").(*models.User)
-	page := http_utils.GetIntParam(ctx, 0)
+	page := http_utils.GetIntParam(ctx, "page", 0)
 	packs, err := h.packUseCase.FetchByAuthor(*caller, true, page, 20)
 	if err != nil {
 		return &echo.HTTPError{

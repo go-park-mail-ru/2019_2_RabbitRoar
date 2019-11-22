@@ -2,8 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
-	"github.com/jackc/pgx/v4"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
@@ -19,7 +18,7 @@ func NewSqlUserRepository(db *sql.DB) user.Repository {
 	}
 }
 
-func scanUser(row pgx.Row) (*models.User, error) {
+func scanUser(row *sql.Row) (*models.User, error) {
 	var u models.User
 	password := make([]byte, 36)
 
@@ -117,4 +116,38 @@ func (repo *sqlUserRepository) Update(user models.User) error {
 	}
 
 	return nil
+}
+
+func (repo *sqlUserRepository) FetchLeaderBoard(page, pageSize int) ([]models.User, error) {
+	rows, err := repo.db.Query(
+		`
+			SELECT id, username, rating, avatar
+			FROM "svoyak"."User"
+			ORDER BY rating DESC
+			OFFSET $1::integer LIMIT $2::integer;
+		`,
+		page * pageSize, pageSize,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "error fetching leaderboard")
+	}
+
+	var users = make([]models.User, 0, pageSize)
+	for rows.Next() {
+		var u models.User
+		err :=  rows.Scan(
+			&u.ID,
+			&u.Username,
+			&u.Rating,
+			&u.AvatarUrl,
+		)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "error scanning user")
+		}
+
+		users = append(users, u)
+	}
+
+	return users, nil
 }

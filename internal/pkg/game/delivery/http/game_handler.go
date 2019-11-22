@@ -42,7 +42,7 @@ func NewGameHandler(
 }
 
 func (gh *handler) self(ctx echo.Context) error {
-	page := http_utils.GetIntParam(ctx, 0)
+	page := http_utils.GetIntParam(ctx, "page",0)
 
 	if page < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "page less than 0 provided")
