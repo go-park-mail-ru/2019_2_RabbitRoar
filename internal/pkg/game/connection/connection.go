@@ -34,6 +34,7 @@ func NewConnectionWrapper(
 }
 
 func (conn *gameConnection) RunReceive(senderID int) error {
+	log.Infof("starting receive goroutine for user %d", senderID)
 	for {
 		select {
 		case <-conn.stopReceive:
@@ -44,9 +45,11 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 		default:
 			_, msg, err := conn.ws.ReadMessage()
 			if err != nil {
+				log.Error(err)
 				close(conn.receiveChan)
 				return err
 			}
+			log.Info("Got msg: ", msg)
 
 			eventWrap := game.EventWrapper{
 				SenderID: senderID,
@@ -56,6 +59,7 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 			if err != nil {
 				log.Info("Invalid event json received")
 			}
+			log.Info("Unmarshalled event: ", eventWrap)
 
 			conn.receiveChan <- eventWrap
 		}
@@ -64,7 +68,7 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 
 func (conn *gameConnection) RunSend() error {
 	ticker := time.NewTicker(10 * time.Second)
-
+	log.Info("starting send goroutine for user")
 	for {
 		select {
 		case <-conn.stopSend:
@@ -76,13 +80,18 @@ func (conn *gameConnection) RunSend() error {
 			return nil
 
 		case event := <-conn.sendChan:
-			msg, _ := json.Marshal(event)
-			err := conn.ws.WriteMessage(websocket.TextMessage, msg)
+			log.Info("Got to send event: ", event)
+			msg, err := json.Marshal(event)
+			log.Info("Error marshalling event: ", err)
+			err = conn.ws.WriteMessage(websocket.TextMessage, msg)
+			log.Info("Event sent: ", msg)
 			if err != nil {
+				log.Error("Error sending event: ", err)
 				return err
 			}
 
 		case <-ticker.C:
+			log.Info("Got ticker event, sending ping.")
 			err := conn.ws.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				return err
