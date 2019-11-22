@@ -32,12 +32,12 @@ func NewGameHandler(
 		usecase: uc,
 	}
 
-	group := e.Group("/game", authMiddleware)
+	group := e.Group("/game")
 	group.GET("", handler.self)
-	group.POST("", csrfMiddleware(handler.create))
-	group.POST("/:uuid/join", csrfMiddleware(handler.join))
-	group.DELETE("/leave", csrfMiddleware(handler.leave))
-	group.GET("/ws", handler.ws)
+	group.POST("", authMiddleware(csrfMiddleware(handler.create)))
+	group.POST("/:uuid/join", authMiddleware(csrfMiddleware(handler.join)))
+	group.DELETE("/leave", authMiddleware(csrfMiddleware(handler.leave)))
+	group.GET("/ws", authMiddleware(handler.ws))
 }
 
 func (gh *handler) self(ctx echo.Context) error {
