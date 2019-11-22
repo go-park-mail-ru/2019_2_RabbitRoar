@@ -89,7 +89,11 @@ func (h *handler) login(ctx echo.Context) error {
 
 	uv, ok := h.userUseCase.IsPasswordCorrect(u)
 	if !ok {
-		return ctx.NoContent(http.StatusUnauthorized)
+		return &echo.HTTPError{
+			Code:     http.StatusUnauthorized,
+			Message:  "invalid credentials provided",
+			Internal: nil,
+		}
 	}
 
 	sessionID, err := h.sessionUseCase.Create(*uv)
