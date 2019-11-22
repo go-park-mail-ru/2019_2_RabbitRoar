@@ -13,6 +13,7 @@ import (
 	_gameHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/delivery/http"
 	_gameRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/repository"
 	_gameUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/usecase"
+	_http "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_packHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/delivery/http"
@@ -40,6 +41,8 @@ func Start() {
 	_sentry.InitSentry()
 
 	e := echo.New()
+
+	e.HTTPErrorHandler = _http.ErrorHandler
 
 	e.Use(_middleware.PanicMiddleware)
 
