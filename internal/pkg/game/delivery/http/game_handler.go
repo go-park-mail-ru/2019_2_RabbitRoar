@@ -169,5 +169,6 @@ func (gh *handler) ws(ctx echo.Context) error {
 	}
 
 	go conn.RunReceive(user.ID)
-	return conn.RunSend()
+	conn.RunSend()
+	return ctx.NoContent(http.StatusOK)
 }

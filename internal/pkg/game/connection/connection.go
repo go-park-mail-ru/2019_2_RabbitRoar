@@ -46,7 +46,7 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 		default:
 			_, msg, err := conn.ws.ReadMessage()
 			if err != nil {
-				log.Error(err)
+				log.Error("Error reading msg: ", err)
 				close(conn.receiveChan)
 				return err
 			}
@@ -66,7 +66,6 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 		}
 		log.Info("RECV Loop end")
 	}
-	log.Info("receive goroutine ended")
 }
 
 func (conn *gameConnection) RunSend() error {
@@ -78,6 +77,7 @@ func (conn *gameConnection) RunSend() error {
 		case <-conn.stopSend:
 			err := conn.ws.WriteMessage(websocket.CloseNormalClosure, []byte{})
 			if err != nil {
+				log.Info("Error sending msg: ", err)
 				return err
 			}
 			log.Info("Stopped writing into websocket manually")
@@ -103,8 +103,6 @@ func (conn *gameConnection) RunSend() error {
 		}
 		log.Info("SEND Loop end")
 	}
-	log.Info("send goroutine for user ended")
-	return nil
 }
 
 func (conn *gameConnection) Stop() {
