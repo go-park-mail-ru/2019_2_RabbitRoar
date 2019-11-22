@@ -7,12 +7,26 @@ import (
 	"net/http"
 )
 
+type errorView struct {
+	message string
+}
+
 func ErrorHandler(err error, ctx echo.Context) {
 	if he, ok := err.(*echo.HTTPError); ok {
-		ctx.Response().Status = he.Code
+		err := errorView{
+			message:err.Error(),
+		}
 		ctx.Logger().Error(he.Internal)
+		if he.Code >= http.StatusInternalServerError {
+			sentry.CaptureException(he)
+		}
+		_ = ctx.JSON(he.Code, err)
+		return
 	}
-	ctx.Error(errors.WithStack(err))
+
+	ctx.Logger().Error(errors.WithStack(err))
+
 	sentry.CaptureException(err)
+
 	_ = ctx.NoContent(http.StatusInternalServerError)
 }
