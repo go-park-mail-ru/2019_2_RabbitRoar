@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/common/log"
 	"net/http"
 	"time"
 )
@@ -79,6 +80,7 @@ func (h *handler) signUp(ctx echo.Context) error {
 func (h *handler) login(ctx echo.Context) error {
 	var u models.User
 	err := ctx.Bind(&u)
+	log.Info("AUTH: binded user: ", u.Username, u.Password)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusUnprocessableEntity,
