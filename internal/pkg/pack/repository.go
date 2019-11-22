@@ -1,6 +1,14 @@
 package pack
 
-import "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+import (
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/pkg/errors"
+)
+
+var(
+	ErrRepoNotFound = errors.New("pack with such ID not found")
+	ErrRepoCorrupted = errors.New("pack corrupted")
+)
 
 type Repository interface {
 	Create(pack *models.Pack) error

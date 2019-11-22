@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/xeipuuv/gojsonschema"
@@ -13,6 +14,7 @@ import (
 
 type handler struct {
 	packUseCase pack.UseCase
+	userUseCase user.UseCase
 	packSchema  *gojsonschema.Schema
 	sanitizer   *bluemonday.Policy
 }
@@ -20,12 +22,14 @@ type handler struct {
 func NewPackHandler(
 	e *echo.Echo,
 	packUseCase pack.UseCase,
+	userUseCase user.UseCase,
 	authMiddleware echo.MiddlewareFunc,
 	csrfMiddleware echo.MiddlewareFunc,
 	packSchema *gojsonschema.Schema,
 ) {
 	handler := handler{
 		packUseCase: packUseCase,
+		userUseCase: userUseCase,
 		packSchema:  packSchema,
 		sanitizer:   bluemonday.UGCPolicy(),
 	}
@@ -38,11 +42,22 @@ func NewPackHandler(
 	group.GET("/offline/author", authMiddleware(handler.offlineAuthor))
 	group.GET("/offline/public", handler.offlinePublic)
 	group.GET("/author", authMiddleware(handler.listAuthor))
-	group.GET("/:id", authMiddleware(handler.byID))
+	group.GET("/:id", handler.byID)
 }
 
-
+//TODO: make me more safe (or think that DB has valid form)
 func (h *handler) sanitizeQuestions(p interface{}) {
+	themeSlice := p.([]interface{})
+	for _, theme := range themeSlice {
+		theme := theme.(map[string]interface{})
+		theme["name"] = h.sanitizer.Sanitize(theme["name"].(string))
+		questionSlice := theme["questions"].([]interface{})
+		for _, question := range questionSlice {
+			question := question.(map[string]interface{})
+			question["text"] = h.sanitizer.Sanitize(question["text"].(string))
+			question["answer"] = h.sanitizer.Sanitize(question["answer"].(string))
+		}
+	}
 }
 
 func (h *handler) sanitize(p models.Pack) models.Pack {
@@ -143,7 +158,11 @@ func (h *handler) list(ctx echo.Context) error {
 
 	packs, err := h.packUseCase.FetchOrderedByRating(true, page, 20)
 	if err != nil {
-		return nil
+		return &echo.HTTPError{
+			Code:     500,
+			Message:  "error fetching packs",
+			Internal: err,
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, h.sanitizeSlice(packs))
@@ -209,7 +228,6 @@ func (h *handler) byID(ctx echo.Context) error {
 		}
 	}
 
-	caller := ctx.Get("user").(*models.User)
 	p, err := h.packUseCase.GetByID(ID)
 	if err != nil {
 		return &echo.HTTPError{
@@ -219,7 +237,25 @@ func (h *handler) byID(ctx echo.Context) error {
 		}
 	}
 
-	if p.Offline || p.Author == caller.ID || h.packUseCase.Played(p.ID, caller.ID) {
+	if p.Offline {
+		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+	}
+
+	sessionID, err := ctx.Cookie("SessionID")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized users can see only offline packs")
+	}
+
+	caller, err := h.userUseCase.GetBySessionID(sessionID.Value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "bad SessionID, invalid or expired")
+	}
+
+	if p.Author == caller.ID {
+		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+	}
+
+	if h.packUseCase.Played(p.ID, caller.ID) {
 		return ctx.JSON(http.StatusOK, h.sanitize(*p))
 	}
 

@@ -59,6 +59,7 @@ func Start() {
 
 	e.Use(_middleware.LogMiddleware)
 
+	//TODO: cleanup here
 	e.Use(
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
@@ -128,7 +129,7 @@ func Start() {
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
 	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
-	_packHttp.NewPackHandler(e, packUseCase, authMiddleware, csrfMiddleware, packSchema)
+	_packHttp.NewPackHandler(e, packUseCase, userUseCase, authMiddleware, csrfMiddleware, packSchema)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }

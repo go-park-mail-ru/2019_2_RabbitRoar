@@ -3,14 +3,12 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/pkg/errors"
+	"github.com/prometheus/common/log"
 )
-
-//TODO: move order by generation to function
-//TODO: move offset and page generation to function
 
 type sqlPackRepository struct {
 	db *sql.DB
@@ -37,12 +35,18 @@ func scanPackRow(row *sql.Row) (*models.Pack, error) {
 		&questions,
 	)
 
-	if err != nil {
-		return nil, err
+	switch err {
+	case sql.ErrNoRows:
+		return nil, pack.ErrRepoNotFound
+	case nil:
+		break
+	default:
+		return nil, errors.Wrap(err, "error scanning error")
 	}
 
 	if err := json.Unmarshal(questions, &p.Questions); err != nil {
-		return nil, err
+		log.Error(err)
+		return nil, pack.ErrRepoCorrupted
 	}
 
 	return &p, err
@@ -58,8 +62,7 @@ func (repo *sqlPackRepository) Create(pack *models.Pack) error {
 			INSERT INTO "svoyak"."Pack" (id, name, description, rating, author, tags, pack)
 			VALUES (DEFAULT, $1::varchar, $2::text, $3::integer, $4::integer, $5::varchar, $6::json)
 			RETURNING id;
-		`,
-		pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags, pPack,
+		`, pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags, pPack,
 	)
 
 	return idRow.Scan(&pack.ID)
@@ -76,8 +79,7 @@ func (repo *sqlPackRepository) Update(pack *models.Pack) error {
     			tags        = $5::varchar,
     			pack        = $6::json
 			WHERE id = $7::integer;
-		`,
-		pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags,pack.Questions, pack.ID,
+		`, pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags,pack.Questions, pack.ID,
 	)
 	if err != nil {
 		return nil
@@ -96,19 +98,18 @@ func (repo *sqlPackRepository) Delete(packID int) error {
 		`
 			DELETE FROM "svoyak"."Pack"
 			WHERE id = $1::integer;
-		`,
-		packID,
+		`, packID,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error deleting pack")
 	}
 
 	c, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting rows affected")
 	}
 	if c != 1 {
-		return errors.New("unable to delete pack: no pack found")
+		return pack.ErrRepoNotFound
 	}
 
 	return nil
@@ -120,17 +121,24 @@ func (repo sqlPackRepository) Played(packID, userID int) (bool, error) {
 			SELECT 1
 			FROM "svoyak"."GameUserHist"
 			WHERE "Pack_id" = $1::integer AND "User_id" = $2::integer;
-		`,
-		packID, userID,
+		`, packID, userID,
 	)
 	var played int
 	err := row.Scan(&played)
-	if err != nil {
-		return false, nil
+
+	switch err {
+	case sql.ErrNoRows:
+		return false, pack.ErrRepoNotFound
+	case nil:
+		break
+	default:
+		return false, err
 	}
+
 	if played == 1 {
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -140,8 +148,7 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 			SELECT id, name, description, rating, author, tags, offline, pack
 			FROM "svoyak"."Pack"
 			WHERE id = $1::integer;
-		`,
-		packID,
+		`, packID,
 	)
 
 	return scanPackRow(row)
@@ -149,20 +156,21 @@ func (repo sqlPackRepository) GetByID(packID int) (*models.Pack, error) {
 
 func (repo sqlPackRepository) FetchOfflinePublic() ([]int, error) {
 	rows, err := repo.db.Query(
-	`
-		SELECT id
-		FROM "svoyak"."Pack"
-		WHERE offline = TRUE
-	`)
+		`
+			SELECT id
+			FROM "svoyak"."Pack"
+			WHERE offline = TRUE
+		`,
+	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching public offline packs")
 	}
 
 	var pid int
 	var pids = make([]int, 0, 20)
 	for rows.Next() {
 		if err := rows.Scan(&pid); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error scanning id")
 		}
 		pids = append(pids, pid)
 	}
@@ -172,19 +180,21 @@ func (repo sqlPackRepository) FetchOfflinePublic() ([]int, error) {
 func (repo sqlPackRepository) FetchOfflineAuthor(caller models.User) ([]int, error) {
 	rows, err := repo.db.Query(
 		`
-		SELECT id
-		FROM "svoyak"."Pack"
-		WHERE author = $1::integer
-	`, caller.ID)
+			SELECT id
+			FROM "svoyak"."Pack"
+			WHERE author = $1::integer
+		`, caller.ID,
+	)
+
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching offline authors packs")
 	}
 
 	var id int
 	var ids = make([]int, 0, 20)
 	for rows.Next() {
 		if err := rows.Scan(&id); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error scanning id")
 		}
 		ids = append(ids, id)
 	}
@@ -193,23 +203,22 @@ func (repo sqlPackRepository) FetchOfflineAuthor(caller models.User) ([]int, err
 
 func (repo sqlPackRepository) FetchOffline(caller models.User) ([]int, error) {
 	rows, err := repo.db.Query(
-	`
-		SELECT DISTINCT "Pack_id"
-		FROM "svoyak"."GameUserHist"
-		WHERE "User_id" = $1::int
-	`,
-	caller.ID,
+		`
+			SELECT DISTINCT "Pack_id"
+			FROM "svoyak"."GameUserHist"
+			WHERE "User_id" = $1::int
+		`, caller.ID,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching offline packs")
 	}
 
 	var pid int
 	var pids = make([]int, 0, 64)
 	for rows.Next() {
 		if err := rows.Scan(&pid); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error scanning id")
 		}
 		pids = append(pids, pid)
 	}
@@ -231,7 +240,7 @@ func scanPackRows(rows *sql.Rows, pageSize int) ([]models.Pack, error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error scanning pack")
 		}
 
 		packs = append(packs, p)
@@ -262,7 +271,7 @@ func (repo sqlPackRepository) FetchOrderedByRating(desc bool, page, pageSize int
 	defer rows.Close()
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching ordered by rating")
 	}
 
 	return scanPackRows(rows, pageSize)
@@ -277,16 +286,18 @@ func (repo sqlPackRepository) FetchByAuthor(u models.User, desc bool, page, page
 	}
 
 	query := fmt.Sprintf(
-	`
-		SELECT id, name, description, rating, author, tags
-		FROM "svoyak"."Pack"
-		WHERE author = $1
-		ORDER BY rating %s
-		OFFSET $2::integer LIMIT $3::integer;
-	`, order)
+		`
+			SELECT id, name, description, rating, author, tags
+			FROM "svoyak"."Pack"
+			WHERE author = $1
+			ORDER BY rating %s
+			OFFSET $2::integer LIMIT $3::integer;
+		`, order,
+	)
+
 	rows, err := repo.db.Query(query, u.ID, page * pageSize, pageSize)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching by author")
 	}
 	defer rows.Close()
 
@@ -308,14 +319,13 @@ func (repo sqlPackRepository) FetchByTags(tags string, desc bool, page, pageSize
 			WHERE tags = $1::varchar
 			ORDER BY rating %s
 			OFFSET $2::integer LIMIT $3::integer;
-		`,
-		order,
+		`, order,
 	)
 
 	rows, err := repo.db.Query(query, tags, page * pageSize, pageSize)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error fetching by tags")
 	}
 
 	defer rows.Close()

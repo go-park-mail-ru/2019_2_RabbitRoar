@@ -3,6 +3,8 @@ package usecase
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/pkg/errors"
+	"github.com/prometheus/common/log"
 )
 
 type packUseCase struct {
@@ -21,18 +23,17 @@ func (useCase* packUseCase) Create(p *models.Pack, caller models.User) error {
 }
 
 func (useCase* packUseCase) Delete(ID int) error {
-	return useCase.repo.Delete(ID)
+	return errors.Wrap(useCase.repo.Delete(ID), "unable delete pack")
 }
 
 func (useCase *packUseCase) Update(pack *models.Pack, caller models.User) error {
-	panic("implement me")
+	return errors.Wrap(useCase.repo.Update(pack), "unable update pack")
 }
 
 func (useCase *packUseCase) Played(packID, userID int) bool {
 	played, err := useCase.repo.Played(packID, userID)
 	if err != nil {
-		//TODO: log error here
-		return false
+		log.Error("unable get played status", err)
 	}
 	return played
 }
