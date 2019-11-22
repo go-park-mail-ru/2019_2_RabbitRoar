@@ -47,6 +47,9 @@ func NewPackHandler(
 
 //TODO: make me more safe (or think that DB has valid form)
 func (h *handler) sanitizeQuestions(p interface{}) {
+	if p == nil {
+		return
+	}
 	themeSlice := p.([]interface{})
 	for _, theme := range themeSlice {
 		theme := theme.(map[string]interface{})
