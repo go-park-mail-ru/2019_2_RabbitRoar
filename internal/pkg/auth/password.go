@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/prometheus/common/log"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -35,6 +34,5 @@ func CheckPassword(userPassword, passwordHashed string) bool {
 	userPasswordBytes := []byte(userPassword)
 	userPasswordBytesHashed := hashPassword(userPasswordBytes, salt)
 
-	log.Info("Invalid password")
 	return bytes.Equal(userPasswordBytesHashed, passwordHashedBytes)
 }
