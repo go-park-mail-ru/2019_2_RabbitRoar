@@ -37,7 +37,7 @@ func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
 	return uc.sqlRepo.GetGameIDByUserID(userID)
 }
 
-func (uc *gameUseCase) Create(g models.Game, u models.User) error {
+func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 	newUUID, err := uuid.NewUUID()
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (uc *gameUseCase) Create(g models.Game, u models.User) error {
 	g.Creator = u.ID
 	g.Pending = true
 
-	err = uc.sqlRepo.Create(g)
+	err = uc.sqlRepo.Create(*g)
 	if err != nil {
 		return err
 	}

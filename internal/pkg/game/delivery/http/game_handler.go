@@ -76,11 +76,11 @@ func (gh *handler) create(ctx echo.Context) error {
 
 	creator := ctx.Get("user").(*models.User)
 
-	if err := gh.usecase.Create(g, *creator); err != nil {
+	if err := gh.usecase.Create(&g, *creator); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	return ctx.NoContent(http.StatusCreated)
+	return ctx.JSON(http.StatusCreated, g.UUID)
 }
 
 func (gh *handler) join(ctx echo.Context) error {
