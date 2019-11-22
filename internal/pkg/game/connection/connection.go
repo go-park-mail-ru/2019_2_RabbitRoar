@@ -36,6 +36,7 @@ func NewConnectionWrapper(
 func (conn *gameConnection) RunReceive(senderID int) error {
 	log.Infof("starting receive goroutine for user %d", senderID)
 	for {
+		log.Info("RECV Loop start")
 		select {
 		case <-conn.stopReceive:
 			close(conn.receiveChan)
@@ -63,13 +64,16 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 
 			conn.receiveChan <- eventWrap
 		}
+		log.Info("RECV Loop end")
 	}
+	log.Info("receive goroutine ended")
 }
 
 func (conn *gameConnection) RunSend() error {
 	ticker := time.NewTicker(10 * time.Second)
 	log.Info("starting send goroutine for user")
 	for {
+		log.Info("SEND Loop start")
 		select {
 		case <-conn.stopSend:
 			err := conn.ws.WriteMessage(websocket.CloseNormalClosure, []byte{})
@@ -97,7 +101,10 @@ func (conn *gameConnection) RunSend() error {
 				return err
 			}
 		}
+		log.Info("SEND Loop end")
 	}
+	log.Info("send goroutine for user ended")
+	return nil
 }
 
 func (conn *gameConnection) Stop() {
