@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/prometheus/common/log"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
@@ -130,6 +131,12 @@ func (gh *handler) leave(ctx echo.Context) error {
 }
 
 func (gh *handler) ws(ctx echo.Context) error {
+	log.Info("ws header Host: ", ctx.Request().Header.Get("Host"))
+	log.Info("ws header Origin: ", ctx.Request().Header.Get("Origin"))
+	log.Info("ws header Connection: ", ctx.Request().Header.Get("Connection"))
+	log.Info("ws header Upgrade: ", ctx.Request().Header.Get("Upgrade"))
+	log.Info("ws header Sec-WebSocket-Key: ", ctx.Request().Header.Get("Sec-WebSocket-Key"))
+	log.Info("ws header Sec-WebSocket-Version: ", ctx.Request().Header.Get("Sec-WebSocket-Version"))
 	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
 		return &echo.HTTPError{
