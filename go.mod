@@ -13,6 +13,7 @@ require (
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/lib/pq v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
+	github.com/mailru/easyjson v0.7.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pelletier/go-toml v1.5.0 // indirect

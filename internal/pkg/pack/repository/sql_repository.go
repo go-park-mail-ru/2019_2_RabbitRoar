@@ -65,7 +65,7 @@ func (repo *sqlPackRepository) Create(pack *models.Pack) error {
 		`, pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags, pPack,
 	)
 
-	return idRow.Scan(&pack.ID)
+	return errors.Wrap(idRow.Scan(&pack.ID), "error creating pack")
 }
 
 func (repo *sqlPackRepository) Update(pack *models.Pack) error {

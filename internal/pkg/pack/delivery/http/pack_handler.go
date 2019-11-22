@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/labstack/echo/v4"
+	"github.com/mailru/easyjson"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/xeipuuv/gojsonschema"
 	"net/http"
@@ -45,7 +46,7 @@ func NewPackHandler(
 	group.GET("/:id", handler.byID)
 }
 
-//TODO: make me more safe (or think that DB has valid form)
+//TODO: make me more safe (or contract that DB has valid form)
 func (h *handler) sanitizeQuestions(p interface{}) {
 	if p == nil {
 		return
@@ -109,8 +110,8 @@ func (h *handler) create(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-
-	return ctx.JSON(http.StatusCreated, h.sanitize(p))
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitize(p), ctx.Response())
+	return err
 }
 
 func (h *handler) offline(ctx echo.Context) error {
