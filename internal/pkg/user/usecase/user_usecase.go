@@ -178,6 +178,7 @@ func (uc *userUseCase) GetBySessionID(UUID string) (*models.User, error) {
 
 func (uc *userUseCase) IsPasswordCorrect(u models.User) (*models.User, bool) {
 	correctUser, err := uc.repository.GetByName(u.Username)
+	log.Error("Error getting from db: ", u)
 	if err != nil {
 		log.Error("Error getting from db: ", u)
 		return nil, false
