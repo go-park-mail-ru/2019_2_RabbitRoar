@@ -12,6 +12,10 @@ type UserErrorView struct {
 }
 
 func ErrorHandler(err error, ctx echo.Context) {
+	if err == nil {
+		return
+	}
+
 	if he, ok := err.(*echo.HTTPError); ok {
 		ctx.Logger().Error(he.Internal)
 
@@ -22,7 +26,7 @@ func ErrorHandler(err error, ctx echo.Context) {
 
 	ctx.Logger().Error(errors.WithStack(err))
 
-	sentry.CaptureException(err)
+	sentry.CaptureException(errors.WithStack(err))
 
 	ctx.Echo().DefaultHTTPErrorHandler(err, ctx)
 }
