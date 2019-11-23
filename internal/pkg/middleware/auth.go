@@ -31,7 +31,7 @@ func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerF
 		}
 
 		ctx.Set("sessionID", sessionID.Value)
-		ctx.Set("user", sess.User)
+		ctx.Set("user", &sess.User)
 		return next(ctx)
 	}
 }
