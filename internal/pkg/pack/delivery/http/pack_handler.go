@@ -37,6 +37,7 @@ func NewPackHandler(
 
 	group := e.Group("/pack")
 	group.POST("", authMiddleware(csrfMiddleware(handler.create)))
+	group.PUT("/:id", handler.update)
 	group.DELETE("/:id", authMiddleware(handler.delete))
 	group.GET("", authMiddleware(handler.list))
 	group.GET("/offline", authMiddleware(handler.offline))
@@ -111,6 +112,80 @@ func (h *handler) create(ctx echo.Context) error {
 		}
 	}
 	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitize(p), ctx.Response())
+	return err
+}
+
+func (h *handler) update(ctx echo.Context) error {
+	ID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "invalid pack id",
+			Internal: err,
+		}
+	}
+	p, err := h.packUseCase.GetByID(ID)
+	switch err {
+	case pack.ErrRepoNotFound:
+		return echo.NewHTTPError(http.StatusNotFound, "pack not found")
+	case nil:
+		break
+	}
+
+	var pn models.Pack
+	err = ctx.Bind(&pn)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUnprocessableEntity,
+			Message:  "error parsing pack",
+			Internal: err,
+		}
+	}
+
+	loader := gojsonschema.NewGoLoader(pn.Questions)
+	res, err := h.packSchema.Validate(loader)
+	if err != nil {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"error parsing pack questions",
+		)
+	}
+
+	if !res.Valid() {
+		return echo.NewHTTPError(
+			http.StatusUnprocessableEntity,
+			http_utils.ExtractErrors(res.Errors()),
+		)
+	}
+
+	caller := ctx.Get("user").(*models.User)
+	if p.Author != caller.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "only own packs can be modified")
+	}
+
+	if pn.Name != "" {
+		p.Name = pn.Name
+	}
+	if pn.Description != "" {
+		p.Description = pn.Description
+	}
+	if pn.Tags != "" {
+		p.Tags = pn.Tags
+	}
+	if pn.Questions != nil {
+		p.Questions = pn.Questions
+	}
+
+	err = h.packUseCase.Update(p, *caller)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error updating pack",
+			Internal: err,
+		}
+	}
+
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitize(*p), ctx.Response())
 	return err
 }
 
