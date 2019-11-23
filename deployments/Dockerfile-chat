@@ -7,7 +7,7 @@ COPY . .
 RUN go get github.com/mailru/easyjson/...
 RUN go generate -v ./internal/pkg/models
 RUN go get -d -v ./...
-RUN go install -v ./cmd/server/server.go
+RUN go install -v ./cmd/chat/chat.go
 
 EXPOSE 3000
-CMD ["server"]
+CMD ["chat"]
