@@ -20,12 +20,12 @@ func NewSqlUserRepository(db *sql.DB) user.Repository {
 
 func scanUser(row *sql.Row) (*models.User, error) {
 	var u models.User
-	password := make([]byte, 36)
+	var password []byte
 
 	err := row.Scan(
 		&u.ID,
 		&u.Username,
-		&password,
+		password,
 		&u.Email,
 		&u.Rating,
 		&u.AvatarUrl,
