@@ -25,7 +25,7 @@ func scanUser(row *sql.Row) (*models.User, error) {
 	err := row.Scan(
 		&u.ID,
 		&u.Username,
-		password,
+		&password,
 		&u.Email,
 		&u.Rating,
 		&u.AvatarUrl,
