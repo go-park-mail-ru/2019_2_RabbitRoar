@@ -14,4 +14,4 @@ RUN go build -v -gcflags "all=-N -l" ./cmd/server/server.go
 
 EXPOSE 3000
 EXPOSE 2345
-CMD dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec ./server
+CMD dlv --listen=:2345 --continue --headless=true --api-version=2 --accept-multiclient exec ./server
