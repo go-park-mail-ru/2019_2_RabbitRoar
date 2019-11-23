@@ -26,7 +26,7 @@ func NewChatHandler(
 		hub: hub,
 	}
 
-	e.GET("/ws", handler.ws)
+	e.GET("/chat/ws", handler.ws)
 }
 
 func (h *handler) ws(ctx echo.Context) error {
