@@ -89,7 +89,9 @@ func Start() {
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
-	_chatHttp.NewChatHandler(e, sessionUseCase, authMiddleware, chat.NewHub())
+	hub := chat.NewHub()
+	go hub.Run()
+	_chatHttp.NewChatHandler(e, sessionUseCase, authMiddleware, hub)
 
 	log.Fatal(e.Start(viper.GetString("chat.address")))
 }

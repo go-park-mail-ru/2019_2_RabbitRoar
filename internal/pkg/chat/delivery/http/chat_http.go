@@ -41,6 +41,6 @@ func (h *handler) ws(ctx echo.Context) error {
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.WritePump()
-	go client.ReadPump()
+	client.ReadPump()
 	return nil
 }
