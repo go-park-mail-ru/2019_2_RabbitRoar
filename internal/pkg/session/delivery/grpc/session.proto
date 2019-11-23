@@ -1,11 +1,9 @@
 syntax = "proto3";
 
-//go:generate protoc --go_out=plugins=grpc:. *.proto
-
 package session;
 
 message SessionID {
-  string ID = 1;
+    string ID = 1;
 }
 
 message User {
@@ -17,7 +15,7 @@ message User {
 }
 
 message Session {
-  SessionID string = 1;
+  string SessionID = 1;
   User user = 2;
 }
 

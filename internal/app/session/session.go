@@ -2,15 +2,12 @@ package session
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	session "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	_grpc "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/delivery/grpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
-//go:generate protoc -I ./ --go_out=plugins=grpc:. ./session.proto
+//go:generate protoc -I ../../pkg/session/delivery/grpc/ --go_out=plugins=grpc:../../pkg/session/delivery/grpc/ ../../pkg/session/delivery/grpc/session.proto
 
 type manager struct {
 	sessionUseCase session.UseCase
@@ -38,9 +35,23 @@ func (m *manager) Create(ctx context.Context, in *_grpc.Session) (*_grpc.Session
 }
 
 func (m *manager) GetByID(ctx context.Context, in *_grpc.SessionID) (*_grpc.Session, error) {
-	return nil, nil
+	sess, err := m.sessionUseCase.GetByID(in.ID)
+	if err != nil {
+		return nil, err
+	}
+	var u = &_grpc.User{
+		ID:                   int32(sess.User.ID),
+		Username:             sess.User.Username,
+		Email:                sess.User.Email,
+		Rating:               int32(sess.User.Rating),
+		Avatar:               sess.User.AvatarUrl,
+	}
+	return &_grpc.Session{
+		SessionID:            sess.ID,
+		User:                 u,
+	}, nil
 }
 
 func (m *manager) Delete(ctx context.Context, in *_grpc.SessionID) (*_grpc.Nothing, error) {
-	return nil, nil
+	return &_grpc.Nothing{}, m.sessionUseCase.Destroy(in.ID)
 }

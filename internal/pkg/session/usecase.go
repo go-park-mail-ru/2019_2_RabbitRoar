@@ -6,6 +6,6 @@ import (
 
 type UseCase interface {
 	Create(models.User) (*string, error)
-	Destroy(string)
+	Destroy(string) error
 	GetByID(sessionID string) (*models.Session, error)
 }
