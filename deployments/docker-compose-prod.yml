@@ -13,9 +13,8 @@ services:
     depends_on:
       - postgres
     ports:
-      - 8010:8080
       - 3010:3000
-      - 2345:2345
+      - 2345:2345 # Remote debug
 
   chat:
     restart: always
@@ -36,6 +35,8 @@ services:
     volumes:
       - "../db/migrations/:/docker-entrypoint-initdb.d"
       - "pg_data:/var/lib/postgresql/data"
+    ports:
+      - 5432:5432
 
   swagger:
     image: swaggerapi/swagger-ui
