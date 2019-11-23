@@ -124,7 +124,7 @@ func Start() {
 	gameMemRepo := _gameRepository.NewMemGameRepository()
 	gameUseCase := _gameUseCase.NewGameUseCase(gameSQLRepo, gameMemRepo)
 
-	authMiddleware := _middleware.NewAuthMiddleware(userUseCase)
+	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
 	csrfMiddleware := _middleware.NewCSRFMiddleware(jwtToken)
 
@@ -132,7 +132,7 @@ func Start() {
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
 	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
-	_packHttp.NewPackHandler(e, packUseCase, userUseCase, authMiddleware, csrfMiddleware, packSchema)
+	_packHttp.NewPackHandler(e, packUseCase, userUseCase,  sessionUseCase, authMiddleware, csrfMiddleware, packSchema)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }

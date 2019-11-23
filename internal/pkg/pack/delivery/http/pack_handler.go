@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/labstack/echo/v4"
 	"github.com/mailru/easyjson"
@@ -16,6 +17,7 @@ import (
 type handler struct {
 	packUseCase pack.UseCase
 	userUseCase user.UseCase
+	sessionUseCase session.UseCase
 	packSchema  *gojsonschema.Schema
 	sanitizer   *bluemonday.Policy
 }
@@ -24,6 +26,7 @@ func NewPackHandler(
 	e *echo.Echo,
 	packUseCase pack.UseCase,
 	userUseCase user.UseCase,
+	sessionUseCase session.UseCase,
 	authMiddleware echo.MiddlewareFunc,
 	csrfMiddleware echo.MiddlewareFunc,
 	packSchema *gojsonschema.Schema,
@@ -31,6 +34,7 @@ func NewPackHandler(
 	handler := handler{
 		packUseCase: packUseCase,
 		userUseCase: userUseCase,
+		sessionUseCase: sessionUseCase,
 		packSchema:  packSchema,
 		sanitizer:   bluemonday.UGCPolicy(),
 	}
@@ -325,16 +329,16 @@ func (h *handler) byID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized users can see only offline packs")
 	}
 
-	caller, err := h.userUseCase.GetBySessionID(sessionID.Value)
+	sess, err := h.sessionUseCase.GetByID(sessionID.Value)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "bad SessionID, invalid or expired")
 	}
 
-	if p.Author == caller.ID {
+	if p.Author == sess.User.ID {
 		return ctx.JSON(http.StatusOK, h.sanitize(*p))
 	}
 
-	if h.packUseCase.Played(p.ID, caller.ID) {
+	if h.packUseCase.Played(p.ID, sess.User.ID) {
 		return ctx.JSON(http.StatusOK, h.sanitize(*p))
 	}
 

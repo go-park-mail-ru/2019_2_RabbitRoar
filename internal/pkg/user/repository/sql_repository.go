@@ -53,19 +53,6 @@ func (repo *sqlUserRepository) GetByID(userID int) (*models.User, error) {
 	return scanUser(row)
 }
 
-func (repo *sqlUserRepository) GetBySessionID(sessionID string) (*models.User, error) {
-	row := repo.db.QueryRow(
-		`
-			SELECT id, username, password, email, rating, avatar
-			FROM "svoyak"."User"
-			WHERE "id" = (SELECT "User_id" FROM "svoyak"."Session" WHERE "UUID" = $1::varchar);
-		`,
-		sessionID,
-	)
-
-	return scanUser(row)
-}
-
 func (repo *sqlUserRepository) GetByName(name string) (*models.User, error) {
 	row := repo.db.QueryRow(
 		`

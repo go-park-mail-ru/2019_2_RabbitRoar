@@ -172,10 +172,6 @@ func (uc *userUseCase) GetByName(name string) (*models.User, error) {
 	return uc.repository.GetByName(name)
 }
 
-func (uc *userUseCase) GetBySessionID(UUID string) (*models.User, error) {
-	return uc.repository.GetBySessionID(UUID)
-}
-
 func (uc *userUseCase) FetchLeaderBoard(page, pageSize int) ([]models.User, error) {
 	return uc.repository.FetchLeaderBoard(page, pageSize)
 }

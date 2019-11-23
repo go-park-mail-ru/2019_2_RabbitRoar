@@ -1,19 +1,19 @@
 package middleware
 
 import (
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type authMiddleware struct {
-	useCase user.UseCase
+	sessionUseCase session.UseCase
 }
 
-func NewAuthMiddleware(useCase user.UseCase) echo.MiddlewareFunc {
+func NewAuthMiddleware(sessionUseCase session.UseCase) echo.MiddlewareFunc {
 	am := authMiddleware{
-		useCase: useCase,
+		sessionUseCase: sessionUseCase,
 	}
 	return am.AuthMiddlewareFunc
 }
@@ -25,13 +25,13 @@ func (u *authMiddleware) AuthMiddlewareFunc(next echo.HandlerFunc) echo.HandlerF
 			return echo.NewHTTPError(http.StatusUnauthorized, "No session.")
 		}
 
-		u, err := u.useCase.GetBySessionID(sessionID.Value)
+		sess, err := u.sessionUseCase.GetByID(sessionID.Value)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Session not found.")
 		}
 
 		ctx.Set("sessionID", sessionID.Value)
-		ctx.Set("user", u)
+		ctx.Set("user", sess.User)
 		return next(ctx)
 	}
 }

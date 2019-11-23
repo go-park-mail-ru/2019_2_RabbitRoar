@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+//go:generate protoc --go_out=plugins=grpc:. *.proto
+
+package session;
+
+message SessionID {
+  string ID = 1;
+}
+
+message User {
+    int32 ID = 1;
+    string username = 2;
+    string email = 3;
+    int32 rating = 4;
+    string avatar = 5;
+}
+
+message Session {
+  SessionID string = 1;
+  User user = 2;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service SessionService {
+    rpc Create (Session) returns (SessionID) {}
+    rpc Delete (SessionID) returns (Nothing) {}
+    rpc Get (SessionID) returns (Session) {}
+}

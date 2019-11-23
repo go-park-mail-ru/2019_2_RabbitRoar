@@ -7,4 +7,5 @@ import (
 type Repository interface {
 	Create(user models.User) (*string, error)
 	Destroy(sessionID string) error
+	GetByID(sessionID string) (*models.Session, error)
 }

@@ -2,11 +2,7 @@ package models
 
 //go:generate easyjson -all
 
-import (
-	"github.com/google/uuid"
-)
-
 type Session struct {
-	UUID uuid.UUID
+	ID string
 	User User
 }

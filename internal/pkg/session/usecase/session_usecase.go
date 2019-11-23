@@ -19,6 +19,10 @@ func (uc sessionUseCase) Create(u models.User) (*string, error) {
 	return uc.repository.Create(u)
 }
 
-func (uc sessionUseCase) Destroy(sessionId string) {
-	_ = uc.repository.Destroy(sessionId)
+func (uc sessionUseCase) Destroy(sessionID string) {
+	_ = uc.repository.Destroy(sessionID)
+}
+
+func (uc sessionUseCase) GetByID(sessionID string) (*models.Session, error) {
+	return uc.repository.GetByID(sessionID)
 }

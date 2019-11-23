@@ -7,4 +7,5 @@ import (
 type UseCase interface {
 	Create(models.User) (*string, error)
 	Destroy(string)
+	GetByID(sessionID string) (*models.Session, error)
 }
