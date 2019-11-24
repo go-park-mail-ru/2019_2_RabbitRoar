@@ -44,5 +44,8 @@ func (g *Game) Run() {
 		}
 
 		g.State = g.State.Handle(ew)
+		if g.State == nil {
+			return
+		}
 	}
 }

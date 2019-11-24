@@ -52,15 +52,16 @@ func (conn *gameConnection) RunReceive(senderID int) {
 			return
 		default:
 			mt, msg, err := conn.ws.ReadMessage()
-			if mt == websocket.PongMessage {
-				continue
-			}
-
 			if err != nil {
 				log.Error("Error reading msg: ", err)
 				return
 			}
-			log.Info("Got msg: ", msg)
+
+			if mt == websocket.PongMessage {
+				continue
+			}
+
+			log.Info("Got msg: ", string(msg))
 
 			eventWrap := game.EventWrapper{
 				SenderID: senderID,
@@ -83,10 +84,9 @@ func (conn *gameConnection) RunSend() {
 
 	ticker := time.NewTicker(10 * time.Second)
 
-	log.Info("starting send goroutine for user")
+	log.Info("Starting send goroutine for user")
 
 	for {
-		log.Info("SEND Loop start")
 		select {
 		case <-conn.stop:
 			err := conn.ws.WriteMessage(websocket.CloseMessage, []byte{})
@@ -101,13 +101,16 @@ func (conn *gameConnection) RunSend() {
 		case event := <-conn.sendChan:
 			log.Info("Got to send event: ", event)
 			msg, err := json.Marshal(event)
-			log.Info("Error marshalling event: ", err)
+			if err != nil {
+				log.Info("Error marshalling event: ", err)
+			}
+
 			err = conn.ws.WriteMessage(websocket.TextMessage, msg)
-			log.Info("Event sent: ", msg)
 			if err != nil {
 				log.Error("Error sending event: ", err)
 				return
 			}
+			log.Info("Event sent: ", string(msg))
 
 		case <-ticker.C:
 			log.Info("Got ticker event, sending ping.")
@@ -116,7 +119,6 @@ func (conn *gameConnection) RunSend() {
 				return
 			}
 		}
-		log.Info("SEND Loop end")
 	}
 }
 

@@ -29,7 +29,7 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 			}
 		}
 
-
+		// collect joined players
 		var players = make([]PlayerInfo, 0, len(s.Game.Players))
 		for _, pl := range s.Game.Players {
 			players = append(players, pl.Info)
@@ -40,26 +40,15 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 			Payload: players,
 		}
 
+		// broadcast event
 		for _, pl := range s.Game.Players {
 			pl.Conn.GetSendChan() <- ev
 		}
 
 		if playersReady == s.Game.Model.PlayersCapacity {
+
 			return &PendQuestionChoose{BaseState{Game:s.Game}}
 		}
 	}
-	return s
-}
-
-type PendQuestionChoose struct {
-	BaseState
-}
-
-func (s *PendQuestionChoose) GetType() StateType {
-	return Running
-}
-
-func (s *PendQuestionChoose) Handle(e EventWrapper) State {
-	log.Info("PendQustionChosen: got event: ", e)
 	return s
 }
