@@ -1,40 +1,30 @@
 package usecase
 
 import (
-	"errors"
-
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/connection"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 )
 
-var log = logging.MustGetLogger("game_handler")
-
 type gameUseCase struct {
-	sqlRepo   game.SQLRepository
-	memRepo   game.MemRepository
-	sanitizer *bluemonday.Policy
+	gameSQLRepo game.SQLRepository
+	gameMemRepo game.MemRepository
+	packRepo    pack.Repository
+	sanitizer   *bluemonday.Policy
 }
 
-func NewGameUseCase(sqlRepo game.SQLRepository, memRepo game.MemRepository) game.UseCase {
+func NewGameUseCase(gameSQLRepo game.SQLRepository, gameMemRepo game.MemRepository, packRepo pack.Repository) game.UseCase {
 	return &gameUseCase{
-		sqlRepo:   sqlRepo,
-		memRepo:   memRepo,
-		sanitizer: bluemonday.UGCPolicy(),
+		gameSQLRepo: gameSQLRepo,
+		gameMemRepo: gameMemRepo,
+		packRepo:    packRepo,
+		sanitizer:   bluemonday.UGCPolicy(),
 	}
-}
-
-func (uc *gameUseCase) GetByID(uuid uuid.UUID) (*models.Game, error) {
-	return uc.sqlRepo.GetByID(uuid)
-}
-
-func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
-	return uc.sqlRepo.GetGameIDByUserID(userID)
 }
 
 func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
@@ -45,84 +35,40 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 
 	g.UUID = newUUID
 	g.PlayersJoined = 0
-	g.Creator = u.ID
-	g.Pending = true
 
-	err = uc.sqlRepo.Create(*g)
+	p, err := uc.packRepo.GetByID(g.PackID)
 	if err != nil {
 		return err
 	}
+	g.PackName = p.Name
 
-	err = uc.memRepo.Create(g.UUID, u)
-	if err != nil {
-		delErr := uc.sqlRepo.Delete(g.UUID)
-		if delErr != nil {
-			return errors.New(err.Error() + delErr.Error())
-		}
-
-		return err
-	}
-
-	return nil
+	return uc.gameMemRepo.Create(g, u)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
-	games, err := uc.sqlRepo.Fetch(viper.GetInt("internal.page_size"), page)
-	if err != nil {
-		return nil, err
-	}
-
-	return games, nil
+	return uc.gameMemRepo.Fetch(viper.GetInt("internal.page_size"), page)
 }
 
-func (uc *gameUseCase) JoinPlayerToGame(playerID int, gameID uuid.UUID) (*models.Game, error) {
-	game, err := uc.sqlRepo.GetByID(gameID)
+func (uc *gameUseCase) JoinPlayerToGame(u models.User, gameID uuid.UUID) (*models.Game, error) {
+	err := uc.gameSQLRepo.JoinPlayer(u.ID, gameID)
 	if err != nil {
 		return nil, err
 	}
 
-	if game.PlayersJoined >= game.PlayersCapacity {
-		return nil, errors.New("unable to join the room: room is full")
-	}
-
-	err = uc.sqlRepo.JoinPlayer(playerID, game.UUID)
-	if err != nil {
-		return nil, err
-	}
-
-	game.PlayersJoined++
-
-	if game.PlayersJoined == game.PlayersCapacity {
-		game.Pending = false
-	}
-
-	return game, uc.sqlRepo.Update(*game)
+	return uc.gameMemRepo.JoinPlayer(u, gameID)
 }
 
 func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
-	gameID, err := uc.sqlRepo.KickPlayer(playerID)
+	gameID, err := uc.gameSQLRepo.KickPlayer(playerID)
 	if err != nil {
 		return err
 	}
 
-	game, err := uc.sqlRepo.GetByID(gameID)
-	if err != nil {
-		return err
-	}
+	return uc.gameMemRepo.KickPlayer(gameID, playerID)
+}
 
-	if game.PlayersJoined <= 0 {
-		return errors.New("unable to leave the room: room is empty")
-	}
-
-	game.PlayersJoined--
-
-	if game.PlayersJoined <= 0 {
-		err = uc.sqlRepo.Delete(game.UUID)
-	} else {
-		err = uc.sqlRepo.Update(*game)
-	}
-
-	return err
+func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
+	return uc.gameSQLRepo.GetGameIDByUserID(userID)
 }
 
 func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {
@@ -134,6 +80,6 @@ func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionW
 	return connection.NewConnectionWrapper(ws, sendChan, receiveChan, stopSend, stopReceive)
 }
 
-func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, u models.User, conn game.ConnectionWrapper) error {
-	return uc.memRepo.JoinConnection(gameID, u, conn)
+func (uc *gameUseCase) JoinConnectionToGame(gameID uuid.UUID, userID int, conn game.ConnectionWrapper) error {
+	return uc.gameMemRepo.JoinConnection(gameID, userID, conn)
 }

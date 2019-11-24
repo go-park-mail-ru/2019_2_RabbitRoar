@@ -44,29 +44,6 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Pack"
             ON UPDATE NO ACTION
 );
 
-
-CREATE TABLE IF NOT EXISTS "svoyak"."Game"
-(
-    "UUID"           VARCHAR(45)        NOT NULL UNIQUE,
-    "name"           VARCHAR(45)        NOT NULL,
-    "players_cap"    SMALLINT           NOT NULL,
-    "players_joined" SMALLINT DEFAULT 0 NOT NULL,
-    "creator"        INT                NOT NULL,
-    "pending"        BOOLEAN            NOT NULL,
-    "Pack_id"        INT                NOT NULL,
-    PRIMARY KEY ("UUID"),
-    CONSTRAINT "fk_Game_User"
-        FOREIGN KEY ("creator")
-            REFERENCES "svoyak"."User" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION,
-    CONSTRAINT "fk_Game_PackQuestion"
-        FOREIGN KEY ("Pack_id")
-            REFERENCES "svoyak"."Pack" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
-);
-
 CREATE TABLE IF NOT EXISTS "svoyak"."GameUser"
 (
     "User_id"   INT         NOT NULL UNIQUE,
@@ -75,11 +52,6 @@ CREATE TABLE IF NOT EXISTS "svoyak"."GameUser"
     CONSTRAINT "fk_GameUser_User_id"
         FOREIGN KEY ("User_id")
             REFERENCES "svoyak"."User" ("id")
-            ON DELETE CASCADE
-            ON UPDATE NO ACTION,
-    CONSTRAINT "fk_GameUser_Game_id"
-        FOREIGN KEY ("Game_UUID")
-            REFERENCES "svoyak"."Game" ("UUID")
             ON DELETE CASCADE
             ON UPDATE NO ACTION
 );

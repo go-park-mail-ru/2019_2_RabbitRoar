@@ -2,6 +2,7 @@ package connection
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
@@ -11,6 +12,7 @@ import (
 
 type gameConnection struct {
 	ws          *websocket.Conn
+	wg          sync.WaitGroup
 	sendChan    chan game.EventWrapper
 	receiveChan chan game.EventWrapper
 	stopSend    chan bool
@@ -26,6 +28,7 @@ func NewConnectionWrapper(
 ) game.ConnectionWrapper {
 	return &gameConnection{
 		ws:          ws,
+		wg:          sync.WaitGroup{},
 		sendChan:    sendChan,
 		receiveChan: receiveChan,
 		stopSend:    stopSend,
@@ -34,7 +37,11 @@ func NewConnectionWrapper(
 }
 
 func (conn *gameConnection) RunReceive(senderID int) error {
+	conn.wg.Add(1)
+	defer conn.wg.Done()
+
 	log.Infof("starting receive goroutine for user %d", senderID)
+
 	for {
 		log.Info("RECV Loop start")
 		select {
@@ -69,17 +76,23 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 }
 
 func (conn *gameConnection) RunSend() error {
+	conn.wg.Add(1)
+	defer conn.wg.Done()
+
 	ticker := time.NewTicker(10 * time.Second)
+
 	log.Info("starting send goroutine for user")
+
 	for {
 		log.Info("SEND Loop start")
 		select {
 		case <-conn.stopSend:
-			err := conn.ws.WriteMessage(websocket.CloseNormalClosure, []byte{})
+			err := conn.ws.WriteMessage(websocket.CloseMessage, []byte{})
 			if err != nil {
 				log.Info("Error sending msg: ", err)
 				return err
 			}
+
 			log.Info("Stopped writing into websocket manually")
 			return nil
 
@@ -96,7 +109,7 @@ func (conn *gameConnection) RunSend() error {
 
 		case <-ticker.C:
 			log.Info("Got ticker event, sending ping.")
-			err := conn.ws.WriteMessage(websocket.PingMessage, []byte{})
+			err := conn.ws.WriteMessage(websocket.TextMessage, []byte{'p', 'i', 'n', 'g'})
 			if err != nil {
 				return err
 			}
@@ -108,6 +121,9 @@ func (conn *gameConnection) RunSend() error {
 func (conn *gameConnection) Stop() {
 	conn.stopSend <- true
 	conn.stopReceive <- true
+
+	conn.wg.Wait()
+
 	conn.ws.Close()
 }
 

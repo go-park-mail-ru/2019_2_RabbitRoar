@@ -6,6 +6,10 @@ import (
 )
 
 type MemRepository interface {
-	Create(gameID uuid.UUID, host models.User) error
-	JoinConnection(gameID uuid.UUID, u models.User, conn ConnectionWrapper) error
+	Create(g *models.Game, host models.User) error
+	Fetch(pageSize int, page int) (*[]models.Game, error)
+
+	JoinPlayer(u models.User, gameID uuid.UUID) (*models.Game, error)
+	JoinConnection(gameID uuid.UUID, userID int, conn ConnectionWrapper) error
+	KickPlayer(gameID uuid.UUID, playerID int) error
 }
