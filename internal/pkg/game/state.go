@@ -9,5 +9,5 @@ const (
 
 type State interface {
 	GetType() StateType
-	Handle(e Event) State
+	Handle(e EventWrapper) State
 }

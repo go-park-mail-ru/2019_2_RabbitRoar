@@ -17,11 +17,17 @@ const (
 	VerdictWrong      EventType = "verdict_wrong"
 	VerdictGivenBack  EventType = "verdict_given_back"
 	GameEnded         EventType = "game_ended"
+	PlayerReadyFront  EventType = "player_ready_front"
+	PlayerReadyBack   EventType = "player_ready_back"
 )
 
 type Event struct {
 	Type    EventType   `json:"type"`
 	Payload interface{} `json:"payload"`
+}
+
+type PlayerReadyBackPayload struct {
+	Players []PlayerInfo `json:"players"`
 }
 
 type UserConnectedPayload struct {

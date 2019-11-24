@@ -72,7 +72,7 @@ func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
 }
 
 func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {
-	sendChan := make(chan game.EventWrapper, 5)
+	sendChan := make(chan game.Event, 5)
 	receiveChan := make(chan game.EventWrapper, 5)
 	stopSend := make(chan bool, 1)
 	stopReceive := make(chan bool, 1)
