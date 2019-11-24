@@ -168,5 +168,5 @@ func (gh *handler) ws(ctx echo.Context) error {
 	go conn.RunReceive(userID)
 	go conn.RunSend()
 	log.Info("WS handler reached the end.")
-	return ctx.NoContent(http.StatusOK)
+	return nil
 }
