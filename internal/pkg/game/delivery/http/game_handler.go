@@ -134,6 +134,8 @@ func (gh *handler) ws(ctx echo.Context) error {
 	log.Info("ws header Sec-WebSocket-Key: ", ctx.Request().Header.Get("Sec-WebSocket-Key"))
 	log.Info("ws header Sec-WebSocket-Version: ", ctx.Request().Header.Get("Sec-WebSocket-Version"))
 
+	userID := ctx.Get("user").(*models.User).ID
+
 	gameID, err := gh.usecase.GetGameIDByUserID(userID)
 	if err != nil {
 		return &echo.HTTPError{
@@ -151,8 +153,6 @@ func (gh *handler) ws(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-
-	userID := ctx.Get("user").(*models.User).ID
 
 	conn := gh.usecase.NewConnectionWrapper(ws)
 
