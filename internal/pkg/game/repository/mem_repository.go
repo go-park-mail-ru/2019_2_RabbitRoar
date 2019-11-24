@@ -28,9 +28,10 @@ func (repo *memGameRepository) Create(g *models.Game, host models.User) error {
 		Players: []game.Player{},
 		State:   &state.PendPlayers{},
 		Model:   *g,
+		EvChan:  make(chan game.EventWrapper, 50),
 	}
 
-	//go repo.games[g.UUID].Run()
+	go repo.games[g.UUID].Run()
 
 	return nil
 }
@@ -99,6 +100,7 @@ func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, userID int, conn
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == userID {
 			repo.games[gameID].Players[i].Conn = conn
+			repo.games[gameID].Players[i].Conn.SetReceiveChan(repo.games[gameID].EvChan)
 			return nil
 		}
 	}

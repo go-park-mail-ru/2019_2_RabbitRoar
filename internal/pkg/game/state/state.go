@@ -16,7 +16,8 @@ func (state *PendPlayers) GetType() game.StateType {
 	return game.Pending
 }
 
-func (state *PendPlayers) Handle(e game.Event) game.State {
-	log.Info()
+func (state *PendPlayers) Handle(ew game.EventWrapper) game.State {
+	log.Infof("Handler received event: ", ew)
+
 	return state
 }

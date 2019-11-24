@@ -13,49 +13,52 @@ import (
 type gameConnection struct {
 	ws          *websocket.Conn
 	wg          sync.WaitGroup
-	sendChan    chan game.EventWrapper
+	sendChan    chan game.Event
 	receiveChan chan game.EventWrapper
-	stopSend    chan bool
-	stopReceive chan bool
+	stop    chan bool
 }
 
 var log = logging.MustGetLogger("connection")
 
 func NewConnectionWrapper(
 	ws *websocket.Conn,
-	sendChan, receiveChan chan game.EventWrapper,
-	stopSend, stopReceive chan bool,
+	sendChan chan game.Event,
+	stop chan bool,
 ) game.ConnectionWrapper {
 	return &gameConnection{
 		ws:          ws,
 		wg:          sync.WaitGroup{},
 		sendChan:    sendChan,
-		receiveChan: receiveChan,
-		stopSend:    stopSend,
-		stopReceive: stopReceive,
+		stop:        stop,
 	}
 }
 
-func (conn *gameConnection) RunReceive(senderID int) error {
+func (conn *gameConnection) RunReceive(senderID int) {
 	conn.wg.Add(1)
 	defer conn.wg.Done()
 
 	log.Infof("starting receive goroutine for user %d", senderID)
 
-	for {
-		log.Info("RECV Loop start")
-		select {
-		case <-conn.stopReceive:
-			close(conn.receiveChan)
-			log.Info("Stopped reading from websocket manually")
-			return nil
+	conn.receiveChan <- game.EventWrapper{
+		SenderID: senderID,
+		Event:    &game.Event{
+			Type: game.WsRun,
+		},
+	}
 
+	for {
+		select {
+		case <- conn.stop:
+			return
 		default:
-			_, msg, err := conn.ws.ReadMessage()
+			mt, msg, err := conn.ws.ReadMessage()
+			if mt == websocket.PongMessage {
+				continue
+			}
+
 			if err != nil {
 				log.Error("Error reading msg: ", err)
-				close(conn.receiveChan)
-				return err
+				return
 			}
 			log.Info("Got msg: ", msg)
 
@@ -71,11 +74,10 @@ func (conn *gameConnection) RunReceive(senderID int) error {
 
 			conn.receiveChan <- eventWrap
 		}
-		log.Info("RECV Loop end")
 	}
 }
 
-func (conn *gameConnection) RunSend() error {
+func (conn *gameConnection) RunSend() {
 	conn.wg.Add(1)
 	defer conn.wg.Done()
 
@@ -86,15 +88,15 @@ func (conn *gameConnection) RunSend() error {
 	for {
 		log.Info("SEND Loop start")
 		select {
-		case <-conn.stopSend:
+		case <-conn.stop:
 			err := conn.ws.WriteMessage(websocket.CloseMessage, []byte{})
 			if err != nil {
 				log.Info("Error sending msg: ", err)
-				return err
+				return
 			}
 
 			log.Info("Stopped writing into websocket manually")
-			return nil
+			return
 
 		case event := <-conn.sendChan:
 			log.Info("Got to send event: ", event)
@@ -104,14 +106,14 @@ func (conn *gameConnection) RunSend() error {
 			log.Info("Event sent: ", msg)
 			if err != nil {
 				log.Error("Error sending event: ", err)
-				return err
+				return
 			}
 
 		case <-ticker.C:
 			log.Info("Got ticker event, sending ping.")
 			err := conn.ws.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
-				return err
+				return
 			}
 		}
 		log.Info("SEND Loop end")
@@ -119,26 +121,21 @@ func (conn *gameConnection) RunSend() error {
 }
 
 func (conn *gameConnection) Stop() {
-	conn.stopSend <- true
-	conn.stopReceive <- true
-
+	conn.stop <- true
+	conn.stop <- true
 	conn.wg.Wait()
 
 	conn.ws.Close()
 }
 
-func (conn gameConnection) GetSendChan() chan game.EventWrapper {
+func (conn *gameConnection) SetReceiveChan(rc chan game.EventWrapper) {
+	conn.receiveChan = rc
+}
+
+func (conn gameConnection) GetSendChan() chan game.Event {
 	return conn.sendChan
 }
 
 func (conn gameConnection) GetReceiveChan() chan game.EventWrapper {
 	return conn.receiveChan
-}
-
-func (conn gameConnection) GetStopSendChan() chan bool {
-	return conn.stopSend
-}
-
-func (conn gameConnection) GetStopReceiveChan() chan bool {
-	return conn.stopReceive
 }
