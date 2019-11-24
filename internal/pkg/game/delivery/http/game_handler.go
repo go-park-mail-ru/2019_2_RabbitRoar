@@ -1,9 +1,8 @@
 package http
 
 import (
-	"net/http"
-
 	"github.com/prometheus/common/log"
+	"net/http"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
@@ -135,18 +134,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 	log.Info("ws header Sec-WebSocket-Key: ", ctx.Request().Header.Get("Sec-WebSocket-Key"))
 	log.Info("ws header Sec-WebSocket-Version: ", ctx.Request().Header.Get("Sec-WebSocket-Version"))
 
-	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusUpgradeRequired,
-			Message:  "error establishing websocket connection",
-			Internal: err,
-		}
-	}
-
 	userID := ctx.Get("user").(*models.User).ID
-
-	conn := gh.usecase.NewConnectionWrapper(ws)
 
 	gameID, err := gh.usecase.GetGameIDByUserID(userID)
 	if err != nil {
@@ -156,6 +144,17 @@ func (gh *handler) ws(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
+
+	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusUpgradeRequired,
+			Message:  "error establishing websocket connection",
+			Internal: err,
+		}
+	}
+
+	conn := gh.usecase.NewConnectionWrapper(ws)
 
 	err = gh.usecase.JoinConnectionToGame(gameID, userID, conn)
 	if err != nil {
