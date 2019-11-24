@@ -9,5 +9,10 @@ const (
 
 type State interface {
 	GetType() StateType
+	//SetGame(g *Game)
 	Handle(e EventWrapper) State
+}
+
+type BaseState struct {
+	Game *Game
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/state"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 )
@@ -26,7 +25,6 @@ func (repo *memGameRepository) Create(g *models.Game, host models.User) error {
 
 	repo.games[g.UUID] = &game.Game{
 		Players: []game.Player{},
-		State:   &state.PendPlayers{},
 		Model:   *g,
 		EvChan:  make(chan game.EventWrapper, 50),
 	}

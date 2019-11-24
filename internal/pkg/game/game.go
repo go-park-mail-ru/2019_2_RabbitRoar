@@ -19,24 +19,30 @@ type Game struct {
 	logger  logging.Logger
 }
 
-func (game *Game) Run() {
-	game.logger.Info("Starting game loop.")
+func (g *Game) Run() {
+	g.logger.Info("Starting game loop.")
+	g.State = &PendPlayers{
+		BaseState: BaseState{
+			Game: g,
+		},
+	}
+
 	for {
-		ew := <- game.EvChan
+		ew := <- g.EvChan
 
 		if ew.Event.Type == WsRun {
 			var allPlayersInfo []PlayerInfo
 
-			for _, p := range game.Players {
+			for _, p := range g.Players {
 				allPlayersInfo = append(allPlayersInfo, p.Info)
 			}
 
-			for _, p := range game.Players {
-				noticeEvent := NewEvent(UserConnected, game.Model.Name, game.Model.PackName, allPlayersInfo)
+			for _, p := range g.Players {
+				noticeEvent := NewEvent(UserConnected, g.Model.Name, g.Model.PackName, allPlayersInfo)
 				p.Conn.GetSendChan() <- *noticeEvent
 			}
 		}
 
-		game.State = game.State.Handle(ew)
+		g.State = g.State.Handle(ew)
 	}
 }
