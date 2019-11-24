@@ -15,11 +15,11 @@ import (
 )
 
 type handler struct {
-	packUseCase pack.UseCase
-	userUseCase user.UseCase
+	packUseCase    pack.UseCase
+	userUseCase    user.UseCase
 	sessionUseCase session.UseCase
-	packSchema  *gojsonschema.Schema
-	sanitizer   *bluemonday.Policy
+	packSchema     *gojsonschema.Schema
+	sanitizer      pack.Sanitizer
 }
 
 func NewPackHandler(
@@ -32,11 +32,11 @@ func NewPackHandler(
 	packSchema *gojsonschema.Schema,
 ) {
 	handler := handler{
-		packUseCase: packUseCase,
-		userUseCase: userUseCase,
+		packUseCase:    packUseCase,
+		userUseCase:    userUseCase,
 		sessionUseCase: sessionUseCase,
-		packSchema:  packSchema,
-		sanitizer:   bluemonday.UGCPolicy(),
+		packSchema:     packSchema,
+		sanitizer:      NewPackSanitizer(bluemonday.UGCPolicy()),
 	}
 
 	group := e.Group("/pack")
@@ -49,39 +49,6 @@ func NewPackHandler(
 	group.GET("/offline/public", handler.offlinePublic)
 	group.GET("/author", authMiddleware(handler.listAuthor))
 	group.GET("/:id", handler.byID)
-}
-
-//TODO: make me more safe (or contract that DB has valid form)
-func (h *handler) sanitizeQuestions(p interface{}) {
-	if p == nil {
-		return
-	}
-	themeSlice := p.([]interface{})
-	for _, theme := range themeSlice {
-		theme := theme.(map[string]interface{})
-		theme["name"] = h.sanitizer.Sanitize(theme["name"].(string))
-		questionSlice := theme["questions"].([]interface{})
-		for _, question := range questionSlice {
-			question := question.(map[string]interface{})
-			question["text"] = h.sanitizer.Sanitize(question["text"].(string))
-			question["answer"] = h.sanitizer.Sanitize(question["answer"].(string))
-		}
-	}
-}
-
-func (h *handler) sanitize(p models.Pack) models.Pack {
-	p.Name = h.sanitizer.Sanitize(p.Name)
-	p.Description = h.sanitizer.Sanitize(p.Description)
-	p.Tags = h.sanitizer.Sanitize(p.Tags)
-	h.sanitizeQuestions(p.Questions)
-	return p
-}
-
-func (h *handler) sanitizeSlice(p []models.Pack) []models.Pack {
-	for i := 0; i < len(p); i++ {
-		p[i] = h.sanitize(p[i])
-	}
-	return p
 }
 
 func (h *handler) create(ctx echo.Context) error {
@@ -115,7 +82,7 @@ func (h *handler) create(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
-	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitize(p), ctx.Response())
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitizer.Sanitize(&p), ctx.Response())
 	return err
 }
 
@@ -189,7 +156,7 @@ func (h *handler) update(ctx echo.Context) error {
 		}
 	}
 
-	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitize(*p), ctx.Response())
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(h.sanitizer.Sanitize(p), ctx.Response())
 	return err
 }
 
@@ -237,7 +204,7 @@ func (h *handler) offlineAuthor(ctx echo.Context) error {
 }
 
 func (h *handler) list(ctx echo.Context) error {
-	page := http_utils.GetIntParam(ctx, "page",0)
+	page := http_utils.GetIntParam(ctx, "page", 0)
 
 	packs, err := h.packUseCase.FetchOrderedByRating(true, page, 20)
 	if err != nil {
@@ -248,7 +215,7 @@ func (h *handler) list(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, h.sanitizeSlice(packs))
+	return ctx.JSON(http.StatusOK, h.sanitizer.SanitizeSlice(packs))
 }
 
 func (h *handler) listAuthor(ctx echo.Context) error {
@@ -263,7 +230,7 @@ func (h *handler) listAuthor(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, h.sanitizeSlice(packs))
+	return ctx.JSON(http.StatusOK, h.sanitizer.SanitizeSlice(packs))
 }
 
 func (h *handler) delete(ctx echo.Context) error {
@@ -321,7 +288,7 @@ func (h *handler) byID(ctx echo.Context) error {
 	}
 
 	if p.Offline {
-		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+		return ctx.JSON(http.StatusOK, h.sanitizer.Sanitize(p))
 	}
 
 	sessionID, err := ctx.Cookie("SessionID")
@@ -335,11 +302,11 @@ func (h *handler) byID(ctx echo.Context) error {
 	}
 
 	if p.Author == sess.User.ID {
-		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+		return ctx.JSON(http.StatusOK, h.sanitizer.Sanitize(p))
 	}
 
 	if h.packUseCase.Played(p.ID, sess.User.ID) {
-		return ctx.JSON(http.StatusOK, h.sanitize(*p))
+		return ctx.JSON(http.StatusOK, h.sanitizer.Sanitize(p))
 	}
 
 	return echo.NewHTTPError(http.StatusForbidden, "you can view only own, played, created packs")

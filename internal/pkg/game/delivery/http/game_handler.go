@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/prometheus/common/log"
 	"net/http"
 
@@ -15,6 +16,7 @@ import (
 
 type handler struct {
 	usecase game.UseCase
+	packSanitizer pack.Sanitizer
 }
 
 var upgrader = websocket.Upgrader{
@@ -34,14 +36,14 @@ func NewGameHandler(
 	}
 
 	group := e.Group("/game")
-	group.GET("", handler.self)
+	group.GET("", handler.list)
 	group.POST("", authMiddleware(csrfMiddleware(handler.create)))
 	group.POST("/:uuid/join", authMiddleware(csrfMiddleware(handler.join)))
 	group.DELETE("/leave", authMiddleware(csrfMiddleware(handler.leave)))
 	group.GET("/ws", authMiddleware(handler.ws))
 }
 
-func (gh *handler) self(ctx echo.Context) error {
+func (gh *handler) list(ctx echo.Context) error {
 	page := http_utils.GetIntParam(ctx, "page", 0)
 
 	if page < 0 {

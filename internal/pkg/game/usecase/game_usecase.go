@@ -18,7 +18,11 @@ type gameUseCase struct {
 	sanitizer   *bluemonday.Policy
 }
 
-func NewGameUseCase(gameSQLRepo game.SQLRepository, gameMemRepo game.MemRepository, packRepo pack.Repository) game.UseCase {
+func NewGameUseCase(
+	gameSQLRepo game.SQLRepository,
+	gameMemRepo game.MemRepository,
+	packRepo pack.Repository,
+) game.UseCase {
 	return &gameUseCase{
 		gameSQLRepo: gameSQLRepo,
 		gameMemRepo: gameMemRepo,

@@ -11,12 +11,13 @@ type Player struct {
 }
 
 type Game struct {
-	Host    *Player
-	Players []Player
-	State   State
-	Model   models.Game
-	EvChan  chan EventWrapper
-	logger  logging.Logger
+	Host      *Player
+	Players   []Player
+	Questions interface{}
+	State     State
+	Model     models.Game
+	EvChan    chan EventWrapper
+	logger    logging.Logger
 }
 
 func (g *Game) Run() {
