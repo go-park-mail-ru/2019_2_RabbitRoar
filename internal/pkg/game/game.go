@@ -37,15 +37,22 @@ func (g *Game) Run() {
 				allPlayersInfo = append(allPlayersInfo, p.Info)
 			}
 
-			for _, p := range g.Players {
-				noticeEvent := NewEvent(UserConnected, g.Model.Name, g.Model.PackName, allPlayersInfo)
-				p.Conn.GetSendChan() <- *noticeEvent
-			}
+			noticeEvent := NewEvent(UserConnected, g.Model.Name, g.Model.PackName, allPlayersInfo)
+			g.BroadcastEvent(*noticeEvent)
 		}
 
 		g.State = g.State.Handle(ew)
 		if g.State == nil {
 			return
 		}
+	}
+}
+
+func (g *Game) BroadcastEvent(e Event) {
+	for _, p := range g.Players {
+		if !p.Conn.IsRunning() {
+			continue
+		}
+		p.Conn.GetSendChan() <- e
 	}
 }

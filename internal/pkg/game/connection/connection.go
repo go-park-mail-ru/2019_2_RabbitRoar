@@ -11,11 +11,12 @@ import (
 )
 
 type gameConnection struct {
+	running     bool
 	ws          *websocket.Conn
 	wg          sync.WaitGroup
 	sendChan    chan game.Event
 	receiveChan chan game.EventWrapper
-	stop    chan bool
+	stop        chan bool
 }
 
 var log = logging.MustGetLogger("connection")
@@ -26,16 +27,22 @@ func NewConnectionWrapper(
 	stop chan bool,
 ) game.ConnectionWrapper {
 	return &gameConnection{
-		ws:          ws,
-		wg:          sync.WaitGroup{},
-		sendChan:    sendChan,
-		stop:        stop,
+		running:  false,
+		ws:       ws,
+		wg:       sync.WaitGroup{},
+		sendChan: sendChan,
+		stop:     stop,
 	}
 }
 
 func (conn *gameConnection) RunReceive(senderID int) {
 	conn.wg.Add(1)
 	defer conn.wg.Done()
+
+	conn.running = true
+	defer func() {
+		conn.running = false
+	}()
 
 	log.Infof("starting receive goroutine for user %d", senderID)
 
@@ -82,6 +89,11 @@ func (conn *gameConnection) RunSend() {
 	conn.wg.Add(1)
 	defer conn.wg.Done()
 
+	conn.running = true
+	defer func() {
+		conn.running = false
+	}()
+
 	ticker := time.NewTicker(10 * time.Second)
 
 	log.Info("Starting send goroutine for user")
@@ -125,9 +137,14 @@ func (conn *gameConnection) RunSend() {
 func (conn *gameConnection) Stop() {
 	conn.stop <- true
 	conn.stop <- true
+
 	conn.wg.Wait()
 
 	conn.ws.Close()
+}
+
+func (conn *gameConnection) IsRunning() bool {
+	return conn.running
 }
 
 func (conn *gameConnection) SetReceiveChan(rc chan game.EventWrapper) {
