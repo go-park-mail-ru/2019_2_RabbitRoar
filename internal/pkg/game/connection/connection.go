@@ -109,7 +109,7 @@ func (conn *gameConnection) RunSend() error {
 
 		case <-ticker.C:
 			log.Info("Got ticker event, sending ping.")
-			err := conn.ws.WriteMessage(websocket.TextMessage, []byte{'p', 'i', 'n', 'g'})
+			err := conn.ws.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				return err
 			}
