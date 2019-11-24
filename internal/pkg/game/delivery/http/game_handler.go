@@ -85,7 +85,7 @@ func (gh *handler) create(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusCreated, g.UUID)
+	return ctx.JSON(http.StatusCreated, g)
 }
 
 func (gh *handler) join(ctx echo.Context) error {
