@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Session"
     CONSTRAINT "fk_Session_User"
         FOREIGN KEY ("User_id")
             REFERENCES "svoyak"."User" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
 );
 
 
@@ -40,9 +40,10 @@ CREATE TABLE IF NOT EXISTS "svoyak"."Pack"
     CONSTRAINT "fk_QuestionPack_User"
         FOREIGN KEY ("author")
             REFERENCES "svoyak"."User" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS "svoyak"."GameUser"
 (
@@ -53,8 +54,9 @@ CREATE TABLE IF NOT EXISTS "svoyak"."GameUser"
         FOREIGN KEY ("User_id")
             REFERENCES "svoyak"."User" ("id")
             ON DELETE CASCADE
-            ON UPDATE NO ACTION
+            ON UPDATE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS "svoyak"."GameUserHist"
 (
@@ -64,28 +66,11 @@ CREATE TABLE IF NOT EXISTS "svoyak"."GameUserHist"
     CONSTRAINT "fk_UserPack_User"
         FOREIGN KEY ("User_id")
         REFERENCES "svoyak"."User" ("id")
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     CONSTRAINT "fk_UserPack_Pack"
         FOREIGN KEY ("Pack_id")
             REFERENCES svoyak."Pack" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
-);
-
-CREATE TABLE IF NOT EXISTS "svoyak"."UserPack"
-(
-    "User_id" INT NOT NULL,
-    "Pack_id" INT NOT NULL UNIQUE,
-    PRIMARY KEY ("User_id", "Pack_id"),
-    CONSTRAINT "fk_UserPack_User"
-        FOREIGN KEY ("User_id")
-            REFERENCES "svoyak"."User" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION,
-    CONSTRAINT "fk_UserPack_Pack"
-        FOREIGN KEY ("Pack_id")
-            REFERENCES svoyak."Pack" ("id")
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
 );
