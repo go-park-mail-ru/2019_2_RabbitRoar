@@ -3,6 +3,7 @@ package game
 type EventType string
 
 const (
+	WsRun             EventType = "ws_run"
 	UserConnected     EventType = "user_connected"
 	GameStart         EventType = "start_game"
 	RequestQuestion   EventType = "request_question_from_player"
@@ -59,5 +60,63 @@ type VerictPayload struct {
 
 type EventWrapper struct {
 	SenderID int
-	Event    Event
+	Event    *Event
+}
+
+func NewEvent(et EventType, data ...interface{}) *Event {
+	e := Event{
+		Type: et,
+	}
+
+	switch et {
+	case UserConnected:
+		e.Payload = UserConnectedPayload{
+			RoomName: data[0].(string),
+			PackName: data[1].(string),
+			Players:  data[2].([]PlayerInfo),
+		}
+
+	case GameStart:
+		e.Payload = GameStartPayload{
+			Themes: data[0].([5]string),
+		}
+
+	case RequestQuestion:
+		e.Payload = RequestFromPlayerPayload{
+			PlayerID: data[0].(int),
+		}
+
+	case QuestionChosen:
+		e.Payload = QuestionChosenPayload{
+			Theme:       data[0].(int),
+			QuestionIdx: data[1].(int),
+		}
+
+	case RequestAnswer:
+		e.Payload = RequestFromPlayerPayload{
+			PlayerID: data[0].(int),
+		}
+
+	case AnswerGiven:
+		e.Payload = AnswerPayload{
+			Answer: data[0].(string),
+		}
+
+	case AnswerGivenBack:
+		e.Payload = AnswerPayload{
+			Answer: data[0].(string),
+		}
+
+	case RequestVerdict:
+		e.Payload = RequestFromPlayerPayload{
+			PlayerID: data[0].(int),
+		}
+
+	case VerdictGivenBack:
+		e.Payload = VerictPayload{
+			Verdict: data[0].(bool),
+		}
+	}
+
+	return &e
 }

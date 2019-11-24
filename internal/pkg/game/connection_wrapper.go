@@ -1,12 +1,11 @@
 package game
 
 type ConnectionWrapper interface {
-	RunReceive(senderID int) error
-	RunSend() error
+	RunReceive(senderID int)
+	RunSend()
 	Stop()
 
-	GetSendChan() chan EventWrapper
+	SetReceiveChan(rc chan EventWrapper)
+	GetSendChan() chan Event
 	GetReceiveChan() chan EventWrapper
-	GetStopSendChan() chan bool
-	GetStopReceiveChan() chan bool
 }
