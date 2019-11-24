@@ -1,8 +1,9 @@
 package http
 
 import (
-	"github.com/prometheus/common/log"
 	"net/http"
+
+	"github.com/prometheus/common/log"
 
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http_utils"
@@ -42,7 +43,7 @@ func NewGameHandler(
 }
 
 func (gh *handler) self(ctx echo.Context) error {
-	page := http_utils.GetIntParam(ctx, "page",0)
+	page := http_utils.GetIntParam(ctx, "page", 0)
 
 	if page < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "page less than 0 provided")
@@ -52,7 +53,7 @@ func (gh *handler) self(ctx echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
-			Message:  "error fetching page of games",
+			Message:  "unable to fetch a page of games",
 			Internal: err,
 		}
 	}
@@ -66,7 +67,7 @@ func (gh *handler) create(ctx echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusUnprocessableEntity,
-			Message:  "can't parse game object",
+			Message:  "unable to identify game object",
 			Internal: err,
 		}
 	}
@@ -78,7 +79,11 @@ func (gh *handler) create(ctx echo.Context) error {
 	creator := ctx.Get("user").(*models.User)
 
 	if err := gh.usecase.Create(&g, *creator); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return &echo.HTTPError{
+			Code:     http.StatusBadRequest,
+			Message:  "unable to create a game",
+			Internal: err,
+		}
 	}
 
 	return ctx.JSON(http.StatusCreated, g.UUID)
@@ -94,18 +99,10 @@ func (gh *handler) join(ctx echo.Context) error {
 		}
 	}
 
-	userID := ctx.Get("user").(*models.User).ID
+	u := ctx.Get("user").(*models.User)
 
-	g, err := gh.usecase.GetByID(gameID)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:     http.StatusBadRequest,
-			Message:  "error finding the game",
-			Internal: err,
-		}
-	}
-
-	if g, err = gh.usecase.JoinPlayerToGame(userID, gameID); err != nil {
+	var g *models.Game
+	if g, err = gh.usecase.JoinPlayerToGame(*u, gameID); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "error joining the game",
@@ -137,6 +134,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 	log.Info("ws header Upgrade: ", ctx.Request().Header.Get("Upgrade"))
 	log.Info("ws header Sec-WebSocket-Key: ", ctx.Request().Header.Get("Sec-WebSocket-Key"))
 	log.Info("ws header Sec-WebSocket-Version: ", ctx.Request().Header.Get("Sec-WebSocket-Version"))
+
 	ws, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 	if err != nil {
 		return &echo.HTTPError{
@@ -146,11 +144,11 @@ func (gh *handler) ws(ctx echo.Context) error {
 		}
 	}
 
-	user := ctx.Get("user").(*models.User)
+	userID := ctx.Get("user").(*models.User).ID
 
 	conn := gh.usecase.NewConnectionWrapper(ws)
 
-	gameID, err := gh.usecase.GetGameIDByUserID(user.ID)
+	gameID, err := gh.usecase.GetGameIDByUserID(userID)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
@@ -159,7 +157,7 @@ func (gh *handler) ws(ctx echo.Context) error {
 		}
 	}
 
-	err = gh.usecase.JoinConnectionToGame(gameID, *user, conn)
+	err = gh.usecase.JoinConnectionToGame(gameID, userID, conn)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
@@ -168,8 +166,8 @@ func (gh *handler) ws(ctx echo.Context) error {
 		}
 	}
 
-	go conn.RunReceive(user.ID)
-	conn.RunSend()
+	go conn.RunReceive(userID)
+	go conn.RunSend()
 	log.Info("WS handler reached the end.")
 	return ctx.NoContent(http.StatusOK)
 }

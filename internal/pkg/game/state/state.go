@@ -12,6 +12,10 @@ type BasicState struct {
 type PendPlayers struct {
 }
 
+func (state *PendPlayers) GetType() game.StateType {
+	return game.Pending
+}
+
 func (state *PendPlayers) Handle(e game.Event) game.State {
 	log.Info()
 	return state
