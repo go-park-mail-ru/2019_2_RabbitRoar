@@ -38,8 +38,15 @@ func (g *Game) Run() {
 				allPlayersInfo = append(allPlayersInfo, p.Info)
 			}
 
-			noticeEvent := NewEvent(UserConnected, g.Model.Name, g.Model.PackName, allPlayersInfo)
-			g.BroadcastEvent(*noticeEvent)
+			noticeEvent := Event{
+				Type:    UserConnected,
+				Payload: UserConnectedPayload{
+					RoomName: g.Model.Name,
+					PackName: g.Model.PackName,
+					Players:  allPlayersInfo,
+				},
+			}
+			g.BroadcastEvent(noticeEvent)
 		}
 
 		g.State = g.State.Handle(ew)

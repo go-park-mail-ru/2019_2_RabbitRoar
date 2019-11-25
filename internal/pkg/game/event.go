@@ -35,6 +35,24 @@ type RequestQuestionPayload struct {
 	PlayerID int `json:"player_id"`
 }
 
+type RequestAnswerPayload struct {
+	PlayerID int `json:"player_id"`
+}
+
+type AnswerGivenPayload struct {
+	Answer string `json:"answer"`
+}
+
+type AnswerGivenBackPayload struct {
+	PlayerAnswer string `json:"player_answer"`
+	PlayerID     int    `json:"player_id"`
+}
+
+type RequestVerdictPayload struct {
+	HostID int    `json:"host_id"`
+	Answer string `json:"answer"`
+}
+
 type RequestRespondentPayload struct {
 	Question   string `json:"question"`
 	ThemeID    int    `json:"theme_id"`
@@ -71,62 +89,4 @@ type VerictPayload struct {
 type EventWrapper struct {
 	SenderID int
 	Event    *Event
-}
-
-func NewEvent(et EventType, data ...interface{}) *Event {
-	e := Event{
-		Type: et,
-	}
-
-	switch et {
-	case UserConnected:
-		e.Payload = UserConnectedPayload{
-			RoomName: data[0].(string),
-			PackName: data[1].(string),
-			Players:  data[2].([]PlayerInfo),
-		}
-
-	case GameStart:
-		e.Payload = GameStartPayload{
-			Themes: data[0].([5]string),
-		}
-
-	case RequestQuestion:
-		e.Payload = RequestFromPlayerPayload{
-			PlayerID: data[0].(int),
-		}
-
-	case QuestionChosen:
-		e.Payload = QuestionChosenPayload{
-			ThemeIdx:       data[0].(int),
-			QuestionIdx: data[1].(int),
-		}
-
-	case RequestAnswer:
-		e.Payload = RequestFromPlayerPayload{
-			PlayerID: data[0].(int),
-		}
-
-	case AnswerGiven:
-		e.Payload = AnswerPayload{
-			Answer: data[0].(string),
-		}
-
-	case AnswerGivenBack:
-		e.Payload = AnswerPayload{
-			Answer: data[0].(string),
-		}
-
-	case RequestVerdict:
-		e.Payload = RequestFromPlayerPayload{
-			PlayerID: data[0].(int),
-		}
-
-	case VerdictGivenBack:
-		e.Payload = VerictPayload{
-			Verdict: data[0].(bool),
-		}
-	}
-
-	return &e
 }
