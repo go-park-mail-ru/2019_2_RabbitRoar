@@ -1,5 +1,7 @@
 package game
 
+import "encoding/json"
+
 type PendQuestionChoose struct {
 	BaseState
 	respondentID int
@@ -45,8 +47,10 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 		return s
 	}
 
-	payload, ok := e.Event.Payload.(QuestionChosenPayload)
-	if !ok {
+	var payload QuestionChosenPayload
+	marshalled, _ := json.Marshal(e.Event.Payload)
+	err := json.Unmarshal(marshalled, &payload)
+	if err != nil {
 		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
 		return s
 	}
