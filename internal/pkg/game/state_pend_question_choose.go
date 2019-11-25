@@ -24,10 +24,6 @@ func (s *PendQuestionChoose) getQuestion(themeID, questionID int) string {
 	return ""
 }
 
-func (s *PendQuestionChoose) GetType() StateType {
-	return Running
-}
-
 func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 	s.Game.logger.Info("PendQuestionChosen: got event: ", e)
 
@@ -82,5 +78,6 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 		QuestionID: payload.QuestionIdx,
 	}
 
+	s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
 	return nextState
 }

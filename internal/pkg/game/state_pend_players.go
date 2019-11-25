@@ -20,10 +20,6 @@ func (s *PendPlayers) getThemes() [5]string {
 	return themes
 }
 
-func (s *PendPlayers) GetType() StateType {
-	return Pending
-}
-
 func (s *PendPlayers) Handle(e EventWrapper) State {
 	s.Game.logger.Info("PendPlayers: got event: ", e)
 	if e.Event.Type != PlayerReadyFront {
@@ -58,9 +54,16 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 	}
 	s.Game.BroadcastEvent(ev)
 
+	if playersReady == s.Game.Model.PlayersCapacity {
+		s.Game.Started = true
+		return &PendQuestionChoose{
+			BaseState: BaseState{Game: s.Game},
+		}
+	}
+
 	if playersReady != s.Game.Model.PlayersCapacity {
 		s.Game.logger.Info(
-			"PendPlayers: got event: players ready %d/%d",
+			"PendPlayers: players ready %d/%d, keep state.",
 			playersReady,
 			s.Game.Model.PlayersCapacity,
 		)
@@ -88,5 +91,6 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 	}
 	s.Game.BroadcastEvent(ev)
 
+	s.Game.logger.Info("PendPlayers: moving to the next state %v.", nextState)
 	return nextState
 }

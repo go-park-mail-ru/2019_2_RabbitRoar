@@ -26,10 +26,6 @@ func (s *PendAnswer) getAnswer(themeID, questionID int) string {
 	return ""
 }
 
-func (s *PendAnswer) GetType() StateType {
-	return Running
-}
-
 func (s *PendAnswer) Handle(e EventWrapper) State {
 	s.Game.logger.Info("PendAnswer: got event: ", e)
 
@@ -74,5 +70,6 @@ func (s *PendAnswer) Handle(e EventWrapper) State {
 		PlayerID:  e.SenderID,
 	}
 
+	s.Game.logger.Info("PendAnswer: moving to the next state %v.", nextState)
 	return nextState
 }

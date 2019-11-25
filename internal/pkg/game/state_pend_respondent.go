@@ -6,10 +6,6 @@ type PendRespondent struct {
 	QuestionID int
 }
 
-func (s *PendRespondent) GetType() StateType {
-	return Running
-}
-
 func (s *PendRespondent) Handle(e EventWrapper) State {
 	s.Game.logger.Info("PendRespondent: got event: ", e)
 
@@ -37,5 +33,6 @@ func (s *PendRespondent) Handle(e EventWrapper) State {
 		QuestionID: s.QuestionID,
 	}
 
+	s.Game.logger.Info("PendRespondent: moving to the next state %v.", nextState)
 	return nextState
 }
