@@ -54,13 +54,6 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 	}
 	s.Game.BroadcastEvent(ev)
 
-	if playersReady == s.Game.Model.PlayersCapacity {
-		s.Game.Started = true
-		return &PendQuestionChoose{
-			BaseState: BaseState{Game: s.Game},
-		}
-	}
-
 	if playersReady != s.Game.Model.PlayersCapacity {
 		s.Game.logger.Info(
 			"PendPlayers: players ready %d/%d, keep state.",
@@ -75,6 +68,7 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		Payload: GameStartPayload{Themes: s.getThemes()},
 	}
 	s.Game.BroadcastEvent(ev)
+	s.Game.Started = true
 
 	nextState := &PendQuestionChoose{
 		BaseState: BaseState{Game: s.Game},
