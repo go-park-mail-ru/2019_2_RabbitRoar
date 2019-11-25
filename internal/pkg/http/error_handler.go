@@ -22,6 +22,9 @@ func ErrorHandler(err error, ctx echo.Context) {
 		if he.Code >= http.StatusInternalServerError {
 			sentry.CaptureException(he)
 		}
+
+		ctx.Echo().DefaultHTTPErrorHandler(err, ctx)
+		return
 	}
 
 	ctx.Logger().Error(errors.WithStack(err))
