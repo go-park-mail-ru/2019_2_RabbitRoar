@@ -50,15 +50,18 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
 	}
 
-	questionIdx, ok := payload["question_idx"].(int)
+	questionIdxFloat, ok := payload["question_idx"].(float64)
 	if !ok {
 		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
 	}
 
-	themeIdx, ok := payload["theme_idx"].(int)
+	themeIdxFloat, ok := payload["theme_idx"].(float64)
 	if !ok {
 		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
 	}
+
+	themeIdx := int(themeIdxFloat)
+	questionIdx := int(questionIdxFloat)
 
 	if themeIdx < 0 || themeIdx > 4 {
 		s.Game.logger.Info("PendQuestionChosen: got invalid theme coords, keep old state.")
