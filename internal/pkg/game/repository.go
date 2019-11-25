@@ -8,8 +8,9 @@ import (
 type MemRepository interface {
 	Create(g *models.Game, host models.User) error
 	Fetch(pageSize int, page int) (*[]models.Game, error)
+	GetGameIDByUserID(userID int) (uuid.UUID, error)
 
 	JoinPlayer(u models.User, gameID uuid.UUID) (*models.Game, error)
 	JoinConnection(gameID uuid.UUID, userID int, conn ConnectionWrapper) error
-	KickPlayer(gameID uuid.UUID, playerID int) error
+	KickPlayer(playerID int) error
 }

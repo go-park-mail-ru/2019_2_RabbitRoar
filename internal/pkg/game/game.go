@@ -31,7 +31,7 @@ func (g *Game) Run() {
 	for {
 		ew := <- g.EvChan
 
-		if ew.Event.Type == WsRun {
+		if ew.Event.Type == WsUpdated {
 			var allPlayersInfo []PlayerInfo
 
 			for _, p := range g.Players {
