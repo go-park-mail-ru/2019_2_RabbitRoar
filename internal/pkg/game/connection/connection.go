@@ -49,9 +49,19 @@ func (conn *gameConnection) RunReceive(senderID int) {
 	conn.receiveChan <- game.EventWrapper{
 		SenderID: senderID,
 		Event:    &game.Event{
-			Type: game.WsRun,
+			Type: game.WsUpdated,
 		},
 	}
+	// MAKE IT SAFER BEYACH
+	//defer func() {
+	//	conn.receiveChan <- game.EventWrapper{
+	//		SenderID: senderID,
+	//		Event:    &game.Event{
+	//			Type: game.WsUpdated,
+	//		},
+	//	}
+	//	close(conn.receiveChan)
+	//}()
 
 	for {
 		select {
