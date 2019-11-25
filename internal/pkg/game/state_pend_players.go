@@ -43,6 +43,7 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		s.Game.BroadcastEvent(ev)
 
 		if playersReady == s.Game.Model.PlayersCapacity {
+
 			return &PendQuestionChoose{BaseState{Game:s.Game}}
 		}
 	}
