@@ -11,13 +11,14 @@ type Player struct {
 }
 
 type Game struct {
-	Host    *Player
-	Players []Player
-	State   State
-	Model   models.Game
-	EvChan  chan EventWrapper
-	Started bool
-	logger  logging.Logger
+	Host      *Player
+	Players   []Player
+	State     State
+	Model     models.Game
+	Questions interface{}
+	EvChan    chan EventWrapper
+	Started   bool
+	logger    logging.Logger
 }
 
 func (g *Game) Run() {
@@ -29,7 +30,7 @@ func (g *Game) Run() {
 	}
 
 	for {
-		ew := <- g.EvChan
+		ew := <-g.EvChan
 
 		if ew.Event.Type == WsUpdated {
 			var allPlayersInfo []PlayerInfo
@@ -38,8 +39,15 @@ func (g *Game) Run() {
 				allPlayersInfo = append(allPlayersInfo, p.Info)
 			}
 
-			noticeEvent := NewEvent(UserConnected, g.Model.Name, g.Model.PackName, allPlayersInfo)
-			g.BroadcastEvent(*noticeEvent)
+			noticeEvent := Event{
+				Type: UserConnected,
+				Payload: UserConnectedPayload{
+					RoomName: g.Model.Name,
+					PackName: g.Model.PackName,
+					Players:  allPlayersInfo,
+				},
+			}
+			g.BroadcastEvent(noticeEvent)
 		}
 
 		g.State = g.State.Handle(ew)

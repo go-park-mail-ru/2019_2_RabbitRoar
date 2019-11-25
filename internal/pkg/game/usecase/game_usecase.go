@@ -17,7 +17,10 @@ type gameUseCase struct {
 	sanitizer   *bluemonday.Policy
 }
 
-func NewGameUseCase(gameMemRepo game.Repository, packRepo pack.Repository) game.UseCase {
+func NewGameUseCase(
+	gameMemRepo game.Repository,
+	packRepo pack.Repository,
+) game.UseCase {
 	return &gameUseCase{
 		gameMemRepo: gameMemRepo,
 		packRepo:    packRepo,
@@ -40,7 +43,7 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 	}
 	g.PackName = p.Name
 
-	return uc.gameMemRepo.Create(g, u)
+	return uc.gameMemRepo.Create(g, p.Questions, u)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {

@@ -1,47 +1,90 @@
 package game
 
 import (
-	"github.com/op/go-logging"
+	"math/rand"
 )
-
-var log = logging.MustGetLogger("State")
 
 type PendPlayers struct {
 	BaseState
 }
 
+func (s *PendPlayers) getThemes() [5]string {
+	var themes [5]string
+	themeSlice := s.Game.Questions.([]interface{})
+
+	for i := 0; i < 5; i++ {
+		theme := themeSlice[i].(map[string]interface{})
+		themes[i] = theme["name"].(string)
+	}
+
+	return themes
+}
+
 func (s *PendPlayers) Handle(e EventWrapper) State {
-	log.Info("PendPlayers: got event: ", e)
-	if e.Event.Type == PlayerReadyFront {
-		var playersReady int
+	s.Game.logger.Info("PendPlayers: got event: ", e)
+	if e.Event.Type != PlayerReadyFront {
+		s.Game.logger.Infof(
+			"PendPlayers: got unexpected event %s, expected %s. ",
+			e.Event.Type,
+			PlayerReadyFront,
+		)
+		return s
+	}
 
-		for idx, pl := range s.Game.Players {
-			if pl.Info.ID == e.SenderID {
-				s.Game.Players[idx].Info.Ready = true
-			}
-
-			if s.Game.Players[idx].Info.Ready {
-				playersReady++
-			}
+	var playersReady int
+	for idx, pl := range s.Game.Players {
+		if pl.Info.ID == e.SenderID {
+			s.Game.Players[idx].Info.Ready = !s.Game.Players[idx].Info.Ready
 		}
 
-		// collect joined players
-		var players = make([]PlayerInfo, 0, len(s.Game.Players))
-		for _, pl := range s.Game.Players {
-			players = append(players, pl.Info)
-		}
-
-		ev := Event{
-			Type:    PlayerReadyBack,
-			Payload: players,
-		}
-
-		s.Game.BroadcastEvent(ev)
-
-		if playersReady == s.Game.Model.PlayersCapacity {
-			s.Game.Started = true
-			return &PendQuestionChoose{BaseState{Game:s.Game}}
+		if s.Game.Players[idx].Info.Ready {
+			playersReady++
 		}
 	}
-	return s
+
+	// collect joined players
+	var players = make([]PlayerInfo, 0, len(s.Game.Players))
+	for _, pl := range s.Game.Players {
+		players = append(players, pl.Info)
+	}
+
+	ev := Event{
+		Type:    PlayerReadyBack,
+		Payload: players,
+	}
+	s.Game.BroadcastEvent(ev)
+
+	if playersReady != s.Game.Model.PlayersCapacity {
+		s.Game.logger.Info(
+			"PendPlayers: players ready %d/%d, keep state.",
+			playersReady,
+			s.Game.Model.PlayersCapacity,
+		)
+		return s
+	}
+
+	ev = Event{
+		Type:    GameStart,
+		Payload: GameStartPayload{Themes: s.getThemes()},
+	}
+	s.Game.BroadcastEvent(ev)
+	s.Game.Started = true
+
+	nextState := &PendQuestionChoose{
+		BaseState: BaseState{Game: s.Game},
+	}
+
+	randIdx := rand.Int() % len(s.Game.Players)
+	nextState.respondentID = s.Game.Players[randIdx].Info.ID
+
+	ev = Event{
+		Type: RequestQuestion,
+		Payload: RequestQuestionPayload{
+			PlayerID: nextState.respondentID,
+		},
+	}
+	s.Game.BroadcastEvent(ev)
+
+	s.Game.logger.Info("PendPlayers: moving to the next state %v.", nextState)
+	return nextState
 }
