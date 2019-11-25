@@ -10,11 +10,13 @@ import (
 
 type memGameRepository struct {
 	games map[uuid.UUID]*game.Game
+	userGame map[int]uuid.UUID
 }
 
-func NewMemGameRepository() game.MemRepository {
+func NewMemGameRepository() game.Repository {
 	return &memGameRepository{
 		games: make(map[uuid.UUID]*game.Game),
+		userGame: make(map[int]uuid.UUID),
 	}
 }
 
@@ -61,14 +63,28 @@ func (repo *memGameRepository) Fetch(pageSize int, page int) (*[]models.Game, er
 	return &gSlice, nil
 }
 
+func (repo *memGameRepository) GetGameIDByUserID(userID int) (uuid.UUID, error) {
+	if _, exists := repo.userGame[userID]; !exists {
+		return uuid.UUID{}, errors.New("no playing user found")
+	}
+
+	return repo.userGame[userID], nil
+}
+
 func (repo *memGameRepository) JoinPlayer(u models.User, gameID uuid.UUID) (*models.Game, error) {
 	if _, exists := repo.games[gameID]; !exists {
 		return nil, errors.New("no game found")
 	}
 
+	if _, exists := repo.userGame[u.ID]; exists {
+		return nil, errors.New("user is already in a game")
+	}
+
 	if repo.games[gameID].Model.PlayersJoined >= repo.games[gameID].Model.PlayersCapacity {
 		return nil, errors.New("unable to join the game: game is full")
 	}
+
+	repo.userGame[u.ID] = gameID
 
 	repo.games[gameID].Players = append(
 		repo.games[gameID].Players,
@@ -107,10 +123,17 @@ func (repo *memGameRepository) JoinConnection(gameID uuid.UUID, userID int, conn
 	return errors.New("no player found to join connection")
 }
 
-func (repo *memGameRepository) KickPlayer(gameID uuid.UUID, playerID int) error {
+func (repo *memGameRepository) KickPlayer(playerID int) error {
+	gameID, exists := repo.userGame[playerID]
+	if !exists {
+		return errors.New("player is not in game")
+	}
+
 	if _, exists := repo.games[gameID]; !exists {
 		return errors.New("no game found to leave")
 	}
+
+	delete(repo.userGame, playerID)
 
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == playerID {

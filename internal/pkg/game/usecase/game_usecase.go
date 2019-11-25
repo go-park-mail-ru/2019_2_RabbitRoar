@@ -12,15 +12,13 @@ import (
 )
 
 type gameUseCase struct {
-	gameSQLRepo game.SQLRepository
-	gameMemRepo game.MemRepository
+	gameMemRepo game.Repository
 	packRepo    pack.Repository
 	sanitizer   *bluemonday.Policy
 }
 
-func NewGameUseCase(gameSQLRepo game.SQLRepository, gameMemRepo game.MemRepository, packRepo pack.Repository) game.UseCase {
+func NewGameUseCase(gameMemRepo game.Repository, packRepo pack.Repository) game.UseCase {
 	return &gameUseCase{
-		gameSQLRepo: gameSQLRepo,
 		gameMemRepo: gameMemRepo,
 		packRepo:    packRepo,
 		sanitizer:   bluemonday.UGCPolicy(),
@@ -50,25 +48,15 @@ func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 }
 
 func (uc *gameUseCase) JoinPlayerToGame(u models.User, gameID uuid.UUID) (*models.Game, error) {
-	err := uc.gameSQLRepo.JoinPlayer(u.ID, gameID)
-	if err != nil {
-		return nil, err
-	}
-
 	return uc.gameMemRepo.JoinPlayer(u, gameID)
 }
 
 func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
-	gameID, err := uc.gameSQLRepo.KickPlayer(playerID)
-	if err != nil {
-		return err
-	}
-
-	return uc.gameMemRepo.KickPlayer(gameID, playerID)
+	return uc.gameMemRepo.KickPlayer(playerID)
 }
 
 func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
-	return uc.gameSQLRepo.GetGameIDByUserID(userID)
+	return uc.gameMemRepo.GetGameIDByUserID(userID)
 }
 
 func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {

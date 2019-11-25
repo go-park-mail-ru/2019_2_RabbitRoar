@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type MemRepository interface {
+type Repository interface {
 	Create(g *models.Game, host models.User) error
 	Fetch(pageSize int, page int) (*[]models.Game, error)
 	GetGameIDByUserID(userID int) (uuid.UUID, error)
