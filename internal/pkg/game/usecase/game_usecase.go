@@ -7,27 +7,24 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 )
 
 type gameUseCase struct {
-	gameSQLRepo game.SQLRepository
-	gameMemRepo game.MemRepository
+	gameMemRepo game.Repository
 	packRepo    pack.Repository
-	sanitizer   *bluemonday.Policy
+	packSanitizer   pack.Sanitizer
 }
 
 func NewGameUseCase(
-	gameSQLRepo game.SQLRepository,
-	gameMemRepo game.MemRepository,
+	gameMemRepo game.Repository,
 	packRepo pack.Repository,
+	packSanitizer pack.Sanitizer,
 ) game.UseCase {
 	return &gameUseCase{
-		gameSQLRepo: gameSQLRepo,
-		gameMemRepo: gameMemRepo,
-		packRepo:    packRepo,
-		sanitizer:   bluemonday.UGCPolicy(),
+		gameMemRepo:   gameMemRepo,
+		packRepo:      packRepo,
+		packSanitizer: packSanitizer,
 	}
 }
 
@@ -44,6 +41,9 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 	if err != nil {
 		return err
 	}
+
+	uc.packSanitizer.Sanitize(p)
+
 	g.PackName = p.Name
 
 	return uc.gameMemRepo.Create(g, p.Questions, u)
@@ -54,25 +54,15 @@ func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 }
 
 func (uc *gameUseCase) JoinPlayerToGame(u models.User, gameID uuid.UUID) (*models.Game, error) {
-	err := uc.gameSQLRepo.JoinPlayer(u.ID, gameID)
-	if err != nil {
-		return nil, err
-	}
-
 	return uc.gameMemRepo.JoinPlayer(u, gameID)
 }
 
 func (uc *gameUseCase) KickPlayerFromGame(playerID int) error {
-	gameID, err := uc.gameSQLRepo.KickPlayer(playerID)
-	if err != nil {
-		return err
-	}
-
-	return uc.gameMemRepo.KickPlayer(gameID, playerID)
+	return uc.gameMemRepo.KickPlayer(playerID)
 }
 
 func (uc *gameUseCase) GetGameIDByUserID(userID int) (uuid.UUID, error) {
-	return uc.gameSQLRepo.GetGameIDByUserID(userID)
+	return uc.gameMemRepo.GetGameIDByUserID(userID)
 }
 
 func (uc *gameUseCase) NewConnectionWrapper(ws *websocket.Conn) game.ConnectionWrapper {
