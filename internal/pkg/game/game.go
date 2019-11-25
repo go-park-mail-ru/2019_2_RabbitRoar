@@ -16,6 +16,7 @@ type Game struct {
 	State   State
 	Model   models.Game
 	EvChan  chan EventWrapper
+	Started bool
 	logger  logging.Logger
 }
 

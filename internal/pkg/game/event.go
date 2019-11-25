@@ -3,7 +3,7 @@ package game
 type EventType string
 
 const (
-	WsRun             EventType = "ws_run"
+	WsUpdated         EventType = "ws_run"
 	UserConnected     EventType = "user_connected"
 	GameStart         EventType = "start_game"
 	RequestQuestion   EventType = "request_question_from_player"

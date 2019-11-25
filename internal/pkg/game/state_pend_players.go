@@ -10,10 +10,6 @@ type PendPlayers struct {
 	BaseState
 }
 
-func (s *PendPlayers) GetType() StateType {
-	return Pending
-}
-
 func (s *PendPlayers) Handle(e EventWrapper) State {
 	log.Info("PendPlayers: got event: ", e)
 	if e.Event.Type == PlayerReadyFront {
@@ -43,6 +39,7 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		s.Game.BroadcastEvent(ev)
 
 		if playersReady == s.Game.Model.PlayersCapacity {
+			s.Game.Started = true
 			return &PendQuestionChoose{BaseState{Game:s.Game}}
 		}
 	}
