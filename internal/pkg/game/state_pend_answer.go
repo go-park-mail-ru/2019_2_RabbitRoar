@@ -40,9 +40,15 @@ func (s *PendAnswer) Handle(e EventWrapper) State {
 		return s
 	}
 
-	payload, ok := e.Event.Payload.(AnswerGivenPayload)
+	payload, ok := e.Event.Payload.(map[string]interface{})
 	if !ok {
 		s.Game.logger.Info("PendAnswer: invalid payload, keep state.")
+		return s
+	}
+
+	playerAnswer, ok := payload["answer"].(string)
+	if !ok {
+		s.Game.logger.Info("PendAnswer: invalid payload answer, keep state.")
 		return s
 	}
 
@@ -51,7 +57,7 @@ func (s *PendAnswer) Handle(e EventWrapper) State {
 	ev = Event{
 		Type: AnswerGivenBack,
 		Payload: AnswerGivenBackPayload{
-			PlayerAnswer: payload.Answer,
+			PlayerAnswer: playerAnswer,
 			PlayerID:     e.SenderID,
 		},
 	}

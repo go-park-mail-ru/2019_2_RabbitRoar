@@ -1,7 +1,5 @@
 package game
 
-import "encoding/json"
-
 type PendQuestionChoose struct {
 	BaseState
 	respondentID int
@@ -47,20 +45,27 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 		return s
 	}
 
-	var payload QuestionChosenPayload
-	marshalled, _ := json.Marshal(e.Event.Payload)
-	err := json.Unmarshal(marshalled, &payload)
-	if err != nil {
+	payload, ok := e.Event.Payload.(map[string]interface{})
+	if !ok {
 		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
-		return s
 	}
 
-	if payload.ThemeIdx < 0 || payload.ThemeIdx > 4 {
+	questionIdx, ok := payload["question_idx"].(int)
+	if !ok {
+		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
+	}
+
+	themeIdx, ok := payload["theme_idx"].(int)
+	if !ok {
+		s.Game.logger.Info("PendQuestionChosen: got invalid payload, keep old state.")
+	}
+
+	if themeIdx < 0 || themeIdx > 4 {
 		s.Game.logger.Info("PendQuestionChosen: got invalid theme coords, keep old state.")
 		return s
 	}
 
-	if payload.QuestionIdx < 0 || payload.QuestionIdx > 4 {
+	if questionIdx < 0 || questionIdx > 4 {
 		s.Game.logger.Info("PendQuestionChosen: got invalid question coords, keep old state.")
 		return s
 	}
@@ -68,9 +73,9 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 	ev := Event{
 		Type: RequestRespondent,
 		Payload: RequestRespondentPayload{
-			Question:   s.getQuestion(payload.ThemeIdx, payload.QuestionIdx),
-			ThemeID:    payload.ThemeIdx,
-			QuestionID: payload.QuestionIdx,
+			Question:   s.getQuestion(themeIdx, questionIdx),
+			ThemeID:    themeIdx,
+			QuestionID: questionIdx,
 		},
 	}
 
@@ -78,8 +83,8 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 
 	nextState := &PendRespondent{
 		BaseState:  BaseState{Game: s.Game},
-		ThemeID:    payload.ThemeIdx,
-		QuestionID: payload.QuestionIdx,
+		ThemeID:    themeIdx,
+		QuestionID: questionIdx,
 	}
 
 	s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
