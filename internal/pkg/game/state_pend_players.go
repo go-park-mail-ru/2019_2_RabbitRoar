@@ -77,7 +77,8 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		BaseState: BaseState{Game: s.Game},
 	}
 
-	nextState.respondentID = rand.Int() % len(s.Game.Players)
+	randIdx := rand.Int() % len(s.Game.Players)
+	nextState.respondentID = s.Game.Players[randIdx].Info.ID
 
 	ev = Event{
 		Type: RequestQuestion,
