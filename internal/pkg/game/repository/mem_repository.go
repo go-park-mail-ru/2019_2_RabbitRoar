@@ -24,17 +24,11 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 	}
 
 	repo.games[g.UUID] = &game.Game{
-<<<<<<< HEAD
-		Players:   []game.Player{},
 		Questions: packQuestions,
-		Model:     *g,
-		EvChan:    make(chan game.EventWrapper, 50),
-=======
 		Players: []game.Player{},
 		Model:   *g,
 		EvChan:  make(chan game.EventWrapper, 50),
 		Started: false,
->>>>>>> game
 	}
 
 	go repo.games[g.UUID].Run()
