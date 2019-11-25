@@ -1,5 +1,7 @@
 package game
 
+import "math/rand"
+
 type PendAnswer struct {
 	BaseState
 	PlayerID   int
@@ -69,6 +71,24 @@ func (s *PendAnswer) Handle(e EventWrapper) State {
 		BaseState: BaseState{Game: s.Game},
 		PlayerID:  e.SenderID,
 	}
+
+	// MOCK BLOCK REMOVE ME
+	nextStateMock := &PendQuestionChoose{
+		BaseState: BaseState{Game: s.Game},
+	}
+
+	randIdx := rand.Int() % len(s.Game.Players)
+	nextStateMock.respondentID = s.Game.Players[randIdx].Info.ID
+
+	ev = Event{
+		Type: RequestQuestion,
+		Payload: RequestQuestionPayload{
+			PlayerID: nextStateMock.respondentID,
+		},
+	}
+	s.Game.BroadcastEvent(ev)
+	return nextStateMock
+	// MOCK BLOCK REMOVE ME
 
 	s.Game.logger.Info("PendAnswer: moving to the next state %v.", nextState)
 	return nextState
