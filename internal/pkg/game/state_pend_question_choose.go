@@ -36,7 +36,7 @@ func (s *PendQuestionChoose) Handle(e EventWrapper) State {
 		return s
 	}
 
-	if e.Event.Type == QuestionChosen {
+	if e.Event.Type != QuestionChosen {
 		s.Game.logger.Infof(
 			"PendQuestionChosen: got unexpected event %s, expected %s.",
 			e.Event.Type,
