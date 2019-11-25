@@ -6,7 +6,7 @@ import (
 )
 
 type MemRepository interface {
-	Create(g *models.Game, host models.User) error
+	Create(g *models.Game, packQuestions interface{}, host models.User) error
 	Fetch(pageSize int, page int) (*[]models.Game, error)
 
 	JoinPlayer(u models.User, gameID uuid.UUID) (*models.Game, error)

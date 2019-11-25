@@ -46,7 +46,7 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 	}
 	g.PackName = p.Name
 
-	return uc.gameMemRepo.Create(g, u)
+	return uc.gameMemRepo.Create(g, p.Questions, u)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {

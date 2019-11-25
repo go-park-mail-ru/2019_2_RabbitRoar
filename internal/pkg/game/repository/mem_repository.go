@@ -18,15 +18,16 @@ func NewMemGameRepository() game.MemRepository {
 	}
 }
 
-func (repo *memGameRepository) Create(g *models.Game, host models.User) error {
+func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, host models.User) error {
 	if _, exists := repo.games[g.UUID]; exists {
 		return errors.New("game already exists")
 	}
 
 	repo.games[g.UUID] = &game.Game{
-		Players: []game.Player{},
-		Model:   *g,
-		EvChan:  make(chan game.EventWrapper, 50),
+		Players:   []game.Player{},
+		Questions: packQuestions,
+		Model:     *g,
+		EvChan:    make(chan game.EventWrapper, 50),
 	}
 
 	go repo.games[g.UUID].Run()

@@ -10,6 +10,18 @@ type PendPlayers struct {
 	BaseState
 }
 
+func (s *PendPlayers) getThemes() []string {
+	var themes []string
+	themeSlice := s.Game.Questions.([]interface{})
+
+	for _, theme := range themeSlice {
+		theme := theme.(map[string]interface{})
+		themes = append(themes, theme["name"].(string))
+	}
+
+	return themes
+}
+
 func (s *PendPlayers) GetType() StateType {
 	return Pending
 }
