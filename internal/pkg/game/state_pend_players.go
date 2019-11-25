@@ -21,7 +21,7 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 
 		for idx, pl := range s.Game.Players {
 			if pl.Info.ID == e.SenderID {
-				s.Game.Players[idx].Info.Ready = true
+				s.Game.Players[idx].Info.Ready = !s.Game.Players[idx].Info.Ready
 			}
 
 			if s.Game.Players[idx].Info.Ready {
