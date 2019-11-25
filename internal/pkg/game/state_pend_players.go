@@ -40,13 +40,9 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 			Payload: players,
 		}
 
-		// broadcast event
-		for _, pl := range s.Game.Players {
-			pl.Conn.GetSendChan() <- ev
-		}
+		s.Game.BroadcastEvent(ev)
 
 		if playersReady == s.Game.Model.PlayersCapacity {
-
 			return &PendQuestionChoose{BaseState{Game:s.Game}}
 		}
 	}
