@@ -83,7 +83,7 @@ func Start() {
 		),
 	)
 
-	jwtToken := csrf.JwtToken{
+	sessionJWTToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
 	}
 
@@ -95,14 +95,17 @@ func Start() {
 		viper.GetString("database.pass"),
 		viper.GetString("database.db"),
 	)
-	log.Info("dbURL: ", dbDSN)
 	db, err := sql.Open(
 		"postgres",
 		dbDSN,
 	)
 	if err != nil {
-		log.Fatal("error connecting to db: ", err)
+		log.Fatal("error init db: ", err)
 	}
+	if err := db.Ping(); err != nil {
+		log.Fatal("error connecting db: ", err)
+	}
+	defer log.Error("error closing db: ", db.Close())
 
 	userRepo := _userRepository.NewSqlUserRepository(db)
 	userUseCase := _userUseCase.NewUserUseCase(userRepo)
@@ -127,11 +130,11 @@ func Start() {
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
-	csrfMiddleware := _middleware.NewCSRFMiddleware(jwtToken)
+	csrfMiddleware := _middleware.NewCSRFMiddleware(sessionJWTToken)
 
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
-	_csrfHttp.NewCSRFHandler(e, jwtToken, authMiddleware)
+	_csrfHttp.NewCSRFHandler(e, sessionJWTToken, authMiddleware)
 	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
 	_packHttp.NewPackHandler(e, packUseCase, userUseCase,  sessionUseCase, authMiddleware, csrfMiddleware, packSchema)
 
