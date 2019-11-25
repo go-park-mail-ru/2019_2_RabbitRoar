@@ -74,8 +74,8 @@ type RequestFromPlayerPayload struct {
 }
 
 type QuestionChosenPayload struct {
-	ThemeIdx    int `json:"theme_idx"`
-	QuestionIdx int `json:"question_idx"`
+	ThemeIdx    int
+	QuestionIdx int
 }
 
 type AnswerPayload struct {
