@@ -25,13 +25,6 @@ services:
     ports:
       - 5432:5432
 
-  adminer:
-    image: adminer
-    depends_on:
-      - postgres
-    ports:
-      - 8080:8080
-
   swagger:
     image: swaggerapi/swagger-ui
     restart: always
