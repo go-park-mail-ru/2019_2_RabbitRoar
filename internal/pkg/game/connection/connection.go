@@ -83,6 +83,7 @@ func (conn *gameConnection) RunReceive(senderID int) {
 			err = json.Unmarshal(msg, &eventWrap.Event)
 			if err != nil {
 				log.Info("Invalid event json received")
+				break
 			}
 			log.Info("Unmarshalled event: ", eventWrap)
 
