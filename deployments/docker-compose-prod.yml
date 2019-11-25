@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  application:
+  svoyak_application:
     restart: always
     build:
       context: ../
@@ -16,7 +16,7 @@ services:
       - 3010:3000
       - 2345:2345 # Remote debug
 
-  chat:
+  svoyak_chat:
     restart: always
     build:
       context: ../
@@ -26,7 +26,7 @@ services:
     depends_on:
       - postgres
 
-  postgres:
+  svoyak_postgres:
     image: postgres:12.0
     restart: always
     environment:
@@ -38,16 +38,17 @@ services:
     ports:
       - 5432:5432
 
-  swagger:
+  svoyak_swagger:
     image: swaggerapi/swagger-ui
     restart: always
     volumes:
       - "../api:/app"
 
-  nginx:
+  svoyak_nginx:
     image: nginx:latest
     restart: always
     depends_on:
+      - chat
       - application
       - swagger
     volumes:
