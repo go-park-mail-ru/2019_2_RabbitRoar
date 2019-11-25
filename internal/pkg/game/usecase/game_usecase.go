@@ -7,24 +7,24 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/viper"
 )
 
 type gameUseCase struct {
 	gameMemRepo game.Repository
 	packRepo    pack.Repository
-	sanitizer   *bluemonday.Policy
+	packSanitizer   pack.Sanitizer
 }
 
 func NewGameUseCase(
 	gameMemRepo game.Repository,
 	packRepo pack.Repository,
+	packSanitizer pack.Sanitizer,
 ) game.UseCase {
 	return &gameUseCase{
-		gameMemRepo: gameMemRepo,
-		packRepo:    packRepo,
-		sanitizer:   bluemonday.UGCPolicy(),
+		gameMemRepo:   gameMemRepo,
+		packRepo:      packRepo,
+		packSanitizer: packSanitizer,
 	}
 }
 
@@ -41,6 +41,9 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 	if err != nil {
 		return err
 	}
+
+	uc.packSanitizer.Sanitize(p)
+
 	g.PackName = p.Name
 
 	return uc.gameMemRepo.Create(g, p.Questions, u)

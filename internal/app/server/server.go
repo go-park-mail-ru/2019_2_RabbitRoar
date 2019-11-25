@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"github.com/microcosm-cc/bluemonday"
 	"io/ioutil"
 
 	sentryecho "github.com/getsentry/sentry-go/echo"
@@ -119,9 +120,10 @@ func Start() {
 	}
 	packRepo := _packRepository.NewSqlPackRepository(db)
 	packUseCase := _packUseCase.NewUserUseCase(packRepo)
+	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
 	gameMemRepo := _gameRepository.NewMemGameRepository()
-	gameUseCase := _gameUseCase.NewGameUseCase(gameMemRepo, packRepo)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameMemRepo, packRepo, packSanitizer)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
