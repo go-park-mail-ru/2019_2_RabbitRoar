@@ -10,13 +10,13 @@ type PendPlayers struct {
 	BaseState
 }
 
-func (s *PendPlayers) getThemes() []string {
-	var themes []string
+func (s *PendPlayers) getThemes() [5]string {
+	var themes [5]string
 	themeSlice := s.Game.Questions.([]interface{})
 
-	for _, theme := range themeSlice {
-		theme := theme.(map[string]interface{})
-		themes = append(themes, theme["name"].(string))
+	for i := 0; i < 5; i++ {
+		theme := themeSlice[i].(map[string]interface{})
+		themes[i] = theme["name"].(string)
 	}
 
 	return themes
@@ -55,7 +55,11 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		s.Game.BroadcastEvent(ev)
 
 		if playersReady == s.Game.Model.PlayersCapacity {
-
+			ev = Event{
+				Type:    GameStart,
+				Payload: GameStartPayload{Themes:s.getThemes()},
+			}
+			s.Game.BroadcastEvent(ev)
 			return &PendQuestionChoose{BaseState{Game:s.Game}}
 		}
 	}
