@@ -1,10 +1,8 @@
 package game
 
 import (
-	"github.com/op/go-logging"
+	"math/rand"
 )
-
-var log = logging.MustGetLogger("State")
 
 type PendPlayers struct {
 	BaseState
@@ -27,7 +25,7 @@ func (s *PendPlayers) GetType() StateType {
 }
 
 func (s *PendPlayers) Handle(e EventWrapper) State {
-	log.Info("PendPlayers: got event: ", e)
+	s.Game.logger.Info("PendPlayers: got event: ", e)
 	if e.Event.Type == PlayerReadyFront {
 		var playersReady int
 
@@ -57,10 +55,26 @@ func (s *PendPlayers) Handle(e EventWrapper) State {
 		if playersReady == s.Game.Model.PlayersCapacity {
 			ev = Event{
 				Type:    GameStart,
-				Payload: GameStartPayload{Themes:s.getThemes()},
+				Payload: GameStartPayload{Themes: s.getThemes()},
 			}
 			s.Game.BroadcastEvent(ev)
-			return &PendQuestionChoose{BaseState{Game:s.Game}}
+
+			nextState := &PendQuestionChoose{
+				BaseState:    BaseState{Game: s.Game},
+			}
+
+			nextState.respondentID = rand.Int() % len(s.Game.Players)
+
+			ev := Event{
+				Type: RequestQuestion,
+				Payload: RequestQuestionPayload{
+					PlayerID: nextState.respondentID,
+				},
+			}
+
+			s.Game.BroadcastEvent(ev)
+
+			return nextState
 		}
 	}
 	return s

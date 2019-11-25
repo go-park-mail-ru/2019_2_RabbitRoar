@@ -31,6 +31,16 @@ type PlayerReadyBackPayload struct {
 	Players []PlayerInfo `json:"players"`
 }
 
+type RequestQuestionPayload struct {
+	PlayerID int `json:"player_id"`
+}
+
+type RequestRespondentPayload struct {
+	Question   string `json:"question"`
+	ThemeID    int    `json:"theme_id"`
+	QuestionID int    `json:"question_id"`
+}
+
 type UserConnectedPayload struct {
 	RoomName string       `json:"room_name"`
 	PackName string       `json:"pack_name"`
@@ -46,7 +56,7 @@ type RequestFromPlayerPayload struct {
 }
 
 type QuestionChosenPayload struct {
-	Theme       int `json:"theme"`
+	ThemeIdx    int `json:"theme_idx"`
 	QuestionIdx int `json:"question_idx"`
 }
 
@@ -88,7 +98,7 @@ func NewEvent(et EventType, data ...interface{}) *Event {
 
 	case QuestionChosen:
 		e.Payload = QuestionChosenPayload{
-			Theme:       data[0].(int),
+			ThemeIdx:       data[0].(int),
 			QuestionIdx: data[1].(int),
 		}
 
