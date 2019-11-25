@@ -42,6 +42,12 @@ func (conn *gameConnection) RunReceive(senderID int) {
 	conn.running = true
 	defer func() {
 		conn.running = false
+		conn.receiveChan <- game.EventWrapper{
+			SenderID: senderID,
+			Event:    &game.Event{
+				Type: game.WsUpdated,
+			},
+		}
 	}()
 
 	log.Infof("starting receive goroutine for user %d", senderID)
@@ -52,16 +58,6 @@ func (conn *gameConnection) RunReceive(senderID int) {
 			Type: game.WsUpdated,
 		},
 	}
-	// MAKE IT SAFER BEYACH
-	//defer func() {
-	//	conn.receiveChan <- game.EventWrapper{
-	//		SenderID: senderID,
-	//		Event:    &game.Event{
-	//			Type: game.WsUpdated,
-	//		},
-	//	}
-	//	close(conn.receiveChan)
-	//}()
 
 	for {
 		select {
