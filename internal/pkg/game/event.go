@@ -4,6 +4,7 @@ type EventType string
 
 const (
 	WsUpdated         EventType = "ws_run"
+	PlayerLeft        EventType = "player_left"
 	UserConnected     EventType = "user_connected"
 	GameStart         EventType = "start_game"
 	RequestQuestion   EventType = "request_question_from_player"

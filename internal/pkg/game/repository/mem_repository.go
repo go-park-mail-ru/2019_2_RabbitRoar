@@ -10,13 +10,19 @@ import (
 type memGameRepository struct {
 	games map[uuid.UUID]*game.Game
 	userGame map[int]uuid.UUID
+	gameKillerChan chan uuid.UUID
 }
 
 func NewMemGameRepository() game.Repository {
-	return &memGameRepository{
+	repo := &memGameRepository{
 		games: make(map[uuid.UUID]*game.Game),
 		userGame: make(map[int]uuid.UUID),
+		gameKillerChan: make(chan uuid.UUID, 10),
 	}
+
+	go repo.runGameKiller()
+
+	return repo
 }
 
 func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, host *models.User) (*models.Game, error) {
@@ -37,7 +43,7 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 	}
 
 	defer func(){
-		go repo.games[g.UUID].Run()
+		go repo.games[g.UUID].Run(repo.gameKillerChan)
 	}()
 
 	return repo.JoinPlayer(host, g.UUID)
@@ -146,11 +152,29 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 			if repo.games[gameID].Players[i].Conn != nil {
 				repo.games[gameID].Players[i].Conn.Stop()
 			}
+
 			repo.games[gameID].Players = append(repo.games[gameID].Players[:i], repo.games[gameID].Players[i+1:]...)
+
 			repo.games[gameID].Model.PlayersJoined--
+
+			repo.games[gameID].EvChan <- game.EventWrapper{
+				SenderID: p.Info.ID,
+				Event:    &game.Event{
+					Type:    game.PlayerLeft,
+					Payload: nil,
+				},
+			}
+
 			return nil
 		}
 	}
 
 	return errors.New("no player found to kick from game")
+}
+
+func (repo *memGameRepository) runGameKiller() {
+	for {
+		gameID := <-repo.gameKillerChan
+		delete(repo.games, gameID)
+	}
 }
