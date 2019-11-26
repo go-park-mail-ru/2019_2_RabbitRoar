@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/google/uuid"
 	"github.com/op/go-logging"
 )
 
@@ -21,7 +22,21 @@ type Game struct {
 	logger    logging.Logger
 }
 
-func (g *Game) Run() {
+func (g *Game) Run(killChan chan uuid.UUID) {
+	defer func() {
+		g.logger.Info("Started closing connections")
+		for _, p := range g.Players {
+			g.logger.Infof("Trying to close player connection: %d", p.Info.ID)
+			if p.Conn.IsRunning() {
+				g.logger.Info("Connection is running. Stopping connection")
+				p.Conn.Stop()
+				g.logger.Info("Connection stopped")
+			}
+		}
+		g.logger.Infof("All connections stopped. Game is ready to be deleted. UUID: %s", g.Model.UUID.String())
+		killChan <- g.Model.UUID
+	}()
+
 	g.logger.Info("Starting game loop.")
 	g.State = &PendPlayers{
 		BaseState: BaseState{
@@ -30,7 +45,12 @@ func (g *Game) Run() {
 	}
 
 	for {
+		if len(g.Players) == 0 {
+			return
+		}
+		g.logger.Info("Pending event...")
 		ew := <-g.EvChan
+		g.logger.Info("Got event: ", ew)
 
 		if ew.Event.Type == WsUpdated {
 			var allPlayersInfo []PlayerInfo
