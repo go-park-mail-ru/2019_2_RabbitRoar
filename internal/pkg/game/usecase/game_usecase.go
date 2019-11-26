@@ -28,7 +28,7 @@ func NewGameUseCase(
 	}
 }
 
-func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
+func (uc *gameUseCase) Create(g *models.Game, userID int) error {
 	newUUID, err := uuid.NewUUID()
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (uc *gameUseCase) Create(g *models.Game, u models.User) error {
 
 	g.PackName = p.Name
 
-	return uc.gameMemRepo.Create(g, p.Questions, u)
+	return uc.gameMemRepo.Create(g, p.Questions, userID)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {

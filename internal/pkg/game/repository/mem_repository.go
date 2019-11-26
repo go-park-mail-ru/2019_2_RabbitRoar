@@ -19,7 +19,11 @@ func NewMemGameRepository() game.Repository {
 	}
 }
 
-func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, host models.User) error {
+func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, hostID int) error {
+	if _, exists := repo.userGame[hostID]; exists {
+		return errors.New("user is already playing")
+	}
+
 	if _, exists := repo.games[g.UUID]; exists {
 		return errors.New("game already exists")
 	}
