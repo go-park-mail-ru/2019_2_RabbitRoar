@@ -7,7 +7,7 @@ import (
 )
 
 type UseCase interface {
-	Create(g *models.Game, u models.User) error
+	Create(g *models.Game, userID int) error
 	Fetch(page int) (*[]models.Game, error)
 	JoinPlayerToGame(u models.User, gameID uuid.UUID) (*models.Game, error)
 	KickPlayerFromGame(playerID int) error

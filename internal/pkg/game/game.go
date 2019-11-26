@@ -47,7 +47,10 @@ func (g *Game) Run() {
 					Players:  allPlayersInfo,
 				},
 			}
+
 			g.BroadcastEvent(noticeEvent)
+
+			continue
 		}
 
 		g.State = g.State.Handle(ew)

@@ -77,9 +77,9 @@ func (gh *handler) create(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "players capacity is too big")
 	}
 
-	creator := ctx.Get("user").(*models.User)
+	creatorID := ctx.Get("user").(*models.User).ID
 
-	if err := gh.usecase.Create(&g, *creator); err != nil {
+	if err := gh.usecase.Create(&g, creatorID); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "unable to create a game",

@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	Create(g *models.Game, packQuestions interface{}, host models.User) error
+	Create(g *models.Game, packQuestions interface{}, hostID int) error
 	Fetch(pageSize int, page int) (*[]models.Game, error)
 	GetGameIDByUserID(userID int) (uuid.UUID, error)
 
