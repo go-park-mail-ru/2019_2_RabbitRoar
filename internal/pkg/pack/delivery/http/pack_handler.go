@@ -41,7 +41,7 @@ func NewPackHandler(
 
 	group := e.Group("/pack")
 	group.POST("", authMiddleware(csrfMiddleware(handler.create)))
-	group.PUT("/:id", handler.update)
+	group.PUT("/:id", authMiddleware(handler.update))
 	group.DELETE("/:id", authMiddleware(handler.delete))
 	group.GET("", authMiddleware(handler.list))
 	group.GET("/offline", authMiddleware(handler.offline))
@@ -101,6 +101,12 @@ func (h *handler) update(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "pack not found")
 	case nil:
 		break
+	default:
+		return &echo.HTTPError{
+			Code:     http.StatusInternalServerError,
+			Message:  "error getting pack",
+			Internal: err,
+		}
 	}
 
 	var pn models.Pack
@@ -147,7 +153,7 @@ func (h *handler) update(ctx echo.Context) error {
 		p.Questions = pn.Questions
 	}
 
-	err = h.packUseCase.Update(p, *caller)
+	err = h.packUseCase.Update(p)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusInternalServerError,

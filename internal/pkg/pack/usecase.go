@@ -4,7 +4,7 @@ import "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 
 type UseCase interface {
 	Create(pack *models.Pack, caller models.User) error
-	Update(pack *models.Pack, caller models.User) error
+	Update(pack *models.Pack) error
 	Delete(ID int) error
 	Played(packID, userID int) bool
 	GetByID(ID int) (*models.Pack, error)

@@ -26,7 +26,7 @@ func (useCase* packUseCase) Delete(ID int) error {
 	return errors.Wrap(useCase.repo.Delete(ID), "unable delete pack")
 }
 
-func (useCase *packUseCase) Update(pack *models.Pack, caller models.User) error {
+func (useCase *packUseCase) Update(pack *models.Pack) error {
 	return errors.Wrap(useCase.repo.Update(pack), "unable update pack")
 }
 
