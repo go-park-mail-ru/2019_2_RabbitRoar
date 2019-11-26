@@ -25,11 +25,18 @@
     },
     "schema": {
       "pack": "internal/pkg/pack/pack_schema.json"
+    },
+    "session": {
+      "host": "localhost:8082"
     }
   },
 
   "chat" : {
     "address": "0.0.0.0:3000"
+  },
+
+  "session": {
+    "address": "0.0.0.0:8082"
   },
 
   "sentry": {

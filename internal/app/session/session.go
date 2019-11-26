@@ -1,57 +1,54 @@
 package session
 
 import (
-	"context"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
-	session "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session"
+	"database/sql"
+	"fmt"
+	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	_grpc "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/delivery/grpc"
+	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
+	_ "github.com/lib/pq"
+	"github.com/op/go-logging"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
+	"net"
 )
 
-//go:generate protoc -I ../../pkg/session/delivery/grpc/ --go_out=plugins=grpc:../../pkg/session/delivery/grpc/ ../../pkg/session/delivery/grpc/session.proto
+var log = logging.MustGetLogger("grpc_session")
 
-type manager struct {
-	sessionUseCase session.UseCase
-}
+func Start() {
+	log.Info("Staring grpc session service.")
 
-func NewManager(sessionUseCase session.UseCase) *manager {
-	return &manager{
-		sessionUseCase: sessionUseCase,
-	}
-}
-
-func (m *manager) Create(ctx context.Context, in *_grpc.Session) (*_grpc.SessionID, error) {
-	var user = models.User{
-		ID:        int(in.User.ID),
-		Username:  in.User.Username,
-		Email:     in.User.Email,
-		Rating:    int(in.User.Rating),
-		AvatarUrl: in.User.Avatar,
-	}
-	sessionID, err := m.sessionUseCase.Create(user)
+	lis, err := net.Listen("tcp", viper.GetString("session.address"))
 	if err != nil {
-		return nil, err
+		log.Fatal("cant listen port", err)
 	}
-	return &_grpc.SessionID{ID: *sessionID}, nil
-}
 
-func (m *manager) GetByID(ctx context.Context, in *_grpc.SessionID) (*_grpc.Session, error) {
-	sess, err := m.sessionUseCase.GetByID(in.ID)
+	dbDSN := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		viper.GetString("database.host"),
+		viper.GetString("database.port"),
+		viper.GetString("database.user"),
+		viper.GetString("database.pass"),
+		viper.GetString("database.db"),
+	)
+	db, err := sql.Open(
+		"postgres",
+		dbDSN,
+	)
 	if err != nil {
-		return nil, err
+		log.Fatal("error init db: ", err)
 	}
-	var u = &_grpc.User{
-		ID:                   int32(sess.User.ID),
-		Username:             sess.User.Username,
-		Email:                sess.User.Email,
-		Rating:               int32(sess.User.Rating),
-		Avatar:               sess.User.AvatarUrl,
+	if err := db.Ping(); err != nil {
+		log.Fatal("error connecting db: ", err)
 	}
-	return &_grpc.Session{
-		SessionID:            sess.ID,
-		User:                 u,
-	}, nil
-}
+	defer db.Close()
 
-func (m *manager) Delete(ctx context.Context, in *_grpc.SessionID) (*_grpc.Nothing, error) {
-	return &_grpc.Nothing{}, m.sessionUseCase.Destroy(in.ID)
+	sessionRepo := _sessionRepository.NewSqlSessionRepository(db)
+
+	server := grpc.NewServer()
+
+	_grpc.RegisterSessionServiceServer(server, _grpc.NewManager(sessionRepo))
+
+	fmt.Println("starting grpc session server")
+	log.Fatal(server.Serve(lis))
 }

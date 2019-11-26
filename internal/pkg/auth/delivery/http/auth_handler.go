@@ -112,6 +112,10 @@ func (h *handler) login(ctx echo.Context) error {
 
 func (h *handler) logout(ctx echo.Context) error {
 	sessionID := ctx.Get("sessionID").(string)
-	h.sessionUseCase.Destroy(sessionID)
-	return nil
+	err := h.sessionUseCase.Destroy(sessionID)
+	if err != nil {
+		ctx.Logger().Error("error deleting session")
+	}
+
+	return ctx.NoContent(http.StatusOK)
 }

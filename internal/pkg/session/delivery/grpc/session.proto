@@ -24,7 +24,7 @@ message Nothing {
 }
 
 service SessionService {
-    rpc Create (Session) returns (SessionID) {}
+    rpc Create (User) returns (SessionID) {}
     rpc Delete (SessionID) returns (Nothing) {}
-    rpc Get (SessionID) returns (Session) {}
+    rpc GetByID (SessionID) returns (Session) {}
 }

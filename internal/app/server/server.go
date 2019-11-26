@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/grpc"
 	"io/ioutil"
 
 	sentryecho "github.com/getsentry/sentry-go/echo"
@@ -83,7 +84,7 @@ func Start() {
 		),
 	)
 
-	sessionJWTToken := csrf.JwtToken{
+	csrfJWTToken := csrf.JwtToken{
 		Secret: []byte(viper.GetString("server.CSRF.secret")),
 	}
 
@@ -105,12 +106,21 @@ func Start() {
 	if err := db.Ping(); err != nil {
 		log.Fatal("error connecting db: ", err)
 	}
-	defer log.Error("error closing db: ", db.Close())
+	defer db.Close()
+
+	grpcConn, err := grpc.Dial(
+		viper.GetString("server.session.host"),
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		log.Fatal("error dial to grpc service: ", err)
+	}
+	defer grpcConn.Close()
 
 	userRepo := _userRepository.NewSqlUserRepository(db)
 	userUseCase := _userUseCase.NewUserUseCase(userRepo)
 
-	sessionRepo := _sessionRepository.NewSqlSessionRepository(db)
+	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
 	schemaBytes, err := ioutil.ReadFile(viper.GetString("server.schema.pack"))
@@ -130,11 +140,11 @@ func Start() {
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
-	csrfMiddleware := _middleware.NewCSRFMiddleware(sessionJWTToken)
+	csrfMiddleware := _middleware.NewCSRFMiddleware(csrfJWTToken)
 
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
-	_csrfHttp.NewCSRFHandler(e, sessionJWTToken, authMiddleware)
+	_csrfHttp.NewCSRFHandler(e, csrfJWTToken, authMiddleware)
 	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
 	_packHttp.NewPackHandler(e, packUseCase, userUseCase,  sessionUseCase, authMiddleware, csrfMiddleware, packSchema)
 

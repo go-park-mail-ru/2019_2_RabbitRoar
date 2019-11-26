@@ -12,8 +12,21 @@ services:
       - "../../configs:/application/configs"
     depends_on:
       - svoyak_postgres
+      - svoyak_session
     ports:
       - 2345:2345 # Remote debug
+
+  svoyak_session:
+    restart: always
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile-session
+    volumes:
+      - "../../configs:/application/configs"
+    depends_on:
+      - svoyak_postgres
+    ports:
+      - 2346:2345 # Remote debug
 
   svoyak_chat:
     restart: always
