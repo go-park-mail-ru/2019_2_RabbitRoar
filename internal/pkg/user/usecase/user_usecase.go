@@ -76,15 +76,11 @@ func (uc *userUseCase) prepareUsername(u *models.User) error {
 
 func (uc *userUseCase) Update(u, uUpdate models.User) (*models.User, error) {
 	if uUpdate.Password != "" {
-		u.Password = uUpdate.Password
+		u.Password = auth.HashPassword(uUpdate.Password)
 	}
 
 	if uUpdate.Username != "" {
 		u.Username = uUpdate.Username
-	}
-
-	if err := uc.prepare(&u); err != nil {
-		return nil, err
 	}
 
 	return &u, uc.repository.Update(u)
