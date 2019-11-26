@@ -63,8 +63,8 @@ func (gh *handler) list(ctx echo.Context) error {
 }
 
 func (gh *handler) create(ctx echo.Context) error {
-	var g models.Game
-	err := ctx.Bind(&g)
+	var receivedGame models.Game
+	err := ctx.Bind(&receivedGame)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusUnprocessableEntity,
@@ -73,13 +73,14 @@ func (gh *handler) create(ctx echo.Context) error {
 		}
 	}
 
-	if g.PlayersCapacity > viper.GetInt("internal.players_cap_limit") {
+	if receivedGame.PlayersCapacity > viper.GetInt("internal.players_cap_limit") {
 		return echo.NewHTTPError(http.StatusBadRequest, "players capacity is too big")
 	}
 
-	creatorID := ctx.Get("user").(*models.User).ID
+	creator := ctx.Get("user").(*models.User)
 
-	if err := gh.usecase.Create(&g, creatorID); err != nil {
+	g, err := gh.usecase.Create(&receivedGame, creator)
+	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "unable to create a game",
@@ -87,7 +88,7 @@ func (gh *handler) create(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusCreated, g)
+	return ctx.JSON(http.StatusCreated, *g)
 }
 
 func (gh *handler) join(ctx echo.Context) error {
@@ -103,7 +104,7 @@ func (gh *handler) join(ctx echo.Context) error {
 	u := ctx.Get("user").(*models.User)
 
 	var g *models.Game
-	if g, err = gh.usecase.JoinPlayerToGame(*u, gameID); err != nil {
+	if g, err = gh.usecase.JoinPlayerToGame(u, gameID); err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,
 			Message:  "error joining the game",

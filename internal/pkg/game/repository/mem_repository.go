@@ -19,13 +19,13 @@ func NewMemGameRepository() game.Repository {
 	}
 }
 
-func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, hostID int) error {
-	if _, exists := repo.userGame[hostID]; exists {
-		return errors.New("user is already playing")
+func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, host *models.User) (*models.Game, error) {
+	if _, exists := repo.userGame[host.ID]; exists {
+		return nil, errors.New("user is already playing")
 	}
 
 	if _, exists := repo.games[g.UUID]; exists {
-		return errors.New("game already exists")
+		return nil, errors.New("game already exists")
 	}
 
 	repo.games[g.UUID] = &game.Game{
@@ -36,9 +36,11 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 		Started: false,
 	}
 
-	go repo.games[g.UUID].Run()
+	defer func(){
+		go repo.games[g.UUID].Run()
+	}()
 
-	return nil
+	return repo.JoinPlayer(host, g.UUID)
 }
 
 func (repo *memGameRepository) Fetch(pageSize int, page int) (*[]models.Game, error) {
@@ -75,7 +77,7 @@ func (repo *memGameRepository) GetGameIDByUserID(userID int) (uuid.UUID, error) 
 	return repo.userGame[userID], nil
 }
 
-func (repo *memGameRepository) JoinPlayer(u models.User, gameID uuid.UUID) (*models.Game, error) {
+func (repo *memGameRepository) JoinPlayer(u *models.User, gameID uuid.UUID) (*models.Game, error) {
 	if _, exists := repo.games[gameID]; !exists {
 		return nil, errors.New("no game found")
 	}

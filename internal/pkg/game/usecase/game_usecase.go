@@ -28,10 +28,10 @@ func NewGameUseCase(
 	}
 }
 
-func (uc *gameUseCase) Create(g *models.Game, userID int) error {
+func (uc *gameUseCase) Create(g *models.Game, u *models.User) (*models.Game, error) {
 	newUUID, err := uuid.NewUUID()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	g.UUID = newUUID
@@ -39,21 +39,21 @@ func (uc *gameUseCase) Create(g *models.Game, userID int) error {
 
 	p, err := uc.packRepo.GetByID(g.PackID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	uc.packSanitizer.Sanitize(p)
 
 	g.PackName = p.Name
 
-	return uc.gameMemRepo.Create(g, p.Questions, userID)
+	return uc.gameMemRepo.Create(g, p.Questions, u)
 }
 
 func (uc *gameUseCase) Fetch(page int) (*[]models.Game, error) {
 	return uc.gameMemRepo.Fetch(viper.GetInt("internal.page_size"), page)
 }
 
-func (uc *gameUseCase) JoinPlayerToGame(u models.User, gameID uuid.UUID) (*models.Game, error) {
+func (uc *gameUseCase) JoinPlayerToGame(u *models.User, gameID uuid.UUID) (*models.Game, error) {
 	return uc.gameMemRepo.JoinPlayer(u, gameID)
 }
 
