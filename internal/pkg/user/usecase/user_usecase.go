@@ -74,7 +74,12 @@ func (uc *userUseCase) prepareUsername(u *models.User) error {
 	return nil
 }
 
-func (uc *userUseCase) Update(u, uUpdate models.User) (*models.User, error) {
+func (uc *userUseCase) Update(userID int, uUpdate models.User) (*models.User, error) {
+	u, err := uc.repository.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
 	if uUpdate.Password != "" {
 		u.Password = auth.HashPassword(uUpdate.Password)
 	}
@@ -83,7 +88,7 @@ func (uc *userUseCase) Update(u, uUpdate models.User) (*models.User, error) {
 		u.Username = uUpdate.Username
 	}
 
-	return &u, uc.repository.Update(u)
+	return u, uc.repository.Update(*u)
 }
 
 func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error) {
