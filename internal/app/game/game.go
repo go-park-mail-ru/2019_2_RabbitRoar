@@ -1,10 +1,9 @@
-package server
+package game
 
 import (
 	"database/sql"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
-	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
@@ -16,28 +15,22 @@ import (
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_packHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/delivery/http"
 	_packRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/repository"
-	_packUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/usecase"
 	_sentry "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sentry"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
-	_userHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/delivery/http"
-	_userRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/repository"
-	_userUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/usecase"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
-	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/grpc"
-	"io/ioutil"
 )
 
-var log = logging.MustGetLogger("server")
+var log = logging.MustGetLogger("game")
 
 func Start() {
-	log.Info("Staring service.")
+	log.Info("Staring game service.")
 
 	_sentry.InitSentry()
 
@@ -111,22 +104,10 @@ func Start() {
 	}
 	defer grpcConn.Close()
 
-	userRepo := _userRepository.NewSqlUserRepository(db)
-	userUseCase := _userUseCase.NewUserUseCase(userRepo)
-
 	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
-	schemaBytes, err := ioutil.ReadFile(viper.GetString("server.schema.pack"))
-	if err != nil {
-		log.Fatal("error reading schema for pack", err)
-	}
-	packSchema, err := gojsonschema.NewSchema(gojsonschema.NewBytesLoader(schemaBytes))
-	if err != nil {
-		log.Fatal("error parsing schema for pack", err)
-	}
 	packRepo := _packRepository.NewSqlPackRepository(db)
-	packUseCase := _packUseCase.NewUserUseCase(packRepo)
 	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
 	gameMemRepo := _gameRepository.NewMemGameRepository()
@@ -136,11 +117,8 @@ func Start() {
 
 	csrfMiddleware := _middleware.NewCSRFMiddleware(csrfJWTToken)
 
-	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
-	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, csrfJWTToken, authMiddleware)
 	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
-	_packHttp.NewPackHandler(e, packUseCase, userUseCase,  sessionUseCase, authMiddleware, csrfMiddleware, packSchema)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
 }
