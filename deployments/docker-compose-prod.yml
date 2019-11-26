@@ -48,7 +48,7 @@ services:
       - "../../configs:/application/configs"
     depends_on:
       - svoyak_postgres
-    - svoyak_session
+      - svoyak_session
 
   svoyak_postgres:
     image: postgres:12.0
