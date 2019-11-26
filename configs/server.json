@@ -28,6 +28,10 @@
     },
     "session": {
       "host": "localhost:8082"
+    },
+    "metrics": {
+      "address": "0.0.0.0:8080",
+      "path": "/metrics"
     }
   },
 

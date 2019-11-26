@@ -2,15 +2,18 @@ package middleware
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/op/go-logging"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
+	"github.com/spf13/viper"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 func NewMetricsMiddleware() echo.MiddlewareFunc {
+	var log = logging.MustGetLogger("metrics")
+
 	requestDurationSummary := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: "svoyak",
@@ -32,9 +35,9 @@ func NewMetricsMiddleware() echo.MiddlewareFunc {
 		requestStatusCounter,
 	)
 
-	http.Handle("/metrics", promhttp.Handler())
+	http.Handle(viper.GetString("server.metrics.path"), promhttp.Handler())
 	go func() {
-		log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+		log.Error(http.ListenAndServe(viper.GetString("server.metrics.address"), nil))
 	}()
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

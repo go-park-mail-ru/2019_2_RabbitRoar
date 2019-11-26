@@ -3,10 +3,6 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"github.com/microcosm-cc/bluemonday"
-	"google.golang.org/grpc"
-	"io/ioutil"
-
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_authHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/auth/delivery/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
@@ -30,9 +26,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
+	"google.golang.org/grpc"
+	"io/ioutil"
 )
 
 var log = logging.MustGetLogger("server")
