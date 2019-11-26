@@ -55,8 +55,9 @@ func scanPackRow(row *sql.Row) (*models.Pack, error) {
 func (repo *sqlPackRepository) Create(pack *models.Pack) error {
 	pPack, err := json.Marshal(pack.Questions)
 	if err != nil {
-		return nil
+		return err
 	}
+
 	idRow := repo.db.QueryRow(
 		`
 			INSERT INTO "svoyak"."Pack" (id, name, description, rating, author, tags, pack)
@@ -69,6 +70,11 @@ func (repo *sqlPackRepository) Create(pack *models.Pack) error {
 }
 
 func (repo *sqlPackRepository) Update(pack *models.Pack) error {
+	pPack, err := json.Marshal(pack.Questions)
+	if err != nil {
+		return err
+	}
+
 	res, err := repo.db.Exec(
 		`
 			UPDATE "svoyak"."Pack"
@@ -79,10 +85,10 @@ func (repo *sqlPackRepository) Update(pack *models.Pack) error {
     			tags        = $5::varchar,
     			pack        = $6::json
 			WHERE id = $7::integer;
-		`, pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags,pack.Questions, pack.ID,
+		`, pack.Name, pack.Description, pack.Rating, pack.Author, pack.Tags, pPack, pack.ID,
 	)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	c, err := res.RowsAffected()
