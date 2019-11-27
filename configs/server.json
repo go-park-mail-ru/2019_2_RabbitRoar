@@ -1,0 +1,62 @@
+{
+  "logger": {
+    "level": "DEBUG",
+    "file": "/tmp/logs/server.log"
+  },
+
+  "server": {
+    "address": "0.0.0.0:3000",
+    "CORS": {
+      "allowed_hosts": [
+        "http://localhost",
+        "http://localhost:8080",
+        "http://frontend.photocouple.space",
+        "https://localhost",
+        "https://localhost:8080",
+        "https://svoyak.fun",
+        "https://frontend.photocouple.space"
+      ]
+    },
+    "static": {
+      "avatar_prefix": "/uploads/avatar/"
+    },
+    "CSRF": {
+      "secret" : "top_secret_csrf_goes_here"
+    },
+    "schema": {
+      "pack": "internal/pkg/pack/pack_schema.json"
+    },
+    "session": {
+      "host": "localhost:8082"
+    },
+    "metrics": {
+      "address": "0.0.0.0:8080",
+      "path": "/metrics"
+    }
+  },
+
+  "chat" : {
+    "address": "0.0.0.0:3000"
+  },
+
+  "session": {
+    "address": "0.0.0.0:8082"
+  },
+
+  "sentry": {
+    "DSN": "sentry_DSN_goes_here"
+  },
+
+  "database": {
+    "host": "localhost",
+    "port": "5432",
+    "user": "svoyak",
+    "pass": "top_secret_goes_here",
+    "db": "svoyak"
+  },
+
+  "internal": {
+    "page_size": 20,
+    "players_cap_limit": 6
+  }
+}

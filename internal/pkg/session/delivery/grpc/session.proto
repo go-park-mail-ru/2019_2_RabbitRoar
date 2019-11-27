@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package session;
+
+message SessionID {
+    string ID = 1;
+}
+
+message User {
+    int32 ID = 1;
+    string username = 2;
+    string email = 3;
+    int32 rating = 4;
+    string avatar = 5;
+}
+
+message Session {
+  string SessionID = 1;
+  User user = 2;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+service SessionService {
+    rpc Create (User) returns (SessionID) {}
+    rpc Delete (SessionID) returns (Nothing) {}
+    rpc GetByID (SessionID) returns (Session) {}
+}

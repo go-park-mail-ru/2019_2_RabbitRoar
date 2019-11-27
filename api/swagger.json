@@ -1,0 +1,789 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1",
+    "title": "Svoyak game project API",
+    "description": "Some day there will be some info..."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/",
+      "description": "Development server"
+    },
+    {
+      "url": "http://svoyak.fun/api",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "login endpoint",
+        "description": "Sets SessionID cookie.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password"
+                  ],
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorised"
+          }
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "sign up endpoint",
+        "description": "SignUp user also sets SessionID cookie.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password",
+                    "email"
+                  ],
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Validation error occurs."
+          },
+          "422": {
+            "description": "Can not parse json. Or fields missing."
+          }
+        }
+      }
+    },
+    "/logout": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "logout endpoint",
+        "description": "removes session associated with SessionID in cookie.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/csrf": {
+      "get": {
+        "tags": [
+          "csrf"
+        ],
+        "summary": "get CSRF Token associated with session",
+        "description": "Should be sent with all forms in X-CSRF-Token Header",
+        "responses": {
+          "200": {
+            "description": "CSRF Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csrf": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "self profile detail view",
+        "description": "Returns JSON object with profile preferences.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "profile edit view",
+        "description": "Accepts JSON object with fields that should be updated.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user fields to update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "password"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error"
+          },
+          "401": {
+            "description": "Unauthorised"
+          }
+        }
+      }
+    },
+    "/user/avatar": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "upload user avatar",
+        "responses": {
+          "200": {
+            "description": "OK."
+          },
+          "400": {
+            "description": "Validation error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorised"
+          }
+        }
+      }
+    },
+    "/user/{id}": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "profile detail view",
+        "description": "Returns JSON object with profile preferences.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Get user object by UID.",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/user/leaderboard": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "leader board list view",
+        "parameters": [
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pack": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "packs list view",
+        "description": "Sorted by rating by default.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "description": "page to display",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackListView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "create view",
+        "operationId": "",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pack create",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackCreate"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "created"
+          }
+        }
+      }
+    },
+    "/pack/author": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "packs list view",
+        "description": "Sorted by rating by default.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Should be one of [rating]",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackListView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pack/{id}": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack detail view, available only if have played that pack",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pack"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack update view, available only if created that pack",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pack update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackCreate"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pack"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "pack delete view",
+        "operationId": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          }
+        }
+      }
+    },
+    "/pack/offline/public": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "description": "list of public offline packs",
+        "summary": "offline packs",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pack/offline": {
+      "get": {
+        "tags": [
+          "pack"
+        ],
+        "summary": "list of offline packs available for user",
+        "responses": {
+          "200": {
+            "description": "pack ids available for offline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "game list view",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "description": "page to display",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameListView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "game"
+        ],
+        "summary": "game create view",
+        "operationId": "",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "game create",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameCreateView"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "created"
+          }
+        }
+      }
+    },
+    "/game/{UUID}/join": {
+      "post": {
+        "tags": [
+          "game"
+        ],
+        "summary": "join game",
+        "parameters": [
+        ],
+        "responses": {
+          "200": {
+            "description": "room successfully joined"
+          }
+        }
+      }
+    },
+    "/game/ws": {
+      "get": {
+        "tags": [
+          "game"
+        ],
+        "summary": "open websocket with game",
+        "responses": {
+          "101": {
+            "description": "upgrade"
+          }
+        }
+      }
+    },
+    "/game/leave": {
+      "delete": {
+        "tags": [
+          "game"
+        ],
+        "summary": "leave current room",
+        "responses": {
+          "200": {
+            "description": "successfully leaved"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "avatar_url": {
+            "type": "string"
+          }
+        }
+      },
+      "GameCreateView": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "playersCapacity": {
+            "type": "integer"
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "pack": {
+            "type": "integer"
+          }
+        }
+      },
+      "GameListView": {
+        "type": "object",
+        "properties": {
+          "UUID": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "joined": {
+            "type": "integer"
+          },
+          "packName": {
+            "type": "string"
+          },
+          "packID": {
+            "type": "integer"
+          }
+        }
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          }
+        }
+      },
+      "Theme": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "minLength": 5,
+            "maxLength": 5,
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+      "PackCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "pack": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/components/schemas/Theme"
+            }
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+      "Pack": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pack": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/components/schemas/Theme"
+            }
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      },
+      "PackListView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "author": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
