@@ -10,7 +10,7 @@ type UseCase interface {
 	GetByName(name string) (*models.User, error)
 	Create(user models.User) (*models.User, error)
 	Update(userID int, uUpdate models.User) (*models.User, error)
-	UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error)
+	UpdateAvatar(userID int, file *multipart.FileHeader) (*models.User, error)
 	IsPasswordCorrect(models.User) (*models.User, bool)
 	Sanitize(models.User) models.User
 	FetchLeaderBoard(page, pageSize int) ([]models.User, error)
