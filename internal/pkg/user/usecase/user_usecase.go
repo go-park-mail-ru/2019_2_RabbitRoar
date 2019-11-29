@@ -112,7 +112,6 @@ func (uc *userUseCase) UpdateAvatar(userID int, file *multipart.FileHeader) (*mo
 
 	filename := uuid.New().String() + "." + ext
 
-	// Move to config
 	filePath := filepath.Join(
 		viper.GetString("server.static.avatar_prefix"),
 		filename,

@@ -9,3 +9,6 @@ cover.out
 
 # Ignore easyjson generated files
 *_easyjson.go
+
+# Ignore protobuf files
+*.pb.go
