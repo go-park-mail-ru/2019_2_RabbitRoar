@@ -13,6 +13,7 @@ services:
     depends_on:
       - postgres
       - session
+      - consul
     ports:
       - 2345:2345 # Remote debug
     networks:
@@ -27,6 +28,7 @@ services:
       - "../configs/server_local.json:/application/configs/configs/server.json"
     depends_on:
       - postgres
+      - consul
     ports:
       - 2346:2345 # Remote debug
     networks:
@@ -42,6 +44,7 @@ services:
     depends_on:
       - postgres
       - session
+      - consul
     networks:
       - app
 
@@ -55,6 +58,7 @@ services:
     depends_on:
       - postgres
       - session
+      - consul
     networks:
       - app
 
@@ -69,6 +73,8 @@ services:
       - "../../data/postgres:/var/lib/postgresql/data"
     ports:
       - 5432:5432
+    depends_on:
+      - consul
     networks:
       - app
 
@@ -95,6 +101,13 @@ services:
       - 3000:3000
     networks:
       - app
+
+  consul:
+    image: consul:latest
+    restart: always
+    ports:
+      - 8500:8500
+      - 8600:8600
 
 networks:
   app:
