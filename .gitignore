@@ -11,4 +11,5 @@ cover.out
 *_easyjson.go
 
 # Ignore protobuf files
-*.pb.go
+#
+# *.pb.go
