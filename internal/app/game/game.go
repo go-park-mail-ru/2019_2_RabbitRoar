@@ -2,6 +2,7 @@ package game
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
@@ -15,6 +16,7 @@ import (
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
 	_packHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/delivery/http"
 	_packRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack/repository"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sd"
 	_sentry "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sentry"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
@@ -27,9 +29,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+
+
 var log = logging.MustGetLogger("game")
 
 func Start() {
+	gameLimiter := sd.GameLimiter{}
+	if err := gameLimiter.Init(); err != nil {
+		log.Fatal("error consul error: ", err)
+	}
+
 	log.Info("Staring game service.")
 
 	_sentry.InitSentry()
@@ -111,7 +120,7 @@ func Start() {
 	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
 	gameMemRepo := _gameRepository.NewMemGameRepository()
-	gameUseCase := _gameUseCase.NewGameUseCase(gameMemRepo, packRepo, packSanitizer)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameMemRepo, packRepo, packSanitizer, &gameLimiter)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 

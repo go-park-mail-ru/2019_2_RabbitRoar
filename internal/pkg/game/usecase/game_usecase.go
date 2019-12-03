@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/connection"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sd"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
@@ -14,21 +15,28 @@ type gameUseCase struct {
 	gameMemRepo game.Repository
 	packRepo    pack.Repository
 	packSanitizer   pack.Sanitizer
+	gameLimiter	*sd.GameLimiter
 }
 
 func NewGameUseCase(
 	gameMemRepo game.Repository,
 	packRepo pack.Repository,
 	packSanitizer pack.Sanitizer,
+	gameLimiter *sd.GameLimiter,
 ) game.UseCase {
 	return &gameUseCase{
 		gameMemRepo:   gameMemRepo,
 		packRepo:      packRepo,
 		packSanitizer: packSanitizer,
+		gameLimiter: gameLimiter,
 	}
 }
 
 func (uc *gameUseCase) Create(g *models.Game, u *models.User) (*models.Game, error) {
+	if (uc.gameLimiter.GetMaxGames() < CURRENT_GAMES) {
+		return nil, err;
+	}
+
 	newUUID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
