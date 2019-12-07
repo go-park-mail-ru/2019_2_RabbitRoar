@@ -23,4 +23,4 @@ COPY --from=builder /application/session .
 
 EXPOSE 3000
 
-CMD ['./session']
+CMD ['ls && pwd && ls ../']
