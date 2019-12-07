@@ -75,7 +75,7 @@ func (uh *handler) avatar(ctx echo.Context) error {
 
 	u := ctx.Get("user").(*models.User)
 
-	u, err = uh.useCase.UpdateAvatar(*u, file)
+	u, err = uh.useCase.UpdateAvatar(u.ID, file)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:     http.StatusBadRequest,

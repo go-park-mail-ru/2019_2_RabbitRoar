@@ -91,7 +91,12 @@ func (uc *userUseCase) Update(userID int, uUpdate models.User) (*models.User, er
 	return u, uc.repository.Update(*u)
 }
 
-func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (*models.User, error) {
+func (uc *userUseCase) UpdateAvatar(userID int, file *multipart.FileHeader) (*models.User, error) {
+	u, err := uc.repository.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
 	src, err := file.Open()
 	if err != nil {
 		log.Error(err)
@@ -107,11 +112,8 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 
 	filename := uuid.New().String() + "." + ext
 
-	// Move to config
 	filePath := filepath.Join(
-		"data",
-		"uploads",
-		"avatar",
+		viper.GetString("server.static.avatar_path"),
 		filename,
 	)
 
@@ -130,7 +132,7 @@ func (uc *userUseCase) UpdateAvatar(u models.User, file *multipart.FileHeader) (
 	url := viper.GetString("server.static.avatar_prefix") + filename
 	u.AvatarUrl = url
 
-	return &u, uc.repository.Update(u)
+	return u, uc.repository.Update(*u)
 }
 
 func checkFileContentType(file multipart.File) (bool, string) {
