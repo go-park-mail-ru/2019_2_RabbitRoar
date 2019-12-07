@@ -20,6 +20,7 @@ FROM alpine
 WORKDIR /application
 
 COPY --from=builder /application/server .
+COPY --from=builder /application/internal/pkg/pack/pack_schema.json .
 
 EXPOSE 3000
 
