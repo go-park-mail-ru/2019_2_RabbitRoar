@@ -43,6 +43,8 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 func (s *PendQuestionChoose) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendQuestionChosen: got event: ", ew)
 
+	var nextState State
+
 	select {
 	case t := <-s.stopTimer.C:
 		s.Game.logger.Info("PendQuestionChosen: pending time exceeded: ", t.String())
@@ -50,17 +52,12 @@ func (s *PendQuestionChoose) Handle(ew EventWrapper) State {
 		themeIdx, questionIdx, err := s.Game.Questions.GetRandAvailableQuestionIndexes()
 		if err != nil {
 			s.Game.logger.Info(err)
-			// TODO: Must switch to game ended state
 			return nil
 		}
 
 		s.Ctx.ThemeIdx = themeIdx
 		s.Ctx.QuestionIdx = questionIdx
-		nextState := NewPendRespondentState(s.Game, s.Ctx)
-
-		s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
-
-		return nextState
+		nextState = NewPendRespondentState(s.Game, s.Ctx)
 
 	default:
 		if err := s.validateEvent(ew); err != nil {
@@ -75,12 +72,11 @@ func (s *PendQuestionChoose) Handle(ew EventWrapper) State {
 
 		s.Ctx.ThemeIdx = themeIdx
 		s.Ctx.QuestionIdx = questionIdx
-		nextState := NewPendRespondentState(s.Game, s.Ctx)
-
-		s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
-
-		return nextState
+		nextState = NewPendRespondentState(s.Game, s.Ctx)
 	}
+
+	s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
+	return nextState
 }
 
 

@@ -73,8 +73,11 @@ func (gh *handler) create(ctx echo.Context) error {
 		}
 	}
 
-	if receivedGame.PlayersCapacity > viper.GetInt("internal.players_cap_limit") {
-		return echo.NewHTTPError(http.StatusBadRequest, "players capacity is too big")
+	playersCapMin := viper.GetInt("internal.players_cap_min")
+	playersCapMax := viper.GetInt("internal.players_cap_max")
+	if receivedGame.PlayersCapacity < playersCapMin || receivedGame.PlayersCapacity > playersCapMax {
+		return echo.NewHTTPError(http.StatusBadRequest, "unexpected players capacity, expected between %d and %d",
+			)
 	}
 
 	creator := ctx.Get("user").(*models.User)
