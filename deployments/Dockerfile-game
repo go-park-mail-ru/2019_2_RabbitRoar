@@ -23,4 +23,4 @@ COPY --from=builder /application/game .
 
 EXPOSE 3000
 
-CMD ['./game']
+CMD ["./game"]
