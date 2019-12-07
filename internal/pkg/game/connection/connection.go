@@ -2,6 +2,7 @@ package connection
 
 import (
 	"encoding/json"
+	"github.com/spf13/viper"
 	"sync"
 	"time"
 
@@ -63,6 +64,7 @@ func (conn *gameConnection) RunReceive(senderID int) {
 		select {
 		case <- conn.stop:
 			return
+
 		default:
 			mt, msg, err := conn.ws.ReadMessage()
 			if err != nil {
@@ -101,7 +103,9 @@ func (conn *gameConnection) RunSend() {
 		conn.running = false
 	}()
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(
+		viper.GetDuration("internal.ping_delay") * time.Second,
+	)
 
 	log.Info("Starting send goroutine for user")
 

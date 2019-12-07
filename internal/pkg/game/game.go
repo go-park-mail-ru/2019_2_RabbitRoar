@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
+	"math/rand"
 )
 
 type Player struct {
@@ -16,7 +17,7 @@ type Game struct {
 	Players   []Player
 	State     State
 	Model     models.Game
-	Questions interface{}
+	Questions *QuestionTable
 	EvChan    chan EventWrapper
 	Started   bool
 	logger    logging.Logger
@@ -38,11 +39,7 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 	}()
 
 	g.logger.Info("Starting game loop.")
-	g.State = &PendPlayers{
-		BaseState: BaseState{
-			Game: g,
-		},
-	}
+	g.State = NewPendPlayersState(g)
 
 	for {
 		if len(g.Players) == 0 {
@@ -64,12 +61,12 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 				Payload: UserConnectedPayload{
 					RoomName: g.Model.Name,
 					PackName: g.Model.PackName,
+					Host:     g.Host.Info,
 					Players:  allPlayersInfo,
 				},
 			}
 
 			g.BroadcastEvent(noticeEvent)
-
 			continue
 		}
 
@@ -80,6 +77,12 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 	}
 }
 
+func (g *Game) Notify(e Event, player *Player) {
+	if player.Conn.IsRunning(){
+		player.Conn.GetSendChan() <- e
+	}
+}
+
 func (g *Game) BroadcastEvent(e Event) {
 	for _, p := range g.Players {
 		if !p.Conn.IsRunning() {
@@ -87,4 +90,29 @@ func (g *Game) BroadcastEvent(e Event) {
 		}
 		p.Conn.GetSendChan() <- e
 	}
+}
+
+func (g *Game) GetRandPlayerID() int {
+	playerID := g.Host.Info.ID
+
+	for playerID == g.Host.Info.ID {
+		randIdx := rand.Int() % len(g.Players)
+		playerID = g.Players[randIdx].Info.ID
+	}
+
+	return playerID
+}
+
+func (g *Game) GetNextPlayerID(prevPlayerID int) int {
+	playerID := (prevPlayerID + 1) % len(g.Players)
+
+	for playerID == g.Host.Info.ID {
+		playerID = (playerID + 1) % len(g.Players)
+	}
+
+	return playerID
+}
+
+func (g *Game) UpdatePlayerScore(playerID, score int) {
+	g.Players[playerID].Info.Score += score
 }

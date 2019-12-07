@@ -3,24 +3,73 @@ package game
 type EventType string
 
 const (
+	// on websocket opening or closure
+	// only for backend
 	WsUpdated         EventType = "ws_run"
+
+	// on user manually leaving the game via event
+	// only for backend
 	PlayerLeft        EventType = "player_left"
+
+	// backend responding with this after ws connection status is changed
+	// backend -> frontend
 	UserConnected     EventType = "user_connected"
-	GameStart         EventType = "start_game"
-	RequestQuestion   EventType = "request_question_from_player"
-	QuestionChosen    EventType = "question_chosen"
-	RequestRespondent EventType = "request_respondent"
-	RespondentReady   EventType = "respondent_ready"
-	RequestAnswer     EventType = "request_answer_from_respondent"
-	AnswerGiven       EventType = "respondent_answer_given"
-	AnswerGivenBack   EventType = "answer_given_back"
-	RequestVerdict    EventType = "request_verdict_from_host"
-	VerdictCorrect    EventType = "verdict_correct"
-	VerdictWrong      EventType = "verdict_wrong"
-	VerdictGivenBack  EventType = "verdict_given_back"
-	GameEnded         EventType = "game_ended"
+
+	// frontend notifies backend with this after a player is ready to start the game
+	// frontend -> backend
 	PlayerReadyFront  EventType = "player_ready_front"
+
+	// backend notifies all players with this after a player readiness status is changed
+	// backend -> frontend
 	PlayerReadyBack   EventType = "player_ready_back"
+
+	// backend notifies all players that the game is started after all players are ready
+	// backend -> frontend
+	GameStart         EventType = "start_game"
+
+	// backend requests a question indexes from specific player and notifies all players of it
+	// backend -> frontend
+	RequestQuestion   EventType = "request_question_from_player"
+
+	// frontend responses with a question indexes chosen by specific player
+	// frontend -> backend
+	QuestionChosen    EventType = "question_chosen"
+
+	// backend notifies all players that respondent for the chosen question is required.
+	// backend -> frontend
+	RequestRespondent EventType = "request_respondent"
+
+	// frontend notifies backend that a player is ready to answer a question.
+	// frontend -> backend
+	RespondentReady   EventType = "respondent_ready"
+
+	// backend notifies all players that an answer for chosen question is required from specific player
+	// backend -> frontend
+	RequestAnswer     EventType = "request_answer_from_respondent"
+
+	// frontend notifies backend with answer given by specific player
+	// frontend -> backend
+	AnswerGiven       EventType = "respondent_answer_given"
+
+	// backend notifies all players of given answer with this
+	// backend -> frontend
+	AnswerGivenBack   EventType = "answer_given_back"
+
+	// backend notifies host of correct answer and pends for verdict on given answer from host
+	// backend -> frontend
+	RequestVerdict    EventType = "request_verdict_from_host"
+
+	// Host notifies backend that given answer is correct
+	// frontend -> backend
+	VerdictCorrect    EventType = "verdict_correct"
+
+	// Host notifies backend that given answer is incorrect
+	// frontend -> backend
+	VerdictWrong      EventType = "verdict_wrong"
+
+	VerdictGivenBack  EventType = "verdict_given_back"
+
+	GameEnded         EventType = "game_ended"
 )
 
 type Event struct {
@@ -28,66 +77,59 @@ type Event struct {
 	Payload interface{} `json:"payload"`
 }
 
-type PlayerReadyBackPayload struct {
-	Players []PlayerInfo `json:"players"`
-}
-
-type RequestQuestionPayload struct {
-	PlayerID int `json:"player_id"`
-}
-
-type RequestAnswerPayload struct {
-	PlayerID int `json:"player_id"`
-}
-
-type AnswerGivenPayload struct {
-	Answer string `json:"answer"`
-}
-
-type AnswerGivenBackPayload struct {
-	PlayerAnswer string `json:"player_answer"`
-	PlayerID     int    `json:"player_id"`
-}
-
-type RequestVerdictPayload struct {
-	HostID int    `json:"host_id"`
-	Answer string `json:"answer"`
-}
-
-type RequestRespondentPayload struct {
-	Question   string `json:"question"`
-	ThemeID    int    `json:"theme_id"`
-	QuestionID int    `json:"question_id"`
+type EventWrapper struct {
+	SenderID int
+	Event    *Event
 }
 
 type UserConnectedPayload struct {
 	RoomName string       `json:"room_name"`
 	PackName string       `json:"pack_name"`
+	Host     PlayerInfo   `json:"host"`
 	Players  []PlayerInfo `json:"players"`
+}
+
+type PlayerReadyBackPayload struct {
+	Players []PlayerInfo `json:"players"`
 }
 
 type GameStartPayload struct {
 	Themes [5]string `json:"themes"`
 }
 
-type RequestFromPlayerPayload struct {
-	PlayerID int `json:"player_id"`
+type RequestQuestionPayload struct {
+	QuestionSelectorID int `json:"player_id"`
 }
 
-type QuestionChosenPayload struct {
-	ThemeIdx    int `json:"theme_idx"`
-	QuestionIdx int `json:"question_idx"`
+//type QuestionChosenPayload struct {
+//	ThemeIdx    int `json:"theme_idx"`
+//	QuestionIdx int `json:"question_idx"`
+//}
+
+type RequestRespondentPayload struct {
+	Question    string `json:"question"`
+	ThemeIdx    int    `json:"theme_id"`
+	QuestionIdx int    `json:"question_id"`
 }
 
-type AnswerPayload struct {
-	Answer string `json:"answer"`
+type RequestAnswerPayload struct {
+	RespondentID int `json:"player_id"`
 }
 
-type VerictPayload struct {
-	Verdict bool `json:"verdict"`
+//type AnswerGivenPayload struct {
+//	Answer string `json:"answer"`
+//}
+
+type AnswerGivenBackPayload struct {
+	PlayerAnswer string `json:"player_answer"`
+	RespondentID int    `json:"player_id"`
 }
 
-type EventWrapper struct {
-	SenderID int
-	Event    *Event
+type RequestVerdictPayload struct {
+	CorrectAnswer string `json:"answer"`
+}
+
+type VerdictPayload struct {
+	Verdict       bool   `json:"verdict"`
+	CorrectAnswer string `json:"answer"`
 }

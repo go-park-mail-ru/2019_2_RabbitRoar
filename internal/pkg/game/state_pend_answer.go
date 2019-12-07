@@ -1,101 +1,113 @@
 package game
 
-import "math/rand"
+import (
+	"errors"
+	"fmt"
+	"github.com/spf13/viper"
+	"time"
+)
 
 type PendAnswer struct {
 	BaseState
-	PlayerID   int
-	ThemeID    int
-	QuestionID int
+	stopTimer  *time.Timer
 }
 
-func (s *PendAnswer) getAnswer(themeID, questionID int) string {
-	themeSlice := s.Game.Questions.([]interface{})
+func NewPendAnswerState(g *Game, ctx *StateContext) State {
+	e := Event{
+		Type:    RequestAnswer,
+		Payload: RequestAnswerPayload{
+			RespondentID: ctx.RespondentID,
+		},
+	}
+	g.BroadcastEvent(e)
 
-	for themeidx, theme := range themeSlice {
-		theme := theme.(map[string]interface{})
-		if themeID == themeidx {
-			questionSlice := theme["questions"].([]interface{})
-			for questionidx, question := range questionSlice {
-				question := question.(map[string]interface{})
-				if questionidx == questionID {
-					return question["answer"].(string)
-				}
-			}
+	return &PendAnswer{
+		BaseState:  BaseState{
+			Game: g,
+			Ctx:  ctx,
+		},
+		stopTimer:  time.NewTimer(
+			viper.GetDuration("internal.pend_answer_duration") * time.Second,
+		),
+	}
+}
+
+func (s *PendAnswer) Handle(ew EventWrapper) State {
+	s.Game.logger.Info("PendAnswer: got event: ", ew)
+
+	select {
+	case t := <-s.stopTimer.C:
+		s.Game.logger.Info("PendAnswer: pending time exceeded: ", t.String())
+
+		nextState := NewPendRespondentState(s.Game, s.Ctx)
+		s.Game.logger.Info("PendAnswer: moving to the next state %v.", nextState)
+		return nextState
+
+	default:
+		if err := s.validateEvent(ew); err != nil {
+			s.Game.logger.Info(err)
+			return s
 		}
-	}
 
-	return ""
+		givenAnswer, err := s.getPlayerGivenAnswer(ew)
+		if err != nil {
+			s.Game.logger.Info(err)
+			return s
+		}
+
+		s.notifyAllPlayersOfGivenAnswer(givenAnswer, ew.SenderID)
+
+		nextState := NewPendVerdictState(s.Game, s.Ctx)
+		s.Game.logger.Info("PendAnswer: moving to the next state %v.", nextState)
+		return nextState
+	}
 }
 
-func (s *PendAnswer) Handle(e EventWrapper) State {
-	s.Game.logger.Info("PendAnswer: got event: ", e)
-
-	if e.Event.Type != AnswerGiven {
-		s.Game.logger.Info(
-			"PendAnswer: got unexpected event %s, expected %s. ",
-			e.Event.Type,
-			AnswerGiven,
+func (s *PendAnswer) validateEvent(ew EventWrapper) error {
+	if ew.SenderID != s.Ctx.RespondentID {
+		return errors.New(
+			fmt.Sprintf(
+				"PendAnswer: got event from unexpected player %d, expected %d. ",
+				ew.SenderID,
+				s.Ctx.RespondentID,
+			),
 		)
-		return s
 	}
 
-	payload, ok := e.Event.Payload.(map[string]interface{})
+	if ew.Event.Type != AnswerGiven {
+		return errors.New(
+			fmt.Sprintf(
+				"PendAnswer: got unexpected event %s, expected %s. ",
+				ew.Event.Type,
+				AnswerGiven,
+			),
+		)
+	}
+
+	return nil
+}
+
+func (s *PendAnswer) getPlayerGivenAnswer(ew EventWrapper) (string, error) {
+	payload, ok := ew.Event.Payload.(map[string]interface{})
 	if !ok {
-		s.Game.logger.Info("PendAnswer: invalid payload, keep state.")
-		return s
+		return "", errors.New("PendAnswer: invalid payload, keep state.")
 	}
 
 	playerAnswer, ok := payload["answer"].(string)
 	if !ok {
-		s.Game.logger.Info("PendAnswer: invalid payload answer, keep state.")
-		return s
+		return "", errors.New("PendAnswer: invalid payload answer, keep state.")
 	}
 
-	var ev Event
+	return playerAnswer, nil
+}
 
-	ev = Event{
+func (s *PendAnswer) notifyAllPlayersOfGivenAnswer(answer string, respondentID int) {
+	e := Event{
 		Type: AnswerGivenBack,
 		Payload: AnswerGivenBackPayload{
-			PlayerAnswer: playerAnswer,
-			PlayerID:     e.SenderID,
+			PlayerAnswer: answer,
+			RespondentID: respondentID,
 		},
 	}
-	s.Game.BroadcastEvent(ev)
-
-	answer := s.getAnswer(s.ThemeID, s.QuestionID)
-	ev = Event{
-		Type: RequestVerdict,
-		Payload: RequestVerdictPayload{
-			HostID: s.Game.Host.Info.ID,
-			Answer: answer,
-		},
-	}
-	s.Game.Host.Conn.GetSendChan() <- ev
-
-	nextState := &PendVerdict{
-		BaseState: BaseState{Game: s.Game},
-		PlayerID:  e.SenderID,
-	}
-
-	// MOCK BLOCK REMOVE ME
-	nextStateMock := &PendQuestionChoose{
-		BaseState: BaseState{Game: s.Game},
-	}
-
-	randIdx := rand.Int() % len(s.Game.Players)
-	nextStateMock.respondentID = s.Game.Players[randIdx].Info.ID
-
-	ev = Event{
-		Type: RequestQuestion,
-		Payload: RequestQuestionPayload{
-			PlayerID: nextStateMock.respondentID,
-		},
-	}
-	s.Game.BroadcastEvent(ev)
-	return nextStateMock
-	// MOCK BLOCK REMOVE ME
-
-	s.Game.logger.Info("PendAnswer: moving to the next state %v.", nextState)
-	return nextState
+	s.Game.BroadcastEvent(e)
 }
