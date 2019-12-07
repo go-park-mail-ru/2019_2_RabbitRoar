@@ -13,15 +13,11 @@ type PendQuestionChosenState struct {
 }
 
 func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
-	e := Event{
-		Type:    GameStart,
-		Payload: GameStartPayload{
-			Themes: g.Questions.GetThemes(),
-		},
+	if !g.Questions.IsAnyQuestionAvailable() {
+		return NewGameEndedState(g, ctx)
 	}
-	g.BroadcastEvent(e)
 
-	e = Event{
+	e := Event{
 		Type: RequestQuestion,
 		Payload: RequestQuestionPayload{
 			QuestionSelectorID: ctx.QuestionSelectorID,
@@ -50,10 +46,11 @@ func (s *PendQuestionChosenState) Handle(ew EventWrapper) State {
 	case t := <-s.stopTimer.C:
 		s.Game.logger.Info("PendQuestionChosen: pending time exceeded: ", t.String())
 
-		themeIdx, questionIdx, err := s.Game.Questions.GetRandAvailableQuestionIndexes()
+		themeIdx, questionIdx, err := s.Game.Questions.GetAnyAvailableQuestionIndexes()
 		if err != nil {
-			s.Game.logger.Info(err)
-			return nil
+			s.Game.logger.Info("PendQuestionChosen:", err)
+			nextState = NewGameEndedState(s.Game, s.Ctx)
+			break
 		}
 
 		s.Ctx.ThemeIdx = themeIdx
@@ -71,6 +68,13 @@ func (s *PendQuestionChosenState) Handle(ew EventWrapper) State {
 			s.Game.logger.Info("PendQuestionChosen:", err)
 			return s
 		}
+
+		if !s.Game.Questions.IsQuestionAvailable(themeIdx, questionIdx) {
+			s.Game.logger.Info("PendQuestionChosen: chosen question unavailable.")
+			return s
+		}
+
+		s.Game.Questions.SetQuestionUnavailable(themeIdx, questionIdx)
 
 		s.Ctx.ThemeIdx = themeIdx
 		s.Ctx.QuestionIdx = questionIdx

@@ -102,7 +102,8 @@ type GameStartPayload struct {
 }
 
 type RequestQuestionPayload struct {
-	QuestionSelectorID int `json:"player_id"`
+	QuestionSelectorID int        `json:"player_id"`
+	QuestionsStatus    [5][5]bool `json:"questions"`
 }
 
 //type QuestionChosenPayload struct {
@@ -136,4 +137,8 @@ type RequestVerdictPayload struct {
 type VerdictPayload struct {
 	Verdict       bool   `json:"verdict"`
 	CorrectAnswer string `json:"answer"`
+}
+
+type GameEndedPayload struct {
+	Players []PlayerInfo `json:"players"`
 }

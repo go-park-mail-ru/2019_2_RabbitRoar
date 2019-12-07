@@ -55,13 +55,12 @@ func (s *PendPlayersState) Handle(ew EventWrapper) State {
 			return s
 		}
 
-		s.Game.Started = true
+		s.startGame()
 
 		s.Ctx.QuestionSelectorID = s.Game.GetRandPlayerID()
 		nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
 
 		s.Game.logger.Info("PendPlayers: moving to the next state %v.", nextState)
-
 		return nextState
 	}
 }
@@ -104,4 +103,16 @@ func (s *PendPlayersState) updateReadyPlayers(ew EventWrapper) int {
 	}
 
 	return playersReady
+}
+
+func (s *PendPlayersState) startGame() {
+	s.Game.Started = true
+
+	e := Event{
+		Type:    GameStart,
+		Payload: GameStartPayload{
+			Themes: s.Game.Questions.GetThemes(),
+		},
+	}
+	s.Game.BroadcastEvent(e)
 }

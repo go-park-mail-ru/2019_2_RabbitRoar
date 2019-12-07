@@ -66,7 +66,7 @@ func (s *PendVerdictState) Handle(ew EventWrapper) State {
 			nextState = NewPendRespondentState(s.Game, s.Ctx)
 
 		default:
-			return nil
+			nextState = NewGameEndedState(s.Game, s.Ctx)
 		}
 	}
 

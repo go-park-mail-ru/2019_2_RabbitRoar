@@ -92,6 +92,16 @@ func (g *Game) BroadcastEvent(e Event) {
 	}
 }
 
+func (g *Game) GatherPlayersInfo() []PlayerInfo {
+	playersInfo := make([]PlayerInfo, 0, len(g.Players))
+
+	for _, pl := range g.Players {
+		playersInfo = append(playersInfo, pl.Info)
+	}
+
+	return playersInfo
+}
+
 func (g *Game) GetRandPlayerID() int {
 	playerID := g.Host.Info.ID
 

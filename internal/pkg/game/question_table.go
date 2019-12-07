@@ -1,15 +1,44 @@
 package game
 
-import "math/rand"
+import (
+	"errors"
+)
 
 type QuestionTable struct {
-	questions interface{}
+	questionsAvailable [5][5]bool
+	questions          interface{}
 }
 
 func NewQuestionTable(questions interface{}) *QuestionTable {
 	return &QuestionTable{
+		questionsAvailable: [5][5]bool{
+			{true, true, true, true, true},
+			{true, true, true, true, true},
+			{true, true, true, true, true},
+			{true, true, true, true, true},
+			{true, true, true, true, true},
+		},
 		questions:questions,
 	}
+}
+
+func (qt *QuestionTable) IsAnyQuestionAvailable() bool {
+	for _, qArr := range qt.questionsAvailable {
+		for _, q := range qArr {
+			if q {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (qt *QuestionTable) IsQuestionAvailable(themeIdx, questionIdx int) bool {
+	return qt.questionsAvailable[themeIdx][questionIdx]
+}
+
+func (qt *QuestionTable) SetQuestionUnavailable(themeIdx, questionIdx int) {
+	qt.questionsAvailable[themeIdx][questionIdx] = false
 }
 
 func (qt *QuestionTable) GetThemes() [5]string {
@@ -62,10 +91,14 @@ func (qt *QuestionTable) GetAnswer(themeIdx, questionIdx int) string {
 	return ""
 }
 
-// TODO: Must return available question. Err if no questions are available
-func (qt *QuestionTable) GetRandAvailableQuestionIndexes() (int, int, error) {
-	themeIdx := rand.Int() % 5
-	questionIdx := rand.Int() % 5
+func (qt *QuestionTable) GetAnyAvailableQuestionIndexes() (int, int, error) {
+	for themeIdx, qArr := range qt.questionsAvailable {
+		for questionIdx, q := range qArr {
+			if q {
+				return themeIdx, questionIdx, nil
+			}
+		}
+	}
 
-	return themeIdx, questionIdx, nil
+	return 0, 0, errors.New("no question is available")
 }
