@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PendAnswer struct {
+type PendAnswerState struct {
 	BaseState
 	stopTimer  *time.Timer
 }
@@ -21,7 +21,7 @@ func NewPendAnswerState(g *Game, ctx *StateContext) State {
 	}
 	g.BroadcastEvent(e)
 
-	return &PendAnswer{
+	return &PendAnswerState{
 		BaseState:  BaseState{
 			Game: g,
 			Ctx:  ctx,
@@ -32,7 +32,7 @@ func NewPendAnswerState(g *Game, ctx *StateContext) State {
 	}
 }
 
-func (s *PendAnswer) Handle(ew EventWrapper) State {
+func (s *PendAnswerState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendAnswer: got event: ", ew)
 
 	var nextState State
@@ -64,7 +64,7 @@ func (s *PendAnswer) Handle(ew EventWrapper) State {
 	return nextState
 }
 
-func (s *PendAnswer) validateEvent(ew EventWrapper) error {
+func (s *PendAnswerState) validateEvent(ew EventWrapper) error {
 	if ew.SenderID != s.Ctx.RespondentID {
 		return errors.New(
 			fmt.Sprintf(
@@ -88,7 +88,7 @@ func (s *PendAnswer) validateEvent(ew EventWrapper) error {
 	return nil
 }
 
-func (s *PendAnswer) getPlayerGivenAnswer(ew EventWrapper) (string, error) {
+func (s *PendAnswerState) getPlayerGivenAnswer(ew EventWrapper) (string, error) {
 	payload, ok := ew.Event.Payload.(map[string]interface{})
 	if !ok {
 		return "", errors.New("PendAnswer: invalid payload, keep state.")
@@ -102,7 +102,7 @@ func (s *PendAnswer) getPlayerGivenAnswer(ew EventWrapper) (string, error) {
 	return playerAnswer, nil
 }
 
-func (s *PendAnswer) notifyAllPlayersOfGivenAnswer(answer string, respondentID int) {
+func (s *PendAnswerState) notifyAllPlayersOfGivenAnswer(answer string, respondentID int) {
 	e := Event{
 		Type: AnswerGivenBack,
 		Payload: AnswerGivenBackPayload{

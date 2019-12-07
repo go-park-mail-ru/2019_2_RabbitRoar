@@ -67,8 +67,12 @@ const (
 	// frontend -> backend
 	VerdictWrong      EventType = "verdict_wrong"
 
+	// Backend notifies all players of given verdict and sends correct answer if the verdict if "Correct"
+	// backend -> frontend
 	VerdictGivenBack  EventType = "verdict_given_back"
 
+	// Backend notifies all players that the game is ended
+	// backend -> frontend
 	GameEnded         EventType = "game_ended"
 )
 

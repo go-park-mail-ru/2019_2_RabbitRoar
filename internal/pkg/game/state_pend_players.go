@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-type PendPlayers struct {
+type PendPlayersState struct {
 	BaseState
 	stopTimer *time.Timer
 }
 
 func NewPendPlayersState(g *Game) State {
-	return &PendPlayers{
+	return &PendPlayersState{
 		BaseState: BaseState{
 			Game: g,
 			Ctx: &StateContext{
@@ -29,7 +29,7 @@ func NewPendPlayersState(g *Game) State {
 	}
 }
 
-func (s *PendPlayers) Handle(ew EventWrapper) State {
+func (s *PendPlayersState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendPlayers: got event: ", ew)
 
 	select {
@@ -66,7 +66,7 @@ func (s *PendPlayers) Handle(ew EventWrapper) State {
 	}
 }
 
-func (s *PendPlayers) validateEvent(ew EventWrapper) error {
+func (s *PendPlayersState) validateEvent(ew EventWrapper) error {
 	if ew.Event.Type != PlayerReadyFront {
 		return errors.New(
 			fmt.Sprintf(
@@ -80,24 +80,18 @@ func (s *PendPlayers) validateEvent(ew EventWrapper) error {
 	return nil
 }
 
-func (s *PendPlayers) sendPlayersInfo() {
-	payload := PlayerReadyBackPayload{
-		Players: make([]PlayerInfo, 0, len(s.Game.Players)),
-	}
-
-	for _, pl := range s.Game.Players {
-		payload.Players = append(payload.Players, pl.Info)
-	}
-
+func (s *PendPlayersState) sendPlayersInfo() {
 	e := Event{
 		Type:    PlayerReadyBack,
-		Payload: payload,
+		Payload: PlayerReadyBackPayload{
+			Players: s.Game.GatherPlayersInfo(),
+		},
 	}
 
 	s.Game.BroadcastEvent(e)
 }
 
-func (s *PendPlayers) updateReadyPlayers(ew EventWrapper) int {
+func (s *PendPlayersState) updateReadyPlayers(ew EventWrapper) int {
 	var playersReady int
 	for playerID, p := range s.Game.Players {
 		if p.Info.ID == ew.SenderID {

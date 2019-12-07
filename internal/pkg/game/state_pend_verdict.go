@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PendVerdict struct {
+type PendVerdictState struct {
 	BaseState
 	stopTimer *time.Timer
 }
@@ -22,7 +22,7 @@ func NewPendVerdictState(g *Game, ctx *StateContext) State {
 	}
 	g.Notify(e, g.Host)
 
-	return &PendVerdict{
+	return &PendVerdictState{
 		BaseState: BaseState{
 			Game: g,
 			Ctx:  ctx,
@@ -33,7 +33,7 @@ func NewPendVerdictState(g *Game, ctx *StateContext) State {
 	}
 }
 
-func (s *PendVerdict) Handle(ew EventWrapper) State {
+func (s *PendVerdictState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendVerdict: got event: ", ew)
 
 	var nextState State
@@ -74,7 +74,7 @@ func (s *PendVerdict) Handle(ew EventWrapper) State {
 	return nextState
 }
 
-func (s *PendVerdict) validateEvent(ew EventWrapper) error {
+func (s *PendVerdictState) validateEvent(ew EventWrapper) error {
 	if ew.SenderID != s.Game.Host.Info.ID {
 		return errors.New(
 			fmt.Sprintf(
@@ -99,7 +99,7 @@ func (s *PendVerdict) validateEvent(ew EventWrapper) error {
 	return nil
 }
 
-func (s *PendVerdict) notifyAllPlayersOfVerdict(verdict bool, correctAnswer string) {
+func (s *PendVerdictState) notifyAllPlayersOfVerdict(verdict bool, correctAnswer string) {
 	e := Event{
 		Type:    VerdictGivenBack,
 		Payload: VerdictPayload{
@@ -110,7 +110,7 @@ func (s *PendVerdict) notifyAllPlayersOfVerdict(verdict bool, correctAnswer stri
 	s.Game.BroadcastEvent(e)
 }
 
-func (s *PendVerdict) onVerdictCorrect() {
+func (s *PendVerdictState) onVerdictCorrect() {
 	questionCost := (s.Ctx.QuestionIdx + 1) * 100
 	s.Game.UpdatePlayerScore(s.Ctx.RespondentID, questionCost)
 
@@ -118,7 +118,7 @@ func (s *PendVerdict) onVerdictCorrect() {
 	s.notifyAllPlayersOfVerdict(true, correctAnswer)
 }
 
-func (s *PendVerdict) onVerdictWrong() {
+func (s *PendVerdictState) onVerdictWrong() {
 	questionCost := (s.Ctx.QuestionIdx + 1) * 100
 	s.Game.UpdatePlayerScore(s.Ctx.RespondentID, -questionCost)
 

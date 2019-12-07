@@ -24,16 +24,16 @@ func (qt *QuestionTable) GetThemes() [5]string {
 	return themes
 }
 
-func (qt *QuestionTable) GetQuestion(themeID, questionID int) string {
+func (qt *QuestionTable) GetQuestion(themeIdx, questionIdx int) string {
 	themeSlice := qt.questions.([]interface{})
 
-	for themeIdx, theme := range themeSlice {
+	for themeIter, theme := range themeSlice {
 		theme := theme.(map[string]interface{})
-		if themeID == themeIdx {
+		if themeIter == themeIdx {
 			questionSlice := theme["questions"].([]interface{})
-			for questionIdx, question := range questionSlice {
+			for questionIter, question := range questionSlice {
 				question := question.(map[string]interface{})
-				if questionIdx == questionID {
+				if questionIter == questionIdx {
 					return question["text"].(string)
 				}
 			}
@@ -43,16 +43,16 @@ func (qt *QuestionTable) GetQuestion(themeID, questionID int) string {
 	return ""
 }
 
-func (qt *QuestionTable) GetAnswer(themeID, questionID int) string {
+func (qt *QuestionTable) GetAnswer(themeIdx, questionIdx int) string {
 	themeSlice := qt.questions.([]interface{})
 
-	for themeIdx, theme := range themeSlice {
+	for themeIter, theme := range themeSlice {
 		theme := theme.(map[string]interface{})
-		if themeID == themeIdx {
+		if themeIter == themeIdx {
 			questionSlice := theme["questions"].([]interface{})
-			for questionIdx, question := range questionSlice {
+			for questionIter, question := range questionSlice {
 				question := question.(map[string]interface{})
-				if questionIdx == questionID {
+				if questionIter == questionIdx {
 					return question["answer"].(string)
 				}
 			}

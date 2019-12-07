@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PendQuestionChosen struct {
+type PendQuestionChosenState struct {
 	BaseState
 	stopTimer *time.Timer
 }
@@ -25,11 +25,12 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 		Type: RequestQuestion,
 		Payload: RequestQuestionPayload{
 			QuestionSelectorID: ctx.QuestionSelectorID,
+			QuestionsStatus:    g.Questions.questionsAvailable,
 		},
 	}
 	g.BroadcastEvent(e)
 
-	return &PendQuestionChosen{
+	return &PendQuestionChosenState{
 		BaseState: BaseState{
 			Game: g,
 			Ctx:  ctx,
@@ -40,7 +41,7 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 	}
 }
 
-func (s *PendQuestionChosen) Handle(ew EventWrapper) State {
+func (s *PendQuestionChosenState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendQuestionChosen: got event: ", ew)
 
 	var nextState State
@@ -61,13 +62,14 @@ func (s *PendQuestionChosen) Handle(ew EventWrapper) State {
 
 	default:
 		if err := s.validateEvent(ew); err != nil {
-			s.Game.logger.Info(err)
+			s.Game.logger.Info("PendQuestionChosen:", err)
 			return s
 		}
 
 		themeIdx, questionIdx, err := s.getQuestionIndexes(ew)
 		if err != nil {
-			s.Game.logger.Info(err)
+			s.Game.logger.Info("PendQuestionChosen:", err)
+			return s
 		}
 
 		s.Ctx.ThemeIdx = themeIdx
@@ -75,12 +77,12 @@ func (s *PendQuestionChosen) Handle(ew EventWrapper) State {
 		nextState = NewPendRespondentState(s.Game, s.Ctx)
 	}
 
-	s.Game.logger.Info("PendQuestionChoose: moving to the next state %v.", nextState)
+	s.Game.logger.Info("PendQuestionChosen: moving to the next state %v.", nextState)
 	return nextState
 }
 
 
-func (s *PendQuestionChosen) validateEvent(ew EventWrapper) error {
+func (s *PendQuestionChosenState) validateEvent(ew EventWrapper) error {
 	if ew.SenderID != s.Ctx.QuestionSelectorID {
 		return errors.New(
 			fmt.Sprintf(
@@ -104,7 +106,7 @@ func (s *PendQuestionChosen) validateEvent(ew EventWrapper) error {
 	return nil
 }
 
-func (s *PendQuestionChosen) getQuestionIndexes(ew EventWrapper) (int, int, error) {
+func (s *PendQuestionChosenState) getQuestionIndexes(ew EventWrapper) (int, int, error) {
 	payload, ok := ew.Event.Payload.(map[string]interface{})
 	if !ok {
 		return 0, 0, errors.New("PendQuestion: got invalid payload, keep old state.")

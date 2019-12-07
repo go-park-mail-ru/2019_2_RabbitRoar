@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PendRespondent struct {
+type PendRespondentState struct {
 	BaseState
 	stopTimer  *time.Timer
 }
@@ -24,7 +24,7 @@ func NewPendRespondentState(g *Game, ctx *StateContext) State {
 
 	g.BroadcastEvent(e)
 
-	return &PendRespondent{
+	return &PendRespondentState{
 		BaseState:  BaseState{
 			Game: g,
 			Ctx:  ctx,
@@ -35,7 +35,7 @@ func NewPendRespondentState(g *Game, ctx *StateContext) State {
 	}
 }
 
-func (s *PendRespondent) Handle(ew EventWrapper) State {
+func (s *PendRespondentState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendRespondent: got event: ", ew)
 
 	var nextState State
@@ -62,7 +62,7 @@ func (s *PendRespondent) Handle(ew EventWrapper) State {
 }
 
 
-func (s *PendRespondent) validateEvent(ew EventWrapper) error {
+func (s *PendRespondentState) validateEvent(ew EventWrapper) error {
 	if ew.Event.Type != RespondentReady {
 		return errors.New(
 			fmt.Sprintf(
