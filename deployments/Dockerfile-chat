@@ -12,7 +12,7 @@ RUN apt update && apt install protobuf-compiler -y
 RUN ./scripts/generate.sh
 
 RUN go get -d -v ./...
-RUN go build -v ./cmd/server/chat.go
+RUN go build -v ./cmd/chat/chat.go
 
 
 FROM alpine
