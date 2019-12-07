@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type PendQuestionChoose struct {
+type PendQuestionChosen struct {
 	BaseState
 	stopTimer *time.Timer
 }
@@ -29,7 +29,7 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 	}
 	g.BroadcastEvent(e)
 
-	return &PendQuestionChoose{
+	return &PendQuestionChosen{
 		BaseState: BaseState{
 			Game: g,
 			Ctx:  ctx,
@@ -40,7 +40,7 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 	}
 }
 
-func (s *PendQuestionChoose) Handle(ew EventWrapper) State {
+func (s *PendQuestionChosen) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendQuestionChosen: got event: ", ew)
 
 	var nextState State
@@ -80,7 +80,7 @@ func (s *PendQuestionChoose) Handle(ew EventWrapper) State {
 }
 
 
-func (s *PendQuestionChoose) validateEvent(ew EventWrapper) error {
+func (s *PendQuestionChosen) validateEvent(ew EventWrapper) error {
 	if ew.SenderID != s.Ctx.QuestionSelectorID {
 		return errors.New(
 			fmt.Sprintf(
@@ -104,7 +104,7 @@ func (s *PendQuestionChoose) validateEvent(ew EventWrapper) error {
 	return nil
 }
 
-func (s *PendQuestionChoose) getQuestionIndexes(ew EventWrapper) (int, int, error) {
+func (s *PendQuestionChosen) getQuestionIndexes(ew EventWrapper) (int, int, error) {
 	payload, ok := ew.Event.Payload.(map[string]interface{})
 	if !ok {
 		return 0, 0, errors.New("PendQuestion: got invalid payload, keep old state.")

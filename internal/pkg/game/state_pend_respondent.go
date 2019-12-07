@@ -38,13 +38,14 @@ func NewPendRespondentState(g *Game, ctx *StateContext) State {
 func (s *PendRespondent) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendRespondent: got event: ", ew)
 
+	var nextState State
+
 	select {
 	case t := <-s.stopTimer.C:
 		s.Game.logger.Info("PendRespondent: pending time exceeded: ", t.String())
+
 		s.Ctx.QuestionSelectorID = s.Game.GetNextPlayerID(s.Ctx.QuestionSelectorID)
-		nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
-		s.Game.logger.Info("PendRespondent: moving to the next state %v.", nextState)
-		return nextState
+		nextState = NewPendQuestionChosenState(s.Game, s.Ctx)
 
 	default:
 		if err := s.validateEvent(ew); err != nil {
@@ -53,11 +54,11 @@ func (s *PendRespondent) Handle(ew EventWrapper) State {
 		}
 
 		s.Ctx.RespondentID = ew.SenderID
-		nextState := NewPendAnswerState(s.Game, s.Ctx)
-
-		s.Game.logger.Info("PendRespondent: moving to the next state %v.", nextState)
-		return nextState
+		nextState = NewPendAnswerState(s.Game, s.Ctx)
 	}
+
+	s.Game.logger.Info("PendRespondent: moving to the next state %v.", nextState)
+	return nextState
 }
 
 

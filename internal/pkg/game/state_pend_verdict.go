@@ -36,15 +36,16 @@ func NewPendVerdictState(g *Game, ctx *StateContext) State {
 func (s *PendVerdict) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendVerdict: got event: ", ew)
 
+	var nextState State
+
 	select {
 	case t := <-s.stopTimer.C:
 		s.Game.logger.Info("PendVerdict: pending time exceeded: ", t.String())
 
 		s.onVerdictCorrect()
 
-		nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
-		s.Game.logger.Info("PendVerdict: moving to the next state %v.", nextState)
-		return nextState
+		s.Ctx.QuestionSelectorID = s.Ctx.RespondentID
+		nextState = NewPendQuestionChosenState(s.Game, s.Ctx)
 
 	default:
 		if err := s.validateEvent(ew); err != nil {
@@ -56,21 +57,21 @@ func (s *PendVerdict) Handle(ew EventWrapper) State {
 		case ew.Event.Type == VerdictCorrect:
 			s.onVerdictCorrect()
 
-			nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
-			s.Game.logger.Info("PendVerdict: moving to the next state %v.", nextState)
-			return nextState
+			s.Ctx.QuestionSelectorID = s.Ctx.RespondentID
+			nextState = NewPendQuestionChosenState(s.Game, s.Ctx)
 
 		case ew.Event.Type == VerdictWrong:
 			s.onVerdictWrong()
 
-			nextState := NewPendRespondentState(s.Game, s.Ctx)
-			s.Game.logger.Info("PendVerdict: moving to the next state %v.", nextState)
-			return nextState
+			nextState = NewPendRespondentState(s.Game, s.Ctx)
 
 		default:
 			return nil
 		}
 	}
+
+	s.Game.logger.Info("PendVerdict: moving to the next state %v.", nextState)
+	return nextState
 }
 
 func (s *PendVerdict) validateEvent(ew EventWrapper) error {
