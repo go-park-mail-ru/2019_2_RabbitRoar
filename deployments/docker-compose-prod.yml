@@ -3,7 +3,7 @@ version: "3.7"
 services:
   application:
     restart: always
-    image: svoyak-application:latest
+    image: alexnav/svoyak-application:latest
     volumes:
       - "../../data/uploads:/application/data/uploads"
       - "../../data/logs:/tmp/logs"
@@ -16,7 +16,7 @@ services:
       - metrics
 
   session:
-    image: svoyak-session:latest
+    image: alexnav/svoyak-session:latest
     restart: always
     volumes:
       - "../../configs:/application/configs"
@@ -27,7 +27,7 @@ services:
       - metrics
 
   chat:
-    image: svoyak-chat:latest
+    image: alexnav/svoyak-chat:latest
     restart: always
     volumes:
       - "../../configs:/application/configs"
@@ -38,7 +38,7 @@ services:
       - app
 
   game:
-    image: svoyak-game:latest
+    image: alexnav/svoyak-game:latest
     restart: always
     volumes:
       - "../../configs:/application/configs"
