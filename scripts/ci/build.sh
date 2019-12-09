@@ -16,7 +16,7 @@ docker build -f deployments/Dockerfile-application -t alexnav/svoyak-application
 docker build -f deployments/Dockerfile-chat -t alexnav/svoyak-chat .
 docker build -f deployments/Dockerfile-game -t alexnav/svoyak-game .
 
-docker login --username=alexnav --password=$DOCKER-HUB-TOKEN
+docker login --username=alexnav --password=$DOCKER_HUB_TOKEN
 
 docker push alexnav/svoyak-session
 docker push alexnav/svoyak-application
