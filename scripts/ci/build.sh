@@ -12,9 +12,16 @@ echo "Running build $PROJ_DIR."
 pushd $PROJ_DIR
 
 docker build -f deployments/Dockerfile-session -t alexnav/svoyak-session .
+docker tag alexnav/svoyak-session:$TRAVIS_BUILD_NUMBER
+
 docker build -f deployments/Dockerfile-application -t alexnav/svoyak-application .
+docker tag alexnav/svoyak-application:$TRAVIS_BUILD_NUMBER
+
 docker build -f deployments/Dockerfile-chat -t alexnav/svoyak-chat .
+docker tag alexnav/svoyak-chat:$TRAVIS_BUILD_NUMBER
+
 docker build -f deployments/Dockerfile-game -t alexnav/svoyak-game .
+docker tag alexnav/svoyak-game:$TRAVIS_BUILD_NUMBER
 
 docker login --username=alexnav --password=$DOCKER_HUB_TOKEN
 
