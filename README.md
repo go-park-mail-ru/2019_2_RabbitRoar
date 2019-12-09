@@ -1,4 +1,4 @@
-# 2019_2_RabbitRoar
+# 2019_2_RabbitRoar [![Build Status](https://travis-ci.org/go-park-mail-ru/2019_2_RabbitRoar.svg?branch=master)](https://travis-ci.org/go-park-mail-ru/2019_2_RabbitRoar)
 
 Frontend repository: [link](https://github.com/frontend-park-mail-ru/2019_2_RabbitRoar)
 
@@ -11,5 +11,5 @@ Notion Page: [link](https://www.notion.so/SVOYAK-f53af7312b784f2bafa785c65e8d81a
 ### How to run:
 
 ```shell script
-cd depoloyments && docker-compose -f docker-compose-<mode>.yml up
+./scripts/start_local.sh
 ```

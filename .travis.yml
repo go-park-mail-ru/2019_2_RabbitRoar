@@ -3,7 +3,7 @@ services: docker
 
 branches:
   only:
-    - ci
+    - dev
 
 script:
   - bash scripts/ci/build.sh
