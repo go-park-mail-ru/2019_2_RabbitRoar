@@ -3,9 +3,7 @@ version: "3.7"
 services:
   application:
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-application
+    image: svoyak-application:latest
     volumes:
       - "../../data/uploads:/application/data/uploads"
       - "../../data/logs:/tmp/logs"
@@ -13,32 +11,24 @@ services:
     depends_on:
       - postgres
       - session
-    ports:
-      - 2345:2345 # Remote debug
     networks:
       - app
       - metrics
 
   session:
+    image: svoyak-session:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-session
     volumes:
       - "../../configs:/application/configs"
     depends_on:
       - postgres
-    ports:
-      - 2346:2345 # Remote debug
     networks:
       - app
       - metrics
 
   chat:
+    image: svoyak-chat:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-chat
     volumes:
       - "../../configs:/application/configs"
     depends_on:
@@ -48,10 +38,8 @@ services:
       - app
 
   game:
+    image: svoyak-game:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-game
     volumes:
       - "../../configs:/application/configs"
     depends_on:
@@ -60,6 +48,18 @@ services:
     networks:
       - app
       - metrics
+
+  watchtower:
+    image: v2tec/watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - application
+      - session
+      - chat
+      - game
+    command: watchtower application session chat game --interval 30
 
   postgres:
     image: postgres:12.0
@@ -70,8 +70,6 @@ services:
     volumes:
       - "../db/migrations/:/docker-entrypoint-initdb.d"
       - "../../data/postgres:/var/lib/postgresql/data"
-    ports:
-      - 5432:5432
     networks:
       - app
 
