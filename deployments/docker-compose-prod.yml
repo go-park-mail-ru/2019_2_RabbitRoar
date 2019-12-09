@@ -11,6 +11,8 @@ services:
     depends_on:
       - postgres
       - session
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
@@ -22,6 +24,8 @@ services:
       - "../../configs:/application/configs"
     depends_on:
       - postgres
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
@@ -34,6 +38,8 @@ services:
     depends_on:
       - postgres
       - session
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
 
@@ -45,6 +51,8 @@ services:
     depends_on:
       - postgres
       - session
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
@@ -59,7 +67,7 @@ services:
       - session
       - chat
       - game
-    command: watchtower application session chat game --interval 30
+    command: watchtower --interval 30 --debug --label-enable
 
   postgres:
     image: postgres:12.0
