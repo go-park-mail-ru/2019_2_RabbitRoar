@@ -20,23 +20,12 @@ type Game struct {
 	Questions *QuestionTable
 	EvChan    chan EventWrapper
 	Started   bool
+	StopTimer *time.Timer
 	logger    logging.Logger
 }
 
 func (g *Game) Run(killChan chan uuid.UUID) {
-	defer func() {
-		g.logger.Info("Started closing connections")
-		for _, p := range g.Players {
-			g.logger.Infof("Trying to close player connection: %d", p.Info.ID)
-			if p.Conn.IsRunning() {
-				g.logger.Info("Connection is running. Stopping connection")
-				p.Conn.Stop()
-				g.logger.Info("Connection stopped")
-			}
-		}
-		g.logger.Infof("All connections stopped. Game is ready to be deleted. UUID: %s", g.Model.UUID.String())
-		killChan <- g.Model.UUID
-	}()
+	defer g.safeStop(killChan)
 
 	g.logger.Info("Starting game loop.")
 	g.State = NewPendPlayersState(g)
@@ -135,6 +124,40 @@ func (g *Game) UpdatePlayerScore(playerID, score int) {
 	}
 
 	g.Players[playerIdx].Info.Score += score
+}
+
+func (g *Game) safeStop(killChan chan uuid.UUID) {
+	g.logger.Info("Started closing connections")
+	for _, p := range g.Players {
+		g.logger.Info("Trying to close player connection. ID: ", p.Info.ID)
+		if p.Conn.IsRunning() {
+			g.logger.Info(" -- Connection is running. Stopping connection")
+			p.Conn.Stop()
+			g.logger.Info(" -- Connection stopped")
+		}
+	}
+	g.logger.Info("All connections stopped. Game is ready to be deleted. UUID: ", g.Model.UUID.String())
+	killChan <- g.Model.UUID
+}
+
+func (g *Game) handleWSUpdated() {
+	var allPlayersInfo []PlayerInfo
+
+	for _, p := range g.Players {
+		allPlayersInfo = append(allPlayersInfo, p.Info)
+	}
+
+	noticeEvent := Event{
+		Type: UserConnected,
+		Payload: UserConnectedPayload{
+			RoomName: g.Model.Name,
+			PackName: g.Model.PackName,
+			Host:     g.Host.Info,
+			Players:  allPlayersInfo,
+		},
+	}
+
+	g.BroadcastEvent(noticeEvent)
 }
 
 func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {
