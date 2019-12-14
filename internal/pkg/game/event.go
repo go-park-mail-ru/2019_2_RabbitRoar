@@ -106,11 +106,6 @@ type RequestQuestionPayload struct {
 	QuestionsStatus    [5][5]bool `json:"questions"`
 }
 
-//type QuestionChosenPayload struct {
-//	ThemeIdx    int `json:"theme_idx"`
-//	QuestionIdx int `json:"question_idx"`
-//}
-
 type RequestRespondentPayload struct {
 	Question    string `json:"question"`
 	ThemeIdx    int    `json:"theme_id"`
@@ -120,10 +115,6 @@ type RequestRespondentPayload struct {
 type RequestAnswerPayload struct {
 	RespondentID int `json:"player_id"`
 }
-
-//type AnswerGivenPayload struct {
-//	Answer string `json:"answer"`
-//}
 
 type AnswerGivenBackPayload struct {
 	PlayerAnswer string `json:"player_answer"`
