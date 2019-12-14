@@ -152,10 +152,11 @@ func (g *Game) handleWSUpdated() {
 	noticeEvent := Event{
 		Type: UserConnected,
 		Payload: UserConnectedPayload{
-			RoomName: g.Model.Name,
-			PackName: g.Model.PackName,
-			Host:     g.Host.Info,
-			Players:  allPlayersInfo,
+			RoomName:        g.Model.Name,
+			PackName:        g.Model.PackName,
+			Host:            g.Host.Info,
+			Players:         allPlayersInfo,
+			QuestionsStatus: g.Questions.questionsAvailable,
 		},
 	}
 

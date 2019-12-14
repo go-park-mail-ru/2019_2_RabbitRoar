@@ -92,10 +92,11 @@ type EventWrapper struct {
 }
 
 type UserConnectedPayload struct {
-	RoomName string       `json:"room_name"`
-	PackName string       `json:"pack_name"`
-	Host     PlayerInfo   `json:"host"`
-	Players  []PlayerInfo `json:"players"`
+	RoomName        string       `json:"room_name"`
+	PackName        string       `json:"pack_name"`
+	Host            PlayerInfo   `json:"host"`
+	Players         []PlayerInfo `json:"players"`
+	QuestionsStatus [5][5]bool   `json:"questions"`
 }
 
 type PlayerReadyBackPayload struct {
