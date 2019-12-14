@@ -113,16 +113,36 @@ func (g *Game) GetRandPlayerID() int {
 	return playerID
 }
 
-func (g *Game) GetNextPlayerID(prevPlayerID int) int {
-	playerID := (prevPlayerID + 1) % len(g.Players)
-
-	for playerID == g.Host.Info.ID {
-		playerID = (playerID + 1) % len(g.Players)
+func (g *Game) GetNextPlayerID(playerID int) int {
+	prevPlayerIdx, err := g.getPlayerIdxByPlayerID(playerID)
+	if err != nil {
+		return g.GetRandPlayerID()
 	}
 
-	return playerID
+	nextPlayerIdx := (prevPlayerIdx + 1) % len(g.Players)
+
+	for nextPlayerIdx == g.Host.Info.ID {
+		nextPlayerIdx = (nextPlayerIdx + 1) % len(g.Players)
+	}
+
+	return nextPlayerIdx
 }
 
 func (g *Game) UpdatePlayerScore(playerID, score int) {
-	g.Players[playerID].Info.Score += score
+	playerIdx, err := g.getPlayerIdxByPlayerID(playerID)
+	if err != nil {
+		return
+	}
+
+	g.Players[playerIdx].Info.Score += score
+}
+
+func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {
+	for idx, p := range g.Players {
+		if p.Info.ID == playerID {
+			return idx, nil
+		}
+	}
+
+	return 0, nil
 }

@@ -13,6 +13,10 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 	}
 
 	g.BroadcastEvent(e)
+	g.EvChan <- EventWrapper{
+		SenderID: ctx.RespondentID,
+		Event:    &e,
+	}
 	
 	return &GameEndedState{
 		BaseState: BaseState{

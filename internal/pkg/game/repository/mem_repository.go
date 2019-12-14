@@ -175,6 +175,11 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 func (repo *memGameRepository) runGameKiller() {
 	for {
 		gameID := <-repo.gameKillerChan
+
+		for _, p := range repo.games[gameID].Players {
+			repo.KickPlayer(p.Info.ID)
+		}
+
 		delete(repo.games, gameID)
 	}
 }

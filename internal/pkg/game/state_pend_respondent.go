@@ -63,6 +63,16 @@ func (s *PendRespondentState) Handle(ew EventWrapper) State {
 
 
 func (s *PendRespondentState) validateEvent(ew EventWrapper) error {
+	if ew.SenderID == s.Game.Host.Info.ID {
+		return errors.New(
+			fmt.Sprintf(
+				"PendRespondent: got event from unexpected player %s, expected any except %s. ",
+				ew.Event.Type,
+				s.Game.Host.Info.ID,
+			),
+		)
+	}
+
 	if ew.Event.Type != RespondentReady {
 		return errors.New(
 			fmt.Sprintf(
