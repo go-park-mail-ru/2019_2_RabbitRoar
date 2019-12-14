@@ -141,11 +141,11 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 		return errors.New("player is not in game")
 	}
 
+	delete(repo.userGame, playerID)
+
 	if _, exists := repo.games[gameID]; !exists {
 		return errors.New("no game found to leave")
 	}
-
-	delete(repo.userGame, playerID)
 
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == playerID {
