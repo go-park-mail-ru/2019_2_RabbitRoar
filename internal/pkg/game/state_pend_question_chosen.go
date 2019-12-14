@@ -9,7 +9,6 @@ import (
 
 type PendQuestionChosenState struct {
 	BaseState
-	stopTimer *time.Timer
 }
 
 func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
@@ -26,14 +25,15 @@ func NewPendQuestionChosenState(g *Game, ctx *StateContext) State {
 	}
 	g.BroadcastEvent(e)
 
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_question_duration") * time.Second,
+	)
+
 	return &PendQuestionChosenState{
 		BaseState: BaseState{
 			Game: g,
 			Ctx:  ctx,
 		},
-		stopTimer: time.NewTimer(
-			viper.GetDuration("internal.pend_question_duration") * time.Second,
-		),
 	}
 }
 
@@ -42,16 +42,17 @@ func (s *PendQuestionChosenState) Handle(ew EventWrapper) State {
 
 	var nextState State
 
-	select {
-	case t := <-s.stopTimer.C:
-		s.Game.logger.Info("PendQuestionChosen: pending time exceeded: ", t.String())
+	switch ew.Event.Type {
+	case PendingExceeded:
+		s.Game.logger.Info("PendQuestionChosen: pending time exceeded")
 
 		themeIdx, questionIdx, err := s.Game.Questions.GetAnyAvailableQuestionIndexes()
 		if err != nil {
-			s.Game.logger.Info("PendQuestionChosen:", err)
+			s.Game.logger.Info("PendQuestionChosen: ", err)
 			nextState = NewGameEndedState(s.Game, s.Ctx)
 			break
 		}
+		s.Game.Questions.SetQuestionUnavailable(themeIdx, questionIdx)
 
 		s.Ctx.ThemeIdx = themeIdx
 		s.Ctx.QuestionIdx = questionIdx

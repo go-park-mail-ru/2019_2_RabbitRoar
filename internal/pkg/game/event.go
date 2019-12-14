@@ -137,6 +137,7 @@ type RequestVerdictPayload struct {
 type VerdictPayload struct {
 	Verdict       bool   `json:"verdict"`
 	CorrectAnswer string `json:"answer"`
+	Players []PlayerInfo `json:"players"`
 }
 
 type GameEndedPayload struct {

@@ -9,7 +9,6 @@ import (
 
 type PendVerdictState struct {
 	BaseState
-	stopTimer *time.Timer
 }
 
 func NewPendVerdictState(g *Game, ctx *StateContext) State {
@@ -22,14 +21,15 @@ func NewPendVerdictState(g *Game, ctx *StateContext) State {
 	}
 	g.Notify(e, g.Host)
 
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_verdict_duration") * time.Second,
+	)
+
 	return &PendVerdictState{
 		BaseState: BaseState{
 			Game: g,
 			Ctx:  ctx,
 		},
-		stopTimer: time.NewTimer(
-			viper.GetDuration("internal.pend_verdict_duration") * time.Second,
-		),
 	}
 }
 
@@ -38,9 +38,9 @@ func (s *PendVerdictState) Handle(ew EventWrapper) State {
 
 	var nextState State
 
-	select {
-	case t := <-s.stopTimer.C:
-		s.Game.logger.Info("PendVerdict: pending time exceeded: ", t.String())
+	switch ew.Event.Type {
+	case PendingExceeded:
+		s.Game.logger.Info("PendVerdict: pending time exceeded")
 
 		s.onVerdictCorrect()
 
@@ -105,6 +105,7 @@ func (s *PendVerdictState) notifyAllPlayersOfVerdict(verdict bool, correctAnswer
 		Payload: VerdictPayload{
 			Verdict:       verdict,
 			CorrectAnswer: correctAnswer,
+			Players:       s.Game.GatherPlayersInfo(),
 		},
 	}
 	s.Game.BroadcastEvent(e)

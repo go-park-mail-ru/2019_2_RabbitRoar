@@ -35,11 +35,11 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 	}
 
 	repo.games[g.UUID] = &game.Game{
+		Players:   []game.Player{},
+		Model:     *g,
 		Questions: game.NewQuestionTable(packQuestions),
-		Players: []game.Player{},
-		Model:   *g,
-		EvChan:  make(chan game.EventWrapper, 50),
-		Started: false,
+		EvChan:    make(chan game.EventWrapper, 50),
+		Started:   false,
 	}
 
 	defer func(){

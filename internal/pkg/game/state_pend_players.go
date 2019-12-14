@@ -9,10 +9,13 @@ import (
 
 type PendPlayersState struct {
 	BaseState
-	stopTimer *time.Timer
 }
 
 func NewPendPlayersState(g *Game) State {
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_players_duration") * time.Second,
+	)
+
 	return &PendPlayersState{
 		BaseState: BaseState{
 			Game: g,
@@ -23,18 +26,15 @@ func NewPendPlayersState(g *Game) State {
 				RespondentID:       0,
 			},
 		},
-		stopTimer: time.NewTimer(
-			viper.GetDuration("internal.pend_players_duration") * time.Second,
-		),
 	}
 }
 
 func (s *PendPlayersState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("PendPlayers: got event: ", ew)
 
-	select {
-	case t := <-s.stopTimer.C:
-		s.Game.logger.Info("PendPlayers: pending time exceeded: ", t.String())
+	switch ew.Event.Type {
+	case PendingExceeded:
+		s.Game.logger.Info("PendPlayers: pending time exceeded")
 		return nil
 
 	default:
@@ -47,7 +47,7 @@ func (s *PendPlayersState) Handle(ew EventWrapper) State {
 		s.sendPlayersInfo()
 
 		if playersReady != s.Game.Model.PlayersCapacity {
-			s.Game.logger.Info(
+			s.Game.logger.Infof(
 				"PendPlayers: players ready %d/%d, keep state.",
 				playersReady,
 				s.Game.Model.PlayersCapacity,
@@ -60,7 +60,7 @@ func (s *PendPlayersState) Handle(ew EventWrapper) State {
 		s.Ctx.QuestionSelectorID = s.Game.GetRandPlayerID()
 		nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
 
-		s.Game.logger.Info("PendPlayers: moving to the next state %v.", nextState)
+		s.Game.logger.Infof("PendPlayers: moving to the next state %v.", nextState)
 		return nextState
 	}
 }

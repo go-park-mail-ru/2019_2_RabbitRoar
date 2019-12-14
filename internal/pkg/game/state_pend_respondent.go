@@ -9,7 +9,6 @@ import (
 
 type PendRespondentState struct {
 	BaseState
-	stopTimer  *time.Timer
 }
 
 func NewPendRespondentState(g *Game, ctx *StateContext) State {
@@ -24,14 +23,15 @@ func NewPendRespondentState(g *Game, ctx *StateContext) State {
 
 	g.BroadcastEvent(e)
 
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_respondent_duration") * time.Second,
+	)
+
 	return &PendRespondentState{
 		BaseState:  BaseState{
 			Game: g,
 			Ctx:  ctx,
 		},
-		stopTimer:  time.NewTimer(
-			viper.GetDuration("internal.pend_respondent_duration") * time.Second,
-		),
 	}
 }
 
@@ -40,9 +40,9 @@ func (s *PendRespondentState) Handle(ew EventWrapper) State {
 
 	var nextState State
 
-	select {
-	case t := <-s.stopTimer.C:
-		s.Game.logger.Info("PendRespondent: pending time exceeded: ", t.String())
+	switch ew.Event.Type {
+	case PendingExceeded:
+		s.Game.logger.Info("PendRespondent: pending time exceeded")
 
 		s.Ctx.QuestionSelectorID = s.Game.GetNextPlayerID(s.Ctx.QuestionSelectorID)
 		nextState = NewPendQuestionChosenState(s.Game, s.Ctx)

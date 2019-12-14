@@ -1,5 +1,10 @@
 package game
 
+import (
+	"github.com/spf13/viper"
+	"time"
+)
+
 type GameEndedState struct {
 	BaseState
 }
@@ -17,6 +22,10 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 		SenderID: ctx.RespondentID,
 		Event:    &e,
 	}
+
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_game_ended_duration") * time.Second,
+	)
 	
 	return &GameEndedState{
 		BaseState: BaseState{
@@ -28,6 +37,15 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 
 func (s *GameEndedState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("GameEnded: got event: ", ew)
-	s.Game.logger.Info("GameEnded: stopping game.")
-	return nil
+
+	for {
+		switch ew.Event.Type {
+		case PendingExceeded:
+			s.Game.logger.Info("GameEnded: stopping game.")
+			return nil
+
+		default:
+			// Handle voting here
+		}
+	}
 }

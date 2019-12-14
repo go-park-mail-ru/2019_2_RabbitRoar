@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"math/rand"
+	"time"
 )
 
 type Player struct {
@@ -35,27 +36,28 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 			return
 		}
 		g.logger.Info("Pending event...")
-		ew := <-g.EvChan
-		g.logger.Info("Got event: ", ew)
 
-		if ew.Event.Type == WsUpdated {
-			var allPlayersInfo []PlayerInfo
+		var ew EventWrapper
 
-			for _, p := range g.Players {
-				allPlayersInfo = append(allPlayersInfo, p.Info)
-			}
-
-			noticeEvent := Event{
-				Type: UserConnected,
-				Payload: UserConnectedPayload{
-					RoomName: g.Model.Name,
-					PackName: g.Model.PackName,
-					Host:     g.Host.Info,
-					Players:  allPlayersInfo,
+		select {
+		case t := <- g.StopTimer.C:
+			g.logger.Info("Current event pending time exceeded: ", t.String())
+			ew = EventWrapper{
+				SenderID: -1,
+				Event:    &Event{
+					Type:    PendingExceeded,
+					Payload: &PendingExceededPayload{
+						Time: t,
+					},
 				},
 			}
 
-			g.BroadcastEvent(noticeEvent)
+		case ew = <-g.EvChan:
+			g.logger.Info("Got event: ", ew)
+		}
+
+		if ew.Event.Type == WsUpdated {
+			g.handleWSUpdated()
 			continue
 		}
 
@@ -110,11 +112,11 @@ func (g *Game) GetNextPlayerID(playerID int) int {
 
 	nextPlayerIdx := (prevPlayerIdx + 1) % len(g.Players)
 
-	for nextPlayerIdx == g.Host.Info.ID {
+	for g.Players[nextPlayerIdx].Info.ID == g.Host.Info.ID {
 		nextPlayerIdx = (nextPlayerIdx + 1) % len(g.Players)
 	}
 
-	return nextPlayerIdx
+	return g.Players[nextPlayerIdx].Info.ID
 }
 
 func (g *Game) UpdatePlayerScore(playerID, score int) {
