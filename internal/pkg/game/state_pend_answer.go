@@ -44,6 +44,8 @@ func (s *PendAnswerState) Handle(ew EventWrapper) State {
 		questionCost := (s.Ctx.QuestionIdx + 1) * 100
 		s.Game.UpdatePlayerScore(s.Ctx.RespondentID, -questionCost)
 
+		s.notifyAllPlayersOfNoGivenAnswer()
+
 		nextState = NewPendRespondentState(s.Game, s.Ctx)
 
 	default:
@@ -114,4 +116,18 @@ func (s *PendAnswerState) notifyAllPlayersOfGivenAnswer(answer string, responden
 		},
 	}
 	s.Game.BroadcastEvent(e)
+}
+
+func (s *PendAnswerState) notifyAllPlayersOfNoGivenAnswer() {
+	e := Event{
+		Type: VerdictGivenBack,
+		Payload: VerdictPayload{
+			Verdict:       false,
+			CorrectAnswer: "",
+			Players:       s.Game.GatherPlayersInfo(),
+		},
+	}
+	s.Game.BroadcastEvent(e)
+
+	time.Sleep(5 * time.Second)
 }

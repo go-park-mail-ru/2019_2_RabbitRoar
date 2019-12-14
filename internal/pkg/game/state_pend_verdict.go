@@ -109,6 +109,8 @@ func (s *PendVerdictState) notifyAllPlayersOfVerdict(verdict bool, correctAnswer
 		},
 	}
 	s.Game.BroadcastEvent(e)
+
+	time.Sleep(5 * time.Second)
 }
 
 func (s *PendVerdictState) onVerdictCorrect() {
