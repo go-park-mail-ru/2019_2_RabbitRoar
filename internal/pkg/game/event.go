@@ -1,5 +1,7 @@
 package game
 
+import "time"
+
 type EventType string
 
 const (
@@ -14,6 +16,9 @@ const (
 	// backend responding with this after ws connection status is changed
 	// backend -> frontend
 	UserConnected     EventType = "user_connected"
+
+	// happens when pending time for current event has exceeded its set time
+	PendingExceeded   EventType = "pending_exceeded"
 
 	// frontend notifies backend with this after a player is ready to start the game
 	// frontend -> backend
@@ -95,6 +100,10 @@ type UserConnectedPayload struct {
 
 type PlayerReadyBackPayload struct {
 	Players []PlayerInfo `json:"players"`
+}
+
+type PendingExceededPayload struct {
+	Time time.Time `json:"time"`
 }
 
 type GameStartPayload struct {
