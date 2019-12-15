@@ -58,7 +58,7 @@ func (s *GameEndedState) addScoreForPlayers() {
 			return
 		}
 
-		u.Rating += p.Info.Score + 50
+		u.Rating += p.Info.Score
 
 		err = s.Game.UserRepo.Update(*u)
 		if err != nil {
