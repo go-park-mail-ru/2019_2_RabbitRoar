@@ -23,11 +23,4 @@ docker tag alexnav/svoyak-chat alexnav/svoyak-chat:$TRAVIS_BUILD_NUMBER
 docker build -f deployments/Dockerfile-game -t alexnav/svoyak-game .
 docker tag alexnav/svoyak-game alexnav/svoyak-game:$TRAVIS_BUILD_NUMBER
 
-docker login --username=alexnav --password=$DOCKER_HUB_TOKEN
-
-docker push alexnav/svoyak-session
-docker push alexnav/svoyak-application
-docker push alexnav/svoyak-chat
-docker push alexnav/svoyak-game
-
 popd

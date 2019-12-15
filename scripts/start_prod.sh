@@ -8,6 +8,7 @@ echo "Running build $PROJ_DIR."
 
 pushd $PROJ_DIR
 
-docker-compose -f deployments/docker-compose-prod.yml -p svoyak up -d
+docker-compose -f deployments/docker-compose-prod.yml pull
+docker-compose -f deployments/docker-compose-prod.yml -p svoyak_backend up -d
 
 popd

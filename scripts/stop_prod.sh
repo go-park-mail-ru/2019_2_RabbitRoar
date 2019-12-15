@@ -7,6 +7,6 @@ echo "Running start_local in $WORK_DIR."
 
 pushd $WORK_DIR
 
-docker-compose -f deployments/docker-compose-prod.yml down
+docker-compose -f deployments/docker-compose-prod.yml -p svoyak_backend down
 
 popd
