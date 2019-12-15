@@ -143,6 +143,7 @@ func (g *Game) UpdateUserRating(playerInfo PlayerInfo) {
 		return
 	}
 
+	g.logger.Infof("Changed user rating: %d + %d", u.Rating, playerInfo.Score)
 	u.Rating += playerInfo.Score
 
 	err = g.UserRepo.Update(*u)
