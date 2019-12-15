@@ -52,18 +52,6 @@ func (s *GameEndedState) Handle(ew EventWrapper) State {
 
 func (s *GameEndedState) addScoreForPlayers() {
 	for _, p := range s.Game.Players {
-		u, err := s.Game.UserRepo.GetByID(p.Info.ID)
-		if err != nil {
-			s.Game.logger.Info("GameEnded: error finding user: ", err)
-			return
-		}
-
-		u.Rating += p.Info.Score
-
-		err = s.Game.UserRepo.Update(*u)
-		if err != nil {
-			s.Game.logger.Info("GameEnded: error updating user: ", err)
-			return
-		}
+		s.Game.UpdateUserRating(p.Info)
 	}
 }

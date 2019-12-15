@@ -1,6 +1,7 @@
 package game
 
 import (
+	"errors"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/google/uuid"
@@ -60,6 +61,11 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 
 		if ew.Event.Type == WsUpdated {
 			g.handleWSUpdated()
+			continue
+		}
+
+		if ew.Event.Type == PlayerLeft {
+			g.handlePlayerLeft(ew)
 			continue
 		}
 
@@ -130,6 +136,22 @@ func (g *Game) UpdatePlayerScore(playerID, score int) {
 	g.Players[playerIdx].Info.Score += score
 }
 
+func (g *Game) UpdateUserRating(playerInfo PlayerInfo) {
+	u, err := g.UserRepo.GetByID(playerInfo.ID)
+	if err != nil {
+		g.logger.Info("Error finding user: ", err)
+		return
+	}
+
+	u.Rating += playerInfo.Score
+
+	err = g.UserRepo.Update(*u)
+	if err != nil {
+		g.logger.Info("Error updating user: ", err)
+		return
+	}
+}
+
 func (g *Game) safeStop(killChan chan uuid.UUID) {
 	g.logger.Info("Started closing connections")
 	for _, p := range g.Players {
@@ -165,6 +187,15 @@ func (g *Game) handleWSUpdated() {
 	g.BroadcastEvent(noticeEvent)
 }
 
+func (g *Game) handlePlayerLeft(ew EventWrapper) {
+	playerIdx, err := g.getPlayerIdxByPlayerID(ew.SenderID)
+	if err != nil {
+		return
+	}
+
+	g.UpdateUserRating(g.Players[playerIdx].Info)
+}
+
 func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {
 	for idx, p := range g.Players {
 		if p.Info.ID == playerID {
@@ -172,5 +203,5 @@ func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {
 		}
 	}
 
-	return 0, nil
+	return 0, errors.New("player with such ID is not found")
 }
