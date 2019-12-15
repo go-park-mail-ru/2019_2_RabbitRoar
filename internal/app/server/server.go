@@ -8,9 +8,6 @@ import (
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
-	_gameHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/delivery/http"
-	_gameRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/repository"
-	_gameUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/usecase"
 	_http "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/http"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/logger"
 	_middleware "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/middleware"
@@ -26,7 +23,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
@@ -127,10 +123,6 @@ func Start() {
 	}
 	packRepo := _packRepository.NewSqlPackRepository(db)
 	packUseCase := _packUseCase.NewUserUseCase(packRepo)
-	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
-
-	gameRepo := _gameRepository.NewMemGameRepository(userRepo)
-	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo, packSanitizer)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
@@ -139,7 +131,6 @@ func Start() {
 	_userHttp.NewUserHandler(e, userUseCase, authMiddleware, csrfMiddleware)
 	_authHttp.NewAuthHandler(e, userUseCase, sessionUseCase, authMiddleware)
 	_csrfHttp.NewCSRFHandler(e, csrfJWTToken, authMiddleware)
-	_gameHttp.NewGameHandler(e, gameUseCase, authMiddleware, csrfMiddleware)
 	_packHttp.NewPackHandler(e, packUseCase, userUseCase,  sessionUseCase, authMiddleware, csrfMiddleware, packSchema)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))

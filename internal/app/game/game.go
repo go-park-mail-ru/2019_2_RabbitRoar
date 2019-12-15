@@ -18,6 +18,7 @@ import (
 	_sentry "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/sentry"
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
+	_userRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/repository"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -107,11 +108,13 @@ func Start() {
 	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
+	userRepo := _userRepository.NewSqlUserRepository(db)
+
 	packRepo := _packRepository.NewSqlPackRepository(db)
 	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
-	gameMemRepo := _gameRepository.NewMemGameRepository()
-	gameUseCase := _gameUseCase.NewGameUseCase(gameMemRepo, packRepo, packSanitizer)
+	gameRepo := _gameRepository.NewMemGameRepository(userRepo)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo, packSanitizer)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 
