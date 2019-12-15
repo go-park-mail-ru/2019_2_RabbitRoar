@@ -4,17 +4,20 @@ import (
 	"errors"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/google/uuid"
 )
 
 type memGameRepository struct {
+	userRepo user.Repository
 	games map[uuid.UUID]*game.Game
 	userGame map[int]uuid.UUID
 	gameKillerChan chan uuid.UUID
 }
 
-func NewMemGameRepository() game.Repository {
+func NewMemGameRepository(userRepo user.Repository) game.Repository {
 	repo := &memGameRepository{
+		userRepo: userRepo,
 		games: make(map[uuid.UUID]*game.Game),
 		userGame: make(map[int]uuid.UUID),
 		gameKillerChan: make(chan uuid.UUID, 10),
@@ -40,6 +43,7 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 		Questions: game.NewQuestionTable(packQuestions),
 		EvChan:    make(chan game.EventWrapper, 50),
 		Started:   false,
+		UserRepo:  repo.userRepo,
 	}
 
 	defer func(){

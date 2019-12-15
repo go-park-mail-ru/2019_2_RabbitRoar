@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"math/rand"
@@ -22,6 +23,7 @@ type Game struct {
 	EvChan    chan EventWrapper
 	Started   bool
 	StopTimer *time.Timer
+	UserRepo  user.Repository
 	logger    logging.Logger
 }
 

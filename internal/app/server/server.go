@@ -129,7 +129,7 @@ func Start() {
 	packUseCase := _packUseCase.NewUserUseCase(packRepo)
 	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
-	gameRepo := _gameRepository.NewMemGameRepository()
+	gameRepo := _gameRepository.NewMemGameRepository(userRepo)
 	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo, packSanitizer)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)

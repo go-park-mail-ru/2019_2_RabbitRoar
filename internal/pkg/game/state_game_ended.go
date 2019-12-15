@@ -18,10 +18,8 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 	}
 
 	g.BroadcastEvent(e)
-	g.EvChan <- EventWrapper{
-		SenderID: ctx.RespondentID,
-		Event:    &e,
-	}
+
+	// update users
 
 	g.StopTimer = time.NewTimer(
 		viper.GetDuration("internal.pend_game_ended_duration") * time.Second,
@@ -38,6 +36,8 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 func (s *GameEndedState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("GameEnded: got event: ", ew)
 
+	s.addScoreForPlayers()
+
 	for {
 		switch ew.Event.Type {
 		case PendingExceeded:
@@ -46,6 +46,24 @@ func (s *GameEndedState) Handle(ew EventWrapper) State {
 
 		default:
 			// Handle voting here
+		}
+	}
+}
+
+func (s *GameEndedState) addScoreForPlayers() {
+	for _, p := range s.Game.Players {
+		u, err := s.Game.UserRepo.GetByID(p.Info.ID)
+		if err != nil {
+			s.Game.logger.Info("GameEnded: error finding user: ", err)
+			return
+		}
+
+		u.Rating += p.Info.Score + 50
+
+		err = s.Game.UserRepo.Update(*u)
+		if err != nil {
+			s.Game.logger.Info("GameEnded: error updating user: ", err)
+			return
 		}
 	}
 }
