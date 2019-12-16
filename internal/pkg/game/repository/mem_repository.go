@@ -153,9 +153,7 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == playerID {
-			if repo.games[gameID].Players[i].Conn != nil {
-				repo.games[gameID].Players[i].Conn.Stop()
-			}
+			player := &repo.games[gameID].Players[i]
 
 			repo.games[gameID].Players = append(repo.games[gameID].Players[:i], repo.games[gameID].Players[i+1:]...)
 
@@ -167,6 +165,10 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 					Type:    game.PlayerLeft,
 					Payload: nil,
 				},
+			}
+
+			if player.Conn != nil {
+				player.Conn.Stop()
 			}
 
 			return nil
