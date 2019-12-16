@@ -64,6 +64,10 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 			continue
 		}
 
+		if ew.Event.Type == PlayerLeft {
+			continue
+		}
+
 		g.State = g.State.Handle(ew)
 		if g.State == nil {
 			return
@@ -97,6 +101,10 @@ func (g *Game) GatherPlayersInfo() []PlayerInfo {
 }
 
 func (g *Game) GetRandPlayerID() int {
+	if len(g.Players) == 0 {
+		return 0
+	}
+
 	playerID := g.Host.Info.ID
 
 	for playerID == g.Host.Info.ID {
