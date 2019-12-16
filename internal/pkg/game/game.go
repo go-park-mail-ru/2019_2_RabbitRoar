@@ -64,11 +64,6 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 			continue
 		}
 
-		if ew.Event.Type == PlayerLeft {
-			g.handlePlayerLeft(ew)
-			continue
-		}
-
 		g.State = g.State.Handle(ew)
 		if g.State == nil {
 			return
@@ -186,15 +181,6 @@ func (g *Game) handleWSUpdated() {
 	}
 
 	g.BroadcastEvent(noticeEvent)
-}
-
-func (g *Game) handlePlayerLeft(ew EventWrapper) {
-	playerIdx, err := g.getPlayerIdxByPlayerID(ew.SenderID)
-	if err != nil {
-		return
-	}
-
-	g.UpdateUserRating(g.Players[playerIdx].Info)
 }
 
 func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {

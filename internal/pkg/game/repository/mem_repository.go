@@ -171,6 +171,8 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 				player.Conn.Stop()
 			}
 
+			repo.games[gameID].UpdateUserRating(player.Info)
+
 			return nil
 		}
 	}
