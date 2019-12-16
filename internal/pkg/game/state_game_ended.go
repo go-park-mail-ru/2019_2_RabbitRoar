@@ -19,7 +19,7 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 
 	g.BroadcastEvent(e)
 
-	// update users
+	addScoreForPlayers(g)
 
 	g.StopTimer = time.NewTimer(
 		viper.GetDuration("internal.pend_game_ended_duration") * time.Second,
@@ -36,8 +36,6 @@ func NewGameEndedState(g *Game, ctx *StateContext) State {
 func (s *GameEndedState) Handle(ew EventWrapper) State {
 	s.Game.logger.Info("GameEnded: got event: ", ew)
 
-	s.addScoreForPlayers()
-
 	for {
 		switch ew.Event.Type {
 		case PendingExceeded:
@@ -50,8 +48,8 @@ func (s *GameEndedState) Handle(ew EventWrapper) State {
 	}
 }
 
-func (s *GameEndedState) addScoreForPlayers() {
-	for _, p := range s.Game.Players {
-		s.Game.UpdateUserRating(p.Info)
+func addScoreForPlayers(g *Game) {
+	for _, p := range g.Players {
+		g.UpdateUserRating(p.Info)
 	}
 }
