@@ -6,14 +6,8 @@ branches:
     - dev
     - ci
 
-stages:
-  - test
-  - deploy
-
-test:
-  stage: test
-  script:
-    - bash scripts/ci/test.sh
+script:
+  - bash scripts/ci/test.sh
 
 deploy:
   provider: script
