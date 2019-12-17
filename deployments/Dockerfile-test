@@ -1,0 +1,16 @@
+FROM golang:alpine
+
+WORKDIR /application
+
+COPY . .
+
+RUN go get github.com/mailru/easyjson/...
+RUN go get google.golang.org/grpc
+RUN go get -d -u github.com/golang/protobuf/protoc-gen-go
+RUN go install github.com/golang/protobuf/protoc-gen-go
+RUN apk add protobuf bash
+RUN ./scripts/generate.sh
+
+RUN go get -d -v ./...
+
+CMD ["scripts/test.sh"]

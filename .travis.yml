@@ -1,9 +1,22 @@
-sudo: true
-services: docker
+services:
+  - docker
 
 branches:
   only:
     - dev
+    - ci
 
-script:
-  - bash scripts/ci/build.sh
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script:
+    - bash scripts/ci/test.sh
+
+deploy:
+  provider: script
+  script: bash scripts/ci/build.sh && scripts/ci/push.sh && scripts/ci/deploy.sh
+  on:
+    branch: dev
