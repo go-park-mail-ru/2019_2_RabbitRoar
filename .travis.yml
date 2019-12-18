@@ -11,6 +11,6 @@ script:
 
 deploy:
   provider: script
-  script: bash scripts/ci/build.sh && scripts/ci/push.sh && scripts/ci/deploy.sh
+  script: bash scripts/ci/deploy.sh
   on:
     branch: dev
