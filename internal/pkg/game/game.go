@@ -65,7 +65,6 @@ func (g *Game) Run(killChan chan uuid.UUID) {
 		}
 
 		if ew.Event.Type == PlayerLeft {
-			g.handlePlayerLeft(ew)
 			continue
 		}
 
@@ -102,6 +101,10 @@ func (g *Game) GatherPlayersInfo() []PlayerInfo {
 }
 
 func (g *Game) GetRandPlayerID() int {
+	if len(g.Players) == 0 {
+		return 0
+	}
+
 	playerID := g.Host.Info.ID
 
 	for playerID == g.Host.Info.ID {
@@ -143,6 +146,7 @@ func (g *Game) UpdateUserRating(playerInfo PlayerInfo) {
 		return
 	}
 
+	g.logger.Infof("Changed user rating: %d + %d", u.Rating, playerInfo.Score)
 	u.Rating += playerInfo.Score
 
 	err = g.UserRepo.Update(*u)
@@ -185,15 +189,6 @@ func (g *Game) handleWSUpdated() {
 	}
 
 	g.BroadcastEvent(noticeEvent)
-}
-
-func (g *Game) handlePlayerLeft(ew EventWrapper) {
-	playerIdx, err := g.getPlayerIdxByPlayerID(ew.SenderID)
-	if err != nil {
-		return
-	}
-
-	g.UpdateUserRating(g.Players[playerIdx].Info)
 }
 
 func (g *Game) getPlayerIdxByPlayerID(playerID int) (int, error) {

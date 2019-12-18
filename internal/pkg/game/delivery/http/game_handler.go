@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/pack"
 	"github.com/prometheus/common/log"
 	"net/http"
@@ -76,8 +77,14 @@ func (gh *handler) create(ctx echo.Context) error {
 	playersCapMin := viper.GetInt("internal.players_cap_min")
 	playersCapMax := viper.GetInt("internal.players_cap_max")
 	if receivedGame.PlayersCapacity < playersCapMin || receivedGame.PlayersCapacity > playersCapMax {
-		return echo.NewHTTPError(http.StatusBadRequest, "unexpected players capacity, expected between %d and %d",
-			)
+		return echo.NewHTTPError(
+			http.StatusBadRequest,
+			fmt.Sprintf(
+				"unexpected players capacity, expected between %d and %d",
+				playersCapMin,
+				playersCapMax,
+			),
+		)
 	}
 
 	creator := ctx.Get("user").(*models.User)
