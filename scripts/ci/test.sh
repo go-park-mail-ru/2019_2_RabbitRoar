@@ -11,6 +11,6 @@ echo "Running test $PROJ_DIR."
 
 pushd $PROJ_DIR
 
-docker run --rm -it $(docker build -f deployments/Dockerfile-test -q .) && echo $?
+docker run --rm -it $(docker build -f deployments/Dockerfile-test -q .)
 
 popd
