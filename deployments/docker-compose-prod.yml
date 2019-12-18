@@ -11,8 +11,6 @@ services:
     depends_on:
       - postgres
       - session
-    labels:
-      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
@@ -24,8 +22,6 @@ services:
       - "../../configs:/application/configs"
     depends_on:
       - postgres
-    labels:
-      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
@@ -38,8 +34,6 @@ services:
     depends_on:
       - postgres
       - session
-    labels:
-      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
 
@@ -51,8 +45,6 @@ services:
     depends_on:
       - postgres
       - session
-    labels:
-      com.centurylinklabs.watchtower.enable: 'true'
     networks:
       - app
       - metrics
