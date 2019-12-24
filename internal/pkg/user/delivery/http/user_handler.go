@@ -11,6 +11,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type paginatedUsers struct {
+	page int
+	pages int
+	objects []models.User
+}
+
 type handler struct {
 	useCase user.UseCase
 }
@@ -120,5 +126,9 @@ func (uh *handler) leaderboard(ctx echo.Context) error {
 		}
 	}
 
-	return ctx.JSON(http.StatusOK, packs)
+	return ctx.JSON(http.StatusOK, paginatedUsers{
+		page:    page,
+		pages:   0,
+		objects: nil,
+	})
 }

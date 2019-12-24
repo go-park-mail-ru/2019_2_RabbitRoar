@@ -105,7 +105,7 @@ func (repo *sqlUserRepository) Update(user models.User) error {
 	return nil
 }
 
-func (repo *sqlUserRepository) FetchLeaderBoard(page, pageSize int) ([]models.User, error) {
+func (repo *sqlUserRepository) FetchLeaderBoard(page, pageSize int) ([]models.User, int, error) {
 	rows, err := repo.db.Query(
 		`
 			SELECT id, username, rating, avatar
@@ -116,7 +116,7 @@ func (repo *sqlUserRepository) FetchLeaderBoard(page, pageSize int) ([]models.Us
 		page * pageSize, pageSize,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "error fetching leaderboard")
+		return nil, 0, errors.Wrap(err, "error fetching leaderboard")
 	}
 
 	var users = make([]models.User, 0, pageSize)
@@ -130,11 +130,20 @@ func (repo *sqlUserRepository) FetchLeaderBoard(page, pageSize int) ([]models.Us
 		)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "error scanning user")
+			return nil, 0,errors.Wrap(err, "error scanning user")
 		}
 
 		users = append(users, u)
 	}
+	var pages int
+	row := repo.db.QueryRow(
+		`
+		SELECT COUNT(*)
+		FROM "svoyak"."User";
+	`)
+	if err := row.Scan(&pages); err != nil {
+		return nil, 0, errors.Wrap(err, "error obtaining pages number")
+	}
 
-	return users, nil
+	return users, pages, nil
 }
