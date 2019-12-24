@@ -29,5 +29,5 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
-	google.golang.org/grpc v1.21.0
+	google.golang.org/grpc v1.26.0
 )

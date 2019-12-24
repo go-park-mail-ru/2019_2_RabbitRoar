@@ -27,7 +27,8 @@
       "pack": "internal/pkg/pack/pack_schema.json"
     },
     "session": {
-      "host": "localhost:8082"
+      "host": "localhost:8082",
+      "port": 8082
     },
     "metrics": {
       "address": "0.0.0.0:8080",

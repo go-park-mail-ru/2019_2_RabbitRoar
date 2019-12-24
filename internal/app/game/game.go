@@ -3,6 +3,7 @@ package game
 import (
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
@@ -27,9 +28,10 @@ import (
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	consulapi "github.com/hashicorp/consul/api"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/balancer"
+	"strconv"
 )
-
-
 
 var log = logging.MustGetLogger("game")
 
@@ -104,14 +106,54 @@ func Start() {
 	}
 	defer db.Close()
 
+	// prikol begin
+	flag.Parse()
+
+	config := consulapi.DefaultConfig()
+	config.Address = *consulAddr
+	consul, err = consulapi.NewClient(config)
+
+	health, _, err := consul.Health().Service("session-api", "", false, nil)
+	if err != nil {
+		log.Fatalf("cant get alive services")
+	}
+
+	servers := []string{}
+	for _, item := range health {
+		addr := item.Service.Address +
+			":" + strconv.Itoa(item.Service.Port)
+		servers = append(servers, addr)
+	}
+
+	nameResolver = &testNameResolver{
+		addr: servers[0],
+	}
+	//
+
 	grpcConn, err := grpc.Dial(
-		viper.GetString("server.session.host"),
+		servers[0],
 		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithBalancer(grpc.RoundRobin(nameResolver)),
 	)
+
 	if err != nil {
 		log.Fatal("error dial to grpc service: ", err)
 	}
 	defer grpcConn.Close()
+
+	if len(servers) > 1 {
+		var updates []*naming.Update
+		for i := 1; i < len(servers); i++ {
+			updates = append(updates, &naming.Update{
+				Op:   naming.Add,
+				Addr: servers[i],
+			})
+		}
+		nameResolver.w.inject(updates)
+	}
+
+	go runOnlineServiceDiscovery(servers)
 
 	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
