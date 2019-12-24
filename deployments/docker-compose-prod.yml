@@ -3,9 +3,7 @@ version: "3.7"
 services:
   application:
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-application
+    image: alexnav/svoyak-application:latest
     volumes:
       - "../../data/uploads:/application/data/uploads"
       - "../../data/logs:/tmp/logs"
@@ -13,32 +11,24 @@ services:
     depends_on:
       - postgres
       - session
-    ports:
-      - 2345:2345 # Remote debug
     networks:
       - app
       - metrics
 
   session:
+    image: alexnav/svoyak-session:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-session
     volumes:
       - "../../configs:/application/configs"
     depends_on:
       - postgres
-    ports:
-      - 2346:2345 # Remote debug
     networks:
       - app
       - metrics
 
   chat:
+    image: alexnav/svoyak-chat:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-chat
     volumes:
       - "../../configs:/application/configs"
     depends_on:
@@ -48,10 +38,8 @@ services:
       - app
 
   game:
+    image: alexnav/svoyak-game:latest
     restart: always
-    build:
-      context: ../
-      dockerfile: deployments/Dockerfile-game
     volumes:
       - "../../configs:/application/configs"
     depends_on:

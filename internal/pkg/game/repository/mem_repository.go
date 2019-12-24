@@ -4,17 +4,20 @@ import (
 	"errors"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user"
 	"github.com/google/uuid"
 )
 
 type memGameRepository struct {
+	userRepo user.Repository
 	games map[uuid.UUID]*game.Game
 	userGame map[int]uuid.UUID
 	gameKillerChan chan uuid.UUID
 }
 
-func NewMemGameRepository() game.Repository {
+func NewMemGameRepository(userRepo user.Repository) game.Repository {
 	repo := &memGameRepository{
+		userRepo: userRepo,
 		games: make(map[uuid.UUID]*game.Game),
 		userGame: make(map[int]uuid.UUID),
 		gameKillerChan: make(chan uuid.UUID, 10),
@@ -35,11 +38,12 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 	}
 
 	repo.games[g.UUID] = &game.Game{
-		Questions: packQuestions,
-		Players: []game.Player{},
-		Model:   *g,
-		EvChan:  make(chan game.EventWrapper, 50),
-		Started: false,
+		Players:   []game.Player{},
+		Model:     *g,
+		Questions: game.NewQuestionTable(packQuestions),
+		EvChan:    make(chan game.EventWrapper, 50),
+		Started:   false,
+		UserRepo:  repo.userRepo,
 	}
 
 	defer func(){
@@ -141,21 +145,25 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 		return errors.New("player is not in game")
 	}
 
+	delete(repo.userGame, playerID)
+
 	if _, exists := repo.games[gameID]; !exists {
 		return errors.New("no game found to leave")
 	}
 
-	delete(repo.userGame, playerID)
-
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == playerID {
-			if repo.games[gameID].Players[i].Conn != nil {
-				repo.games[gameID].Players[i].Conn.Stop()
-			}
+			player := &repo.games[gameID].Players[i]
+
+			repo.games[gameID].UpdateUserRating(player.Info)
 
 			repo.games[gameID].Players = append(repo.games[gameID].Players[:i], repo.games[gameID].Players[i+1:]...)
 
 			repo.games[gameID].Model.PlayersJoined--
+
+			if player.Conn != nil {
+				player.Conn.Stop()
+			}
 
 			repo.games[gameID].EvChan <- game.EventWrapper{
 				SenderID: p.Info.ID,
@@ -175,6 +183,11 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 func (repo *memGameRepository) runGameKiller() {
 	for {
 		gameID := <-repo.gameKillerChan
+
+		for _, p := range repo.games[gameID].Players {
+			repo.KickPlayer(p.Info.ID)
+		}
+
 		delete(repo.games, gameID)
 	}
 }

@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM golang:1.13
 
 WORKDIR /application
 
@@ -8,19 +8,16 @@ RUN go get github.com/mailru/easyjson/...
 RUN go get google.golang.org/grpc
 RUN go get -d -u github.com/golang/protobuf/protoc-gen-go
 RUN go install github.com/golang/protobuf/protoc-gen-go
-RUN apk add protobuf bash
+RUN apt update && apt install protobuf-compiler -y
 RUN ./scripts/generate.sh
 
 RUN go get -d -v ./...
-RUN go build -v ./cmd/game/game.go
 
+RUN go get -u github.com/go-delve/delve/cmd/dlv
 
-FROM alpine
-
-WORKDIR /application
-
-COPY --from=builder /application/game .
+RUN go build -v -gcflags "all=-N -l" ./cmd/server/server.go
 
 EXPOSE 3000
+EXPOSE 2345
 
-CMD ["./game"]
+CMD dlv --listen=:2345 --continue --headless=true --api-version=2 --accept-multiclient exec ./server

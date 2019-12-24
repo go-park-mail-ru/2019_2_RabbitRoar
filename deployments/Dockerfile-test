@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM golang:alpine
 
 WORKDIR /application
 
@@ -12,15 +12,5 @@ RUN apk add protobuf bash
 RUN ./scripts/generate.sh
 
 RUN go get -d -v ./...
-RUN go build -v ./cmd/game/game.go
 
-
-FROM alpine
-
-WORKDIR /application
-
-COPY --from=builder /application/game .
-
-EXPOSE 3000
-
-CMD ["./game"]
+CMD ["scripts/test.sh"]

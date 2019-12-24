@@ -1,0 +1,16 @@
+services:
+  - docker
+
+branches:
+  only:
+    - dev
+    - ci
+
+script:
+  - bash scripts/ci/test.sh
+
+deploy:
+  provider: script
+  script: bash scripts/ci/deploy.sh
+  on:
+    branch: dev

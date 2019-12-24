@@ -1,90 +1,118 @@
 package game
 
 import (
-	"math/rand"
+	"errors"
+	"fmt"
+	"github.com/spf13/viper"
+	"time"
 )
 
-type PendPlayers struct {
+type PendPlayersState struct {
 	BaseState
 }
 
-func (s *PendPlayers) getThemes() [5]string {
-	var themes [5]string
-	themeSlice := s.Game.Questions.([]interface{})
+func NewPendPlayersState(g *Game) State {
+	g.StopTimer = time.NewTimer(
+		viper.GetDuration("internal.pend_players_duration") * time.Second,
+	)
 
-	for i := 0; i < 5; i++ {
-		theme := themeSlice[i].(map[string]interface{})
-		themes[i] = theme["name"].(string)
+	return &PendPlayersState{
+		BaseState: BaseState{
+			Game: g,
+			Ctx: &StateContext{
+				QuestionSelectorID: 0,
+				ThemeIdx:           0,
+				QuestionIdx:        0,
+				RespondentID:       0,
+			},
+		},
 	}
-
-	return themes
 }
 
-func (s *PendPlayers) Handle(e EventWrapper) State {
-	s.Game.logger.Info("PendPlayers: got event: ", e)
-	if e.Event.Type != PlayerReadyFront {
-		s.Game.logger.Infof(
-			"PendPlayers: got unexpected event %s, expected %s. ",
-			e.Event.Type,
-			PlayerReadyFront,
-		)
-		return s
-	}
+func (s *PendPlayersState) Handle(ew EventWrapper) State {
+	s.Game.logger.Info("PendPlayers: got event: ", ew)
 
-	var playersReady int
-	for idx, pl := range s.Game.Players {
-		if pl.Info.ID == e.SenderID {
-			s.Game.Players[idx].Info.Ready = !s.Game.Players[idx].Info.Ready
+	switch ew.Event.Type {
+	case PendingExceeded:
+		s.Game.logger.Info("PendPlayers: pending time exceeded")
+		return nil
+
+	default:
+		if err := s.validateEvent(ew); err != nil {
+			s.Game.logger.Info(err)
+			return s
 		}
 
-		if s.Game.Players[idx].Info.Ready {
+		playersReady := s.updateReadyPlayers(ew)
+		s.sendPlayersInfo()
+
+		if playersReady != s.Game.Model.PlayersCapacity {
+			s.Game.logger.Infof(
+				"PendPlayers: players ready %d/%d, keep state.",
+				playersReady,
+				s.Game.Model.PlayersCapacity,
+			)
+			return s
+		}
+
+		s.startGame()
+
+		s.Ctx.QuestionSelectorID = s.Game.GetRandPlayerID()
+		nextState := NewPendQuestionChosenState(s.Game, s.Ctx)
+
+		s.Game.logger.Infof("PendPlayers: moving to the next state %v.", nextState)
+		return nextState
+	}
+}
+
+func (s *PendPlayersState) validateEvent(ew EventWrapper) error {
+	if ew.Event.Type != PlayerReadyFront {
+		return errors.New(
+			fmt.Sprintf(
+				"PendPlayers: got unexpected event %s, expected %s. ",
+				ew.Event.Type,
+				PlayerReadyFront,
+			),
+		)
+	}
+
+	return nil
+}
+
+func (s *PendPlayersState) sendPlayersInfo() {
+	e := Event{
+		Type:    PlayerReadyBack,
+		Payload: PlayerReadyBackPayload{
+			Players: s.Game.GatherPlayersInfo(),
+		},
+	}
+
+	s.Game.BroadcastEvent(e)
+}
+
+func (s *PendPlayersState) updateReadyPlayers(ew EventWrapper) int {
+	var playersReady int
+	for playerID, p := range s.Game.Players {
+		if p.Info.ID == ew.SenderID {
+			s.Game.Players[playerID].Info.Ready = !p.Info.Ready
+		}
+
+		if s.Game.Players[playerID].Info.Ready {
 			playersReady++
 		}
 	}
 
-	// collect joined players
-	var players = make([]PlayerInfo, 0, len(s.Game.Players))
-	for _, pl := range s.Game.Players {
-		players = append(players, pl.Info)
-	}
+	return playersReady
+}
 
-	ev := Event{
-		Type:    PlayerReadyBack,
-		Payload: players,
-	}
-	s.Game.BroadcastEvent(ev)
-
-	if playersReady != s.Game.Model.PlayersCapacity {
-		s.Game.logger.Info(
-			"PendPlayers: players ready %d/%d, keep state.",
-			playersReady,
-			s.Game.Model.PlayersCapacity,
-		)
-		return s
-	}
-
-	ev = Event{
-		Type:    GameStart,
-		Payload: GameStartPayload{Themes: s.getThemes()},
-	}
-	s.Game.BroadcastEvent(ev)
+func (s *PendPlayersState) startGame() {
 	s.Game.Started = true
 
-	nextState := &PendQuestionChoose{
-		BaseState: BaseState{Game: s.Game},
-	}
-
-	randIdx := rand.Int() % len(s.Game.Players)
-	nextState.respondentID = s.Game.Players[randIdx].Info.ID
-
-	ev = Event{
-		Type: RequestQuestion,
-		Payload: RequestQuestionPayload{
-			PlayerID: nextState.respondentID,
+	e := Event{
+		Type:    GameStart,
+		Payload: GameStartPayload{
+			Themes: s.Game.Questions.GetThemes(),
 		},
 	}
-	s.Game.BroadcastEvent(ev)
-
-	s.Game.logger.Info("PendPlayers: moving to the next state %v.", nextState)
-	return nextState
+	s.Game.BroadcastEvent(e)
 }

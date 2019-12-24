@@ -46,6 +46,14 @@
 
   "internal": {
     "page_size": 20,
-    "players_cap_limit": 6
+    "players_cap_min": 2,
+    "players_cap_max": 6,
+    "ping_delay": 10,
+    "pend_players_duration": 10800,
+    "pend_question_duration": 180,
+    "pend_respondent_duration": 30,
+    "pend_answer_duration": 15,
+    "pend_verdict_duration": 15,
+    "pend_game_ended_duration": 300
   }
 }
