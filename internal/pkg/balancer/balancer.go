@@ -5,9 +5,6 @@ import (
 	"google.golang.org/grpc/naming"
 )
 
-// load balancer
-// Copyright 2016 gRPC authors https://github.com/grpc/grpc-go/blob/master/balancer_test.go
-
 type testWatcher struct {
 	// the channel to receives name resolution updates
 	update chan *naming.Update
