@@ -2,10 +2,10 @@ package game
 
 import (
 	"database/sql"
-	"encoding/json"
 	"flag"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
+	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/balancer"
 	_ "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/config"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf"
 	_csrfHttp "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/csrf/delivery/http"
@@ -22,6 +22,7 @@ import (
 	_sessionRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/repository"
 	_sessionUseCase "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/session/usecase"
 	_userRepository "github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/user/repository"
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -29,8 +30,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
-	consulapi "github.com/hashicorp/consul/api"
-	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/balancer"
+	"google.golang.org/grpc/naming"
 	"strconv"
 )
 
