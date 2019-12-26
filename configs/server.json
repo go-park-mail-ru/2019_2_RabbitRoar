@@ -45,7 +45,7 @@
   },
 
   "session": {
-    "address": "0.0.0.0:8082"
+    "port": "8082"
   },
 
   "sentry": {

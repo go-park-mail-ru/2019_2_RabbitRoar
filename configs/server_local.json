@@ -32,6 +32,14 @@
     "address": "0.0.0.0:3000"
   },
 
+  "session": {
+    "port": "8082"
+  },
+
+  "consul": {
+    "address": "consul:8500"
+  },
+
   "sentry": {
     "DSN": "sentry_DSN_goes_here"
   },

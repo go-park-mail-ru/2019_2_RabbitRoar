@@ -92,3 +92,6 @@ networks:
   metrics:
     external:
       name: metrics
+  consul:
+    external:
+      name: consul
