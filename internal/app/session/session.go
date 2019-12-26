@@ -13,11 +13,14 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"os"
+	"time"
 )
 
 var log = logging.MustGetLogger("grpc_session")
 
 func Start() {
+	time.Sleep(5 * time.Second)
+
 	var err error
 
 	config := consulapi.DefaultConfig()
@@ -28,34 +31,49 @@ func Start() {
 	}
 
 	serviceAddress := os.Getenv("HOSTNAME")
+	servicePort := viper.GetInt("session.port")
+	serviceBind := fmt.Sprintf("%s:%d", serviceAddress, servicePort)
 	serviceID := "SESSION_" + serviceAddress
-
-	grpcPort := viper.GetInt("session.port")
 
 	err = consul.Agent().ServiceRegister(
 		&consulapi.AgentServiceRegistration{
+			Kind:    "",
 			ID:      serviceID,
 			Name:    "session-api",
-			Port:    grpcPort,
+			Tags:    nil,
+			Port:    servicePort,
 			Address: serviceAddress,
+			Check: &consulapi.AgentServiceCheck{
+				CheckID:                        "session",
+				Name:                           "Session service heath status",
+				Interval:                       "10s",
+				TCP:                            serviceBind,
+				DeregisterCriticalServiceAfter: "20s",
+			},
 		},
 	)
 
 	if err != nil {
 		log.Fatal("cant add session service to consul:", err)
 	}
-	log.Info("registered in consul with id:", serviceID)
+
+	log.Infof(
+		"registered session microservice %s:%d in consul with id: %s",
+		serviceAddress,
+		servicePort,
+		serviceID,
+	)
 
 	defer func() {
 		err := consul.Agent().ServiceDeregister(serviceID)
 		if err != nil {
 			log.Error("Error Deristering service:", err)
 		}
-	} ()
+	}()
 
 	log.Info("Staring grpc session service.")
 
-	lis, err := net.Listen("tcp", viper.GetString("session.address"))
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", servicePort))
 	if err != nil {
 		log.Fatal("cant listen port", err)
 	}
