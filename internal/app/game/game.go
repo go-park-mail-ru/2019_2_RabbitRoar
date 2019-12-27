@@ -2,7 +2,6 @@ package game
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/balancer"
@@ -30,7 +29,6 @@ import (
 	"github.com/op/go-logging"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/naming"
 	"strconv"
 )
 
@@ -107,54 +105,49 @@ func Start() {
 	}
 	defer db.Close()
 
-	// prikol begin
-	flag.Parse()
-
 	config := consulapi.DefaultConfig()
-	config.Address = *consulAddr
-	consul, err = consulapi.NewClient(config)
+	config.Address = viper.GetString("consul.address")
+	consul, err := consulapi.NewClient(config)
+	if err != nil {
+		log.Fatal("Error initializing consul api client:", err)
+	}
 
 	health, _, err := consul.Health().Service("session-api", "", false, nil)
 	if err != nil {
 		log.Fatalf("cant get alive services")
 	}
 
-	servers := []string{}
+	var servers []string
 	for _, item := range health {
 		addr := item.Service.Address +
 			":" + strconv.Itoa(item.Service.Port)
 		servers = append(servers, addr)
 	}
 
-	nameResolver = &testNameResolver{
-		addr: servers[0],
+	if servers == nil {
+		log.Fatal("No session services online.")
 	}
-	//
 
+	resolver := &balancer.NameResolver{Addr: servers[0]}
+
+	go balancer.RunOnlineSD(servers, resolver, consul)
+
+	//TODO: move to experimental API
 	grpcConn, err := grpc.Dial(
 		servers[0],
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
-		grpc.WithBalancer(grpc.RoundRobin(nameResolver)),
+		grpc.WithBalancer(
+			grpc.RoundRobin(
+				resolver,
+			),
+		),
 	)
 
 	if err != nil {
 		log.Fatal("error dial to grpc service: ", err)
 	}
 	defer grpcConn.Close()
-
-	if len(servers) > 1 {
-		var updates []*naming.Update
-		for i := 1; i < len(servers); i++ {
-			updates = append(updates, &naming.Update{
-				Op:   naming.Add,
-				Addr: servers[i],
-			})
-		}
-		nameResolver.w.inject(updates)
-	}
-
-	go runOnlineServiceDiscovery(servers)
 
 	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
