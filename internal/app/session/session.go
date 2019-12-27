@@ -104,6 +104,6 @@ func Start() {
 
 	_grpc.RegisterSessionServiceServer(server, _grpc.NewManager(sessionRepo))
 
-	fmt.Println("starting grpc session server")
+	log.Info("Starting grpc session server at port:", servicePort)
 	log.Fatal(server.Serve(lis))
 }

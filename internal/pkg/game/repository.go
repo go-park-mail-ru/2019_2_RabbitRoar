@@ -6,6 +6,8 @@ import (
 )
 
 type Repository interface {
+	GamesOnline() int
+
 	Create(g *models.Game, packQuestions interface{}, host *models.User) (*models.Game, error)
 	Fetch(pageSize int, page int) (*[]models.Game, error)
 	GetGameIDByUserID(userID int) (uuid.UUID, error)

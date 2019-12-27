@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/game/connection"
 	"github.com/go-park-mail-ru/2019_2_RabbitRoar/internal/pkg/models"
@@ -33,8 +34,8 @@ func NewGameUseCase(
 }
 
 func (uc *gameUseCase) Create(g *models.Game, u *models.User) (*models.Game, error) {
-	if (uc.gameLimiter.GetMaxGames() < CURRENT_GAMES) {
-		return nil, err;
+	if uc.gameLimiter.GetMaxGames() < uc.gameMemRepo.GamesOnline() {
+		return nil, fmt.Errorf("maximum games amount reached")
 	}
 
 	newUUID, err := uuid.NewUUID()
