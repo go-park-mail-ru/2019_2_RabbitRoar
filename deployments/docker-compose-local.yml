@@ -2,23 +2,23 @@ version: "3.7"
 
 services:
 
-#  application:
-#    restart: always
-#    build:
-#      context: ../
-#      dockerfile: deployments/Dockerfile-application
-#    volumes:
-#      - "../../data/uploads:/application/data/uploads"
-#      - "../../data/logs:/tmp/logs"
-#      - "../../configs:/application/configs"
-#    depends_on:
-#      - postgres
-#      - session
-#      - consul
-#    ports:
-#      - 2345:2345 # Remote debug
-#    networks:
-#      - app
+  application:
+    restart: always
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile-application
+    volumes:
+      - "../../data/uploads:/application/data/uploads"
+      - "../../data/logs:/tmp/logs"
+      - "../configs/server_local.json:/application/configs/server.json"
+    depends_on:
+      - postgres
+      - session
+      - consul
+    ports:
+      - 2345:2345 # Remote debug
+    networks:
+      - app
 
   session:
     restart: always
@@ -35,33 +35,33 @@ services:
     networks:
       - app
 
-#  chat:
-#    restart: always
-#    build:
-#      context: ../
-#      dockerfile: deployments/Dockerfile-chat
-#    volumes:
-#      - "../configs/server_local.json:/application/configs/configs/server.json"
-#    depends_on:
-#      - postgres
-#      - session
-#      - consul
-#    networks:
-#      - app
+  chat:
+    restart: always
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile-chat
+    volumes:
+      - "../configs/server_local.json:/application/configs/server.json"
+    depends_on:
+      - postgres
+      - session
+      - consul
+    networks:
+      - app
 
-#  game:
-#    restart: always
-#    build:
-#      context: ../
-#      dockerfile: deployments/Dockerfile-game
-#    volumes:
-#      - "../configs/server_local.json:/application/configs/configs/server.json"
-#    depends_on:
-#      - postgres
-#      - session
-#      - consul
-#    networks:
-#      - app
+  game:
+    restart: always
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile-game
+    volumes:
+      - "../configs/server_local.json:/application/configs/server.json"
+    depends_on:
+      - postgres
+      - session
+      - consul
+    networks:
+      - app
 
   postgres:
     image: postgres:12.0
@@ -87,21 +87,21 @@ services:
     networks:
       - app
 
-#  nginx:
-#    image: nginx:latest
-#    restart: always
-#    depends_on:
-#      - chat
-#      - session
-#      - game
-#      - application
-#    volumes:
-#      - "../configs/nginx.conf:/etc/nginx/nginx.conf:ro"
-#      - "../../data/uploads:/data/uploads"
-#    ports:
-#      - 3000:3000
-#    networks:
-#      - app
+  nginx:
+    image: nginx:latest
+    restart: always
+    depends_on:
+      - chat
+      - session
+      - game
+      - application
+    volumes:
+      - "../configs/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "../../data/uploads:/data/uploads"
+    ports:
+      - 3000:3000
+    networks:
+      - app
 
   consul:
     image: consul:latest

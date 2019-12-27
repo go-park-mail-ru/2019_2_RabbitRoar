@@ -25,6 +25,10 @@
     },
     "schema": {
       "pack": "internal/pkg/pack/pack_schema.json"
+    },
+    "metrics": {
+      "address": "0.0.0.0:8080",
+      "path": "/metrics"
     }
   },
 
