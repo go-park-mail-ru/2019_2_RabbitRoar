@@ -55,7 +55,7 @@ type NameResolver struct {
 	Addr string
 }
 
-func (r *NameResolver) Resolve(target string) (naming.Watcher, error) {
+func (r *NameResolver) Resolve(_ string) (naming.Watcher, error) {
 	r.w = &Watcher{
 		update:   make(chan *naming.Update, 1),
 		side:     make(chan int, 1),
