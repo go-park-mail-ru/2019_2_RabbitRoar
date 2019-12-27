@@ -35,11 +35,6 @@ import (
 var log = logging.MustGetLogger("game")
 
 func Start() {
-	gameLimiter := sd.GameLimiter{}
-	if err := gameLimiter.Init(); err != nil {
-		log.Fatal("error consul error: ", err)
-	}
-
 	log.Info("Staring game service.")
 
 	_sentry.InitSentry()
@@ -149,6 +144,9 @@ func Start() {
 	}
 	defer grpcConn.Close()
 
+	gameLimiter := sd.NewGameLimiter(consul)
+	go gameLimiter.RunPolling()
+
 	sessionRepo := _sessionRepository.NewGrpcSessionRepository(grpcConn)
 	sessionUseCase := _sessionUseCase.NewSessionUseCase(sessionRepo)
 
@@ -158,7 +156,7 @@ func Start() {
 	packSanitizer := _packHttp.NewPackSanitizer(bluemonday.UGCPolicy())
 
 	gameRepo := _gameRepository.NewMemGameRepository(userRepo)
-	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo, packSanitizer, &gameLimiter)
+	gameUseCase := _gameUseCase.NewGameUseCase(gameRepo, packRepo, packSanitizer, gameLimiter)
 
 	authMiddleware := _middleware.NewAuthMiddleware(sessionUseCase)
 

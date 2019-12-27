@@ -26,10 +26,6 @@
     "schema": {
       "pack": "internal/pkg/pack/pack_schema.json"
     },
-    "session": {
-      "host": "localhost:8082",
-      "port": 8082
-    },
     "metrics": {
       "address": "0.0.0.0:8080",
       "path": "/metrics"
@@ -58,6 +54,10 @@
     "user": "svoyak",
     "pass": "top_secret_goes_here",
     "db": "svoyak"
+  },
+
+  "game": {
+    "max_online": 50
   },
 
   "internal": {

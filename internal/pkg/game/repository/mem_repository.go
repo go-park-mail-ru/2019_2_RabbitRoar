@@ -28,6 +28,10 @@ func NewMemGameRepository(userRepo user.Repository) game.Repository {
 	return repo
 }
 
+func (repo *memGameRepository) GamesOnline() int {
+	return len(repo.games)
+}
+
 func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{}, host *models.User) (*models.Game, error) {
 	if _, exists := repo.userGame[host.ID]; exists {
 		return nil, errors.New("user is already playing")

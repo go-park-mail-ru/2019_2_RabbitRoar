@@ -1,51 +1,42 @@
 package sd
 
 import (
-	"encoding/json"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/op/go-logging"
+	"github.com/spf13/viper"
+	"strconv"
 	"time"
 )
 
-type MaxGames struct {
-	max_games int64
-	cache_time int
-}
+var log = logging.MustGetLogger("gameLimiter")
 
 type GameLimiter struct {
-	mg MaxGames
-	kv *consulapi.KV
-	lastUpdate int
+	maxGames int
+	KV       *consulapi.KV
 }
 
-func (gl *GameLimiter) Init() (error) {
-	config := consulapi.DefaultConfig()
-	config.Address = "consul:8500"
-	consul, err := consulapi.NewClient(config)
-	if (err != nil) {
-		return err
+func NewGameLimiter(consul *consulapi.Client) *GameLimiter {
+	return &GameLimiter{
+		maxGames: viper.GetInt("game.max_online"),
+		KV:       consul.KV(),
 	}
-	gl.mg.cache_time = 1000
-	gl.mg.max_games = 0
-	gl.kv = consul.KV()
-	gl.lastUpdate = 0
-	return nil
 }
 
-func (gl *GameLimiter) GetMaxGames() (int64, error) {
-	currentTime := time.Now().Second()
-	if currentTime - gl.lastUpdate < gl.mg.cache_time {
-		return gl.mg.max_games, nil
-	}
+func (gl *GameLimiter) GetMaxGames() int {
+	return gl.maxGames
+}
 
-	kvp, _, err := gl.kv.Get("max_games", nil)
-	if err != nil {
-		return 0, err
-	}
+func (gl *GameLimiter) RunPolling() {
+	ticker := time.Tick(5 * time.Second)
 
-	if err := json.Unmarshal(kvp.Value, &gl.mg); err != nil {
-		return 0, err
+	for range ticker {
+		kv, _, err := gl.KV.Get("max_games", nil)
+		if err != nil {
+			log.Error("Error getting max_games keep previous value")
+			return
+		}
+		log.Infof("Checking max_games: %s", string(kv.Value))
+		maxGames, err := strconv.Atoi(string(kv.Value))
+		gl.maxGames = maxGames
 	}
-
-	gl.lastUpdate = time.Now().Second()
-	return gl.mg.max_games, nil
 }
