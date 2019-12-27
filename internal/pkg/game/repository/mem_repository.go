@@ -38,7 +38,7 @@ func (repo *memGameRepository) Create(g *models.Game, packQuestions interface{},
 	}
 
 	repo.games[g.UUID] = &game.Game{
-		Players:   []game.Player{},
+		Players:   []*game.Player{},
 		Model:     *g,
 		Questions: game.NewQuestionTable(packQuestions),
 		EvChan:    make(chan game.EventWrapper, 50),
@@ -104,7 +104,7 @@ func (repo *memGameRepository) JoinPlayer(u *models.User, gameID uuid.UUID) (*mo
 
 	repo.games[gameID].Players = append(
 		repo.games[gameID].Players,
-		game.Player{
+		&game.Player{
 			Info: game.PlayerInfo{
 				ID:       u.ID,
 				Username: u.Username,
@@ -115,7 +115,7 @@ func (repo *memGameRepository) JoinPlayer(u *models.User, gameID uuid.UUID) (*mo
 	)
 
 	if repo.games[gameID].Host == nil {
-		repo.games[gameID].Host = &repo.games[gameID].Players[0]
+		repo.games[gameID].Host = repo.games[gameID].Players[0]
 	}
 
 	repo.games[gameID].Model.PlayersJoined++
@@ -153,7 +153,7 @@ func (repo *memGameRepository) KickPlayer(playerID int) error {
 
 	for i, p := range repo.games[gameID].Players {
 		if p.Info.ID == playerID {
-			player := &repo.games[gameID].Players[i]
+			player := repo.games[gameID].Players[i]
 
 			repo.games[gameID].UpdateUserRating(player.Info)
 

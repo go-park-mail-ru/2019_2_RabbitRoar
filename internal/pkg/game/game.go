@@ -17,7 +17,7 @@ type Player struct {
 
 type Game struct {
 	Host      *Player
-	Players   []Player
+	Players   []*Player
 	State     State
 	Model     models.Game
 	Questions *QuestionTable
