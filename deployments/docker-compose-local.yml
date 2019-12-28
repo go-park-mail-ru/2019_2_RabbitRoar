@@ -11,6 +11,7 @@ services:
       - "../../data/uploads:/application/data/uploads"
       - "../../data/logs:/tmp/logs"
       - "../configs/server_local.json:/application/configs/server.json"
+      - "../internal/pkg/pack/pack_schema.json:/application/internal/pkg/pack/pack_schema.json"
     depends_on:
       - postgres
       - session
