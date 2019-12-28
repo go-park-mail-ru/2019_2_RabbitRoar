@@ -33,10 +33,18 @@ func (gl *GameLimiter) RunPolling() {
 		kv, _, err := gl.KV.Get("max_games", nil)
 		if err != nil {
 			log.Error("Error getting max_games keep previous value")
-			return
+			continue
 		}
-		log.Infof("Checking max_games: %s", string(kv.Value))
+		if kv == nil {
+			log.Error("Error not max_games set keep previous value")
+			continue
+		}
 		maxGames, err := strconv.Atoi(string(kv.Value))
+		if err != nil {
+			log.Error("Error interpreting max_games keep previous value")
+			continue
+		}
+		log.Info("Updating max_games:", maxGames)
 		gl.maxGames = maxGames
 	}
 }
