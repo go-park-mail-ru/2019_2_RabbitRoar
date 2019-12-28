@@ -221,6 +221,19 @@ func (h *handler) list(ctx echo.Context) error {
 		}
 	}
 
+	for i := range packs {
+		u, err := h.userUseCase.GetByID(packs[i].Author)
+		if err != nil {
+			return &echo.HTTPError{
+				Code:     http.StatusNotFound,
+				Message:  "no user with such ID",
+				Internal: err,
+			}
+		}
+
+		packs[i].AuthorName = u.Username
+	}
+
 	return ctx.JSON(http.StatusOK, h.sanitizer.SanitizeSlice(packs))
 }
 
@@ -292,6 +305,16 @@ func (h *handler) byID(ctx echo.Context) error {
 			Internal: err,
 		}
 	}
+
+	u, err := h.userUseCase.GetByID(p.Author)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:     http.StatusNotFound,
+			Message:  "no user with such ID",
+			Internal: err,
+		}
+	}
+	p.AuthorName = u.Username
 
 	if p.Offline {
 		return ctx.JSON(http.StatusOK, h.sanitizer.Sanitize(p))

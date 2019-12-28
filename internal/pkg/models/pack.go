@@ -11,4 +11,5 @@ type Pack struct {
 	Tags        string      `json:"tags"`
 	Offline     bool        `json:"-"`
 	Questions   interface{} `json:"pack,omitempty"`
+	AuthorName  string      `json:"pack_name,omitempty"`
 }
